@@ -1,0 +1,112 @@
+// Prisma schema — DBL International oncology platform
+// Datasource: PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Oncologist {
+  id            Int      @id @default(autoincrement())
+  name          String
+  specialty     String                    // e.g. "Medical Oncology"
+  qualifications String                   // e.g. "MBBS, MD, DM (Oncology)"
+  experience    Int      @default(0)      // years of experience
+  hospital      String?
+  city          String?
+  bio           String?
+  photoUrl      String?
+  rating        Float    @default(4.8)
+  featured      Boolean  @default(false)
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([active])
+  @@index([featured])
+}
+
+model Service {
+  id              Int      @id @default(autoincrement())
+  title           String
+  description     String                    // short one-liner for cards
+  longDescription String?                   // full text for the detail page
+  price           Int      @default(0)      // in rupees
+  priceUnit       String?                   // e.g. "/month" (null = one-time)
+  icon            String   @default("report") // icon key mapped in the frontend
+  featured        Boolean  @default(false)
+  active          Boolean  @default(true)
+  order           Int      @default(0)      // display order
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([active])
+}
+
+model Admin {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String
+  password  String                       // bcrypt hash
+  createdAt DateTime @default(now())
+}
+
+// ---- Pricing (admin-managed) ----
+model PricingPlan {
+  id           Int      @id @default(autoincrement())
+  name         String
+  tagline      String?
+  priceMonthly Int      @default(0)      // base price in INR (one-time / monthly)
+  features     String[]                  // one line per feature
+  ctaLabel     String   @default("Choose Plan")
+  featured     Boolean  @default(false)  // "Most Popular"
+  active       Boolean  @default(true)
+  order        Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([active])
+}
+
+model PricingSetting {
+  id                Int      @id @default(1)   // singleton row
+  currency          String   @default("INR")
+  yearlyEnabled     Boolean  @default(true)
+  yearlyDiscountPct Int      @default(20)      // % off on yearly billing
+  updatedAt         DateTime @updatedAt
+}
+
+model BlogPost {
+  id        Int      @id @default(autoincrement())
+  title     String
+  category  String                        // e.g. "Cancer Guide"
+  excerpt   String
+  imageUrl  String?
+  date      String?                       // display date, e.g. "10 May, 2025"
+  readTime  String?                       // e.g. "5 min read"
+  isVideo   Boolean  @default(false)
+  active    Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active])
+}
+
+model Offer {
+  id          Int      @id @default(autoincrement())
+  title       String                          // e.g. "Independence Day Offer"
+  subtitle    String?
+  badge       String?                         // short label, e.g. "15% OFF"
+  discountPct Int      @default(0)            // extra % off applied while live
+  active      Boolean  @default(false)        // the on/off switch
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([active])
+}

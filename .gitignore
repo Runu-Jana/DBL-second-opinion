@@ -1,0 +1,12 @@
+node_modules/
+.env
+npm-debug.log*
+prisma/migrations/dev.db*
+.DS_Store
+
+# build output
+client/dist/
+
+# uploaded doctor photos (keep the folder, not the files)
+uploads/*
+!uploads/.gitkeep

@@ -1,0 +1,35 @@
+# Render.com blueprint — deploys the Express+Prisma API (serving the built
+# React app) plus a managed PostgreSQL database.
+# Deploy: push to GitHub, then in Render → "New +" → "Blueprint" → pick this repo.
+services:
+  - type: web
+    name: dbl-international
+    runtime: node
+    plan: free
+    # Build: generate Prisma client + build the React frontend into client/dist
+    buildCommand: npm install && npm run build
+    # Sync the DB schema and seed once (idempotent) before traffic is switched
+    preDeployCommand: npm run release
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: dbl-international-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_EMAIL
+        value: admin@dblinternational.com
+      - key: ADMIN_PASSWORD
+        sync: false        # set your own strong value in the Render dashboard
+      - key: ADMIN_NAME
+        value: DBL Admin
+      - key: NODE_VERSION
+        value: "20"
+
+databases:
+  - name: dbl-international-db
+    plan: free
+    databaseName: dbl_international
+    user: dbl
