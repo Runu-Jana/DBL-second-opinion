@@ -10,6 +10,13 @@ const pricingRouter = require('./routes/pricing');
 const blogRouter = require('./routes/blog');
 const authRouter = require('./routes/auth');
 const uploadRouter = require('./routes/upload');
+const patientsRouter = require('./routes/patients');
+const staffRouter = require('./routes/staff');
+const appointmentsRouter = require('./routes/appointments');
+const consultationsRouter = require('./routes/consultations');
+const doctorRouter = require('./routes/doctor');
+const doctorApplicationsRouter = require('./routes/doctorApplications');
+const M = require('./routes/modules');
 
 const app = express();
 const PORT = process.env.PORT || 5177;
@@ -26,6 +33,22 @@ app.use('/api/pricing', pricingRouter);
 app.use('/api/blog', blogRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/upload', uploadRouter);
+app.use('/api/patients', patientsRouter);
+app.use('/api/staff', staffRouter);
+app.use('/api/appointments', appointmentsRouter);
+app.use('/api/consultations', consultationsRouter);
+app.use('/api/doctor', doctorRouter);
+app.use('/api/doctor-applications', doctorApplicationsRouter);
+app.use('/api/reports', M.reports);
+app.use('/api/treatment-plans', M.treatmentPlans);
+app.use('/api/second-opinions', M.secondOpinions);
+app.use('/api/medications', M.medications);
+app.use('/api/invoices', M.invoices);
+app.use('/api/lab-tests', M.labTests);
+app.use('/api/users', M.users);
+app.use('/api/announcements', M.announcements);
+app.use('/api/activity', M.activity);
+app.use('/api/settings', M.settings);
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 

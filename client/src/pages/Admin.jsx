@@ -1,6 +1,27 @@
 import { useEffect, useRef, useState } from 'react';
 import { api, getToken, setToken, clearToken, rupees } from '../api.js';
 import { SERVICE_ICON_KEYS } from '../lib/icons.jsx';
+import AdminLayout, { ADMIN_NAV } from '../components/AdminLayout.jsx';
+import AdminDashboard from './AdminDashboard.jsx';
+import { Select, DateField, RefreshButton } from '../components/AdminFields.jsx';
+import PatientsAdmin from './admin/PatientsAdmin.jsx';
+import StaffAdmin from './admin/StaffAdmin.jsx';
+import AppointmentsAdmin from './admin/AppointmentsAdmin.jsx';
+import ConsultationsAdmin from './admin/ConsultationsAdmin.jsx';
+import ApplicationsAdmin from './admin/ApplicationsAdmin.jsx';
+import ReportsAdmin from './admin/ReportsAdmin.jsx';
+import AdminCrud from '../components/AdminCrud.jsx';
+import MODULE_CONFIGS from './admin/moduleConfigs.jsx';
+import AnalyticsAdmin from './admin/AnalyticsAdmin.jsx';
+import SettingsAdmin from './admin/SettingsAdmin.jsx';
+import ActivityAdmin from './admin/ActivityAdmin.jsx';
+
+const CONTENT_SECTION = 'content';
+const BESPOKE_SECTIONS = ['patients', 'staff', 'appointments', 'consultations', 'applications', 'reports'];
+const SPECIAL_SECTIONS = ['analytics', 'settings', 'system-activity', 'audit'];
+const REAL_SECTIONS = [...BESPOKE_SECTIONS, ...Object.keys(MODULE_CONFIGS), ...SPECIAL_SECTIONS]; // fully-built sections
+const sectionLabel = (key) => (ADMIN_NAV.find((n) => n.key === key)?.label || 'Section');
+const PLACEHOLDER_ICON = <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 9h18M8 14h8M8 17h5" /></svg>;
 
 const Mark = () => (
   <span className="modal-mark" aria-hidden="true">
@@ -103,7 +124,7 @@ function ServiceModal({ svc, onClose, onSaved }) {
             <label className="full">Full description<textarea value={f.longDescription} onChange={set('longDescription')} placeholder="Detailed text for the service page…" /></label>
             <label>Price (₹)<input type="number" min="0" value={f.price} onChange={set('price')} /></label>
             <label>Price unit<input value={f.priceUnit} onChange={set('priceUnit')} placeholder="/month (blank = one-time)" /></label>
-            <label>Icon<select value={f.icon} onChange={set('icon')}>{SERVICE_ICON_KEYS.map((k) => <option key={k} value={k}>{k}</option>)}</select></label>
+            <label>Icon<Select value={f.icon} onChange={(v) => setF({ ...f, icon: v })} options={SERVICE_ICON_KEYS} /></label>
             <label>Display order<input type="number" value={f.order} onChange={set('order')} /></label>
             <div className="full checks">
               <label><input type="checkbox" checked={f.featured} onChange={set('featured')} /> Popular</label>
@@ -205,11 +226,13 @@ const BLOG_CATS = ['Cancer Guide', 'Patient Stories', 'Expert Insights', 'News &
 
 /* ---------- Blog post modal ---------- */
 function BlogModal({ post, onClose, onSaved }) {
-  const empty = { title: '', category: 'Cancer Guide', excerpt: '', imageUrl: '', date: '', readTime: '', isVideo: false, order: 0, active: true };
+  const empty = { title: '', category: 'Cancer Guide', excerpt: '', imageUrl: '', videoUrl: '', date: '', readTime: '', isVideo: false, order: 0, active: true };
   const [f, setF] = useState(empty);
   const [err, setErr] = useState('');
   const [hint, setHint] = useState('PNG/JPG cover image, or paste a URL below.');
+  const [vhint, setVhint] = useState('MP4/WebM/MOV up to 100 MB, or paste a link below.');
   const fileRef = useRef(null);
+  const videoRef = useRef(null);
   const set = (k) => (e) => setF({ ...f, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value });
   useEffect(() => { setF(post ? { ...empty, ...post } : empty); setErr(''); }, [post]);
 
@@ -218,6 +241,12 @@ function BlogModal({ post, onClose, onSaved }) {
     const fd = new FormData(); fd.append('photo', file); setHint('Uploading…');
     api('/upload', { method: 'POST', body: fd }).then((r) => { setF((p) => ({ ...p, imageUrl: r.url })); setHint('Uploaded ✓'); })
       .catch((ex) => setHint(ex.message)).finally(() => { e.target.value = ''; });
+  };
+  const uploadVideo = (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    const fd = new FormData(); fd.append('video', file); setVhint('Uploading… (large files may take a while)');
+    api('/upload/video', { method: 'POST', body: fd }).then((r) => { setF((p) => ({ ...p, videoUrl: r.url })); setVhint('Uploaded ✓'); })
+      .catch((ex) => setVhint(ex.message)).finally(() => { e.target.value = ''; });
   };
   const submit = (e) => {
     e.preventDefault();
@@ -234,10 +263,10 @@ function BlogModal({ post, onClose, onSaved }) {
         <form className="admin-form" onSubmit={submit}>
           <div className="admin-form-grid">
             <label className="full">Title *<input value={f.title} onChange={set('title')} required placeholder="Understanding Your Cancer Diagnosis" /></label>
-            <label>Category<select value={f.category} onChange={set('category')}>{BLOG_CATS.map((c) => <option key={c}>{c}</option>)}</select></label>
+            <label>Category<Select value={f.category} onChange={(v) => setF({ ...f, category: v })} options={BLOG_CATS} /></label>
             <label>Order<input type="number" value={f.order} onChange={set('order')} /></label>
             <label className="full">Excerpt *<textarea value={f.excerpt} onChange={set('excerpt')} required placeholder="Short summary shown on the card…" /></label>
-            <label>Date label<input value={f.date} onChange={set('date')} placeholder="10 May, 2025" /></label>
+            <label>Date label<DateField value={f.date} onChange={(v) => setF({ ...f, date: v })} /></label>
             <label>Read time<input value={f.readTime} onChange={set('readTime')} placeholder="5 min read" /></label>
             <label className="full">Cover image
               <div className="photo-field">
@@ -255,6 +284,22 @@ function BlogModal({ post, onClose, onSaved }) {
               <label><input type="checkbox" checked={f.isVideo} onChange={set('isVideo')} /> Video / Podcast</label>
               <label><input type="checkbox" checked={f.active} onChange={set('active')} /> Active (visible)</label>
             </div>
+            {f.isVideo && (
+              <label className="full">Video
+                <div className="photo-field">
+                  <span className={'photo-preview video' + (f.videoUrl ? ' has-vid' : '')} aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="6" width="12" height="12" rx="2" /><path d="m15 10 6-3v10l-6-3Z" /></svg>
+                  </span>
+                  <div className="photo-controls">
+                    <input ref={videoRef} type="file" accept="video/mp4,video/webm,video/ogg,video/quicktime" hidden onChange={uploadVideo} />
+                    <button type="button" className="btn-ghost sm" onClick={() => videoRef.current.click()}>Upload video</button>
+                    {f.videoUrl && <button type="button" className="btn-ghost sm" onClick={() => { setF({ ...f, videoUrl: '' }); setVhint('MP4/WebM/MOV up to 100 MB, or paste a link below.'); }}>Remove</button>}
+                    <span className="photo-hint">{vhint}</span>
+                  </div>
+                </div>
+                <input value={f.videoUrl} onChange={set('videoUrl')} placeholder="https://youtube.com/… or upload a file above" />
+              </label>
+            )}
           </div>
           {err && <p className="admin-msg err show">{err}</p>}
           <div className="admin-form-actions"><button type="button" className="btn-ghost" onClick={onClose}>Cancel</button><button type="submit" className="btn btn-primary">Save</button></div>
@@ -268,6 +313,7 @@ export default function Admin() {
   const [authed, setAuthed] = useState(!!getToken());
   const [adminName, setAdminName] = useState('');
   const [loginErr, setLoginErr] = useState('');
+  const [section, setSection] = useState('dashboard');
   const [tab, setTab] = useState('oncologists');
   const [docs, setDocs] = useState([]);
   const [services, setServices] = useState([]);
@@ -292,7 +338,7 @@ export default function Admin() {
 
   useEffect(() => {
     if (!authed) return;
-    api('/auth/me', { on401 }).then((r) => setAdminName(r.admin.email)).catch(() => {});
+    api('/auth/me', { on401 }).then((r) => setAdminName(r.admin.name || r.admin.email)).catch(() => {});
     loadDocs(); loadServices(); loadPricing(); loadBlog();
   }, [authed]);
 
@@ -334,27 +380,57 @@ export default function Admin() {
   }
 
   return (
-    <div className="admin-body">
-      <header className="admin-topbar">
-        <div className="inner">
-          <span className="admin-brand">DBL <em>INDIA</em> · Admin</span>
-          <span className="admin-user">
-            <span>{adminName}</span>
-            <a href="/oncologists" className="icon-btn" target="_blank" rel="noreferrer">View site ↗</a>
-            <button className="icon-btn" onClick={logout}>Log out</button>
-          </span>
-        </div>
-      </header>
+    <>
+    <AdminLayout section={section} onNavigate={setSection} adminName={adminName} onLogout={logout}>
+      {msg && <p className={'admin-msg ' + msg.kind + ' show'}>{msg.m}</p>}
 
-      <main className="admin-main">
+      {section === 'dashboard' && <AdminDashboard adminName={adminName} onNavigate={setSection} on401={on401} />}
+
+      {section === 'patients' && <PatientsAdmin flash={flash} on401={on401} />}
+
+      {section === 'staff' && <StaffAdmin flash={flash} on401={on401} />}
+
+      {section === 'appointments' && <AppointmentsAdmin flash={flash} on401={on401} />}
+
+      {section === 'consultations' && <ConsultationsAdmin flash={flash} on401={on401} />}
+
+      {section === 'applications' && <ApplicationsAdmin flash={flash} on401={on401} />}
+
+      {section === 'reports' && <ReportsAdmin flash={flash} on401={on401} />}
+
+      {MODULE_CONFIGS[section] && <AdminCrud key={section} cfg={MODULE_CONFIGS[section]} flash={flash} on401={on401} />}
+
+      {section === 'analytics' && <AnalyticsAdmin flash={flash} on401={on401} />}
+      {section === 'settings' && <SettingsAdmin flash={flash} on401={on401} />}
+      {section === 'system-activity' && <ActivityAdmin key="sysact" kind="activity" title="System Activity" subtitle="Recent platform activity" flash={flash} on401={on401} />}
+      {section === 'audit' && <ActivityAdmin key="audit" kind="audit" title="Audit Logs" subtitle="Security & change audit trail" flash={flash} on401={on401} />}
+
+      {section !== 'dashboard' && section !== CONTENT_SECTION && !REAL_SECTIONS.includes(section) && (
+        <div className="adm-placeholder">
+          <div className="adm-page-head"><div><h1>{sectionLabel(section)}</h1><p>This module is coming soon. The dashboard overview and Content Management are fully wired up.</p></div></div>
+          <div className="adm-card adm-soon">
+            <span className="adm-soon-ico">{PLACEHOLDER_ICON}</span>
+            <h2>{sectionLabel(section)}</h2>
+            <p>Detailed {sectionLabel(section).toLowerCase()} tools will live here. Use <button type="button" className="adm-link" onClick={() => setSection('content')}>Content Management</button> to edit the live site now.</p>
+          </div>
+        </div>
+      )}
+
+      {section === CONTENT_SECTION && (
+        <div className="adm-cms">
+          <div className="adm-page-head">
+            <div><h1>Content Management</h1><p>Manage the oncologists, services, pricing and blog content shown on the public site.</p></div>
+            <div className="adm-head-actions">
+              <RefreshButton onClick={() => { loadDocs(); loadServices(); loadPricing(); loadBlog(); }} />
+              <a href="/oncologists" className="adm-daterange" target="_blank" rel="noreferrer">View site ↗</a>
+            </div>
+          </div>
         <div className="admin-tabs" role="tablist">
           <button className={'admin-tab' + (tab === 'oncologists' ? ' active' : '')} onClick={() => setTab('oncologists')}>Oncologists</button>
           <button className={'admin-tab' + (tab === 'services' ? ' active' : '')} onClick={() => setTab('services')}>Services</button>
           <button className={'admin-tab' + (tab === 'pricing' ? ' active' : '')} onClick={() => setTab('pricing')}>Pricing</button>
           <button className={'admin-tab' + (tab === 'blog' ? ' active' : '')} onClick={() => setTab('blog')}>Blog</button>
         </div>
-
-        {msg && <p className={'admin-msg ' + msg.kind + ' show'}>{msg.m}</p>}
 
         {tab === 'oncologists' && (
           <section className="admin-panel">
@@ -493,13 +569,15 @@ export default function Admin() {
             </div>
           </section>
         )}
-      </main>
+        </div>
+      )}
+    </AdminLayout>
 
       {docModal !== undefined && <OncologistModal doc={docModal} onClose={() => setDocModal(undefined)} onSaved={(m) => { setDocModal(undefined); flash(m); loadDocs(); }} />}
       {svcModal !== undefined && <ServiceModal svc={svcModal} onClose={() => setSvcModal(undefined)} onSaved={(m) => { setSvcModal(undefined); flash(m); loadServices(); }} />}
       {planModal !== undefined && <PlanModal plan={planModal} onClose={() => setPlanModal(undefined)} onSaved={(m) => { setPlanModal(undefined); flash(m); loadPricing(); }} />}
       {offerModal !== undefined && <OfferModal offer={offerModal} onClose={() => setOfferModal(undefined)} onSaved={(m) => { setOfferModal(undefined); flash(m); loadPricing(); }} />}
       {postModal !== undefined && <BlogModal post={postModal} onClose={() => setPostModal(undefined)} onSaved={(m) => { setPostModal(undefined); flash(m); loadBlog(); }} />}
-    </div>
+    </>
   );
 }

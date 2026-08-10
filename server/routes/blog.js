@@ -2,6 +2,7 @@
 const express = require('express');
 const prisma = require('../db');
 const { requireAdmin } = require('./auth');
+const { logCrud } = require('../lib/audit');
 
 const router = express.Router();
 
@@ -11,6 +12,7 @@ function parseBody(b = {}) {
     category: String(b.category || '').trim() || 'Cancer Guide',
     excerpt: String(b.excerpt || '').trim(),
     imageUrl: b.imageUrl ? String(b.imageUrl).trim() : null,
+    videoUrl: b.videoUrl ? String(b.videoUrl).trim() : null,
     date: b.date ? String(b.date).trim() : null,
     readTime: b.readTime ? String(b.readTime).trim() : null,
     isVideo: !!b.isVideo,
@@ -32,7 +34,9 @@ router.post('/', requireAdmin, async (req, res) => {
   try {
     const data = parseBody(req.body);
     if (!data.title || !data.excerpt) return res.status(400).json({ error: 'Title and excerpt are required.' });
-    res.status(201).json(await prisma.blogPost.create({ data }));
+    const created = await prisma.blogPost.create({ data });
+    logCrud(req, 'Created', 'Blog Post', created.title, { activity: true });
+    res.status(201).json(created);
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not create post.' }); }
 });
 
@@ -40,7 +44,9 @@ router.put('/:id', requireAdmin, async (req, res) => {
   try {
     const data = parseBody(req.body);
     if (!data.title || !data.excerpt) return res.status(400).json({ error: 'Title and excerpt are required.' });
-    res.json(await prisma.blogPost.update({ where: { id: +req.params.id }, data }));
+    const updated = await prisma.blogPost.update({ where: { id: +req.params.id }, data });
+    logCrud(req, 'Updated', 'Blog Post', updated.title);
+    res.json(updated);
   } catch (e) {
     if (e.code === 'P2025') return res.status(404).json({ error: 'Not found.' });
     console.error(e); res.status(500).json({ error: 'Could not update post.' });
@@ -49,7 +55,8 @@ router.put('/:id', requireAdmin, async (req, res) => {
 
 router.delete('/:id', requireAdmin, async (req, res) => {
   try {
-    await prisma.blogPost.delete({ where: { id: +req.params.id } });
+    const deleted = await prisma.blogPost.delete({ where: { id: +req.params.id } });
+    logCrud(req, 'Deleted', 'Blog Post', deleted.title);
     res.json({ ok: true });
   } catch (e) {
     if (e.code === 'P2025') return res.status(404).json({ error: 'Not found.' });

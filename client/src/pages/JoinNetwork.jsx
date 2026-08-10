@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import Header from '../components/Header.jsx';
 import Footer from '../components/Footer.jsx';
 import { useLang } from '../i18n.jsx';
+import { Select } from '../components/AdminFields.jsx';
+import { api } from '../api.js';
 
 const s = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.7, strokeLinecap: 'round', strokeLinejoin: 'round' };
 const Ico = {
@@ -37,6 +39,15 @@ const STATS = [
   { v: '24/7', l: 'Doctor Support', icon: <svg viewBox="0 0 24 24" {...s}><path d="M4 13v-1a8 8 0 0 1 16 0v1M4 13a2 2 0 0 0-2 2v1a2 2 0 0 0 2 2h1v-5H4M20 13a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2h-1v-5h1M20 18v1a3 3 0 0 1-3 3h-3" /></svg> },
 ];
 
+const Check = <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 4 4 10-10" /></svg>;
+const WHY_JOIN = [
+  'Access to a global patient base',
+  'Advanced technology & AI support',
+  'Timely honorarium & transparent process',
+  'Continuing Medical Education (CME) opportunities',
+  'Be part of a trusted, ethical, patient-first platform',
+];
+
 const SPECIALIZATIONS = ['Medical Oncology', 'Surgical Oncology', 'Radiation Oncology', 'Hematology-Oncology', 'Clinical Pharmacology', 'Pathology', 'Nuclear Medicine', 'Other'];
 const EXPERIENCE = ['0–3 years', '3–5 years', '5–10 years', '10–15 years', '15+ years'];
 const QUALIFICATIONS = ['MBBS', 'MD', 'DM', 'DNB', 'MCh', 'PhD', 'Other'];
@@ -44,9 +55,21 @@ const COUNTRIES = ['India', 'United States', 'United Kingdom', 'United Arab Emir
 
 export default function JoinNetwork() {
   const { t } = useLang();
-  const [form, setForm] = useState({ name: '', email: '', spec: '', exp: '', qual: '', country: '' });
+  const [form, setForm] = useState({ name: '', email: '', phone: '', regNo: '', spec: '', exp: '', qual: '', country: '', brief: '' });
+  const [agree, setAgree] = useState(false);
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState('');
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+  const setV = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
+  const submit = (e) => {
+    e.preventDefault();
+    if (!form.name.trim() || !form.email.trim()) return setError('Name and email are required.');
+    if (!agree) return setError('Please agree to the Terms & Conditions and Privacy Policy to continue.');
+    setError('');
+    api('/doctor-applications', { method: 'POST', auth: false, body: JSON.stringify(form) })
+      .then(() => setSent(true))
+      .catch((ex) => setError(ex.message || 'Could not submit. Please try again.'));
+  };
   const scrollToApply = () => document.getElementById('fd-apply')?.scrollIntoView({ behavior: 'smooth' });
 
   return (
@@ -132,6 +155,15 @@ export default function JoinNetwork() {
                 <li>{Ico.globe} Flexible, remote case reviews</li>
                 <li>{Ico.growth} Fair, transparent compensation</li>
               </ul>
+
+              <aside className="fd-why" role="img" aria-label="A doctor warmly shaking hands with a patient">
+                <h3>Why Join DBL International?</h3>
+                <ul className="fd-why-list">
+                  {WHY_JOIN.map((b) => (
+                    <li key={b}><span className="fd-why-check">{Check}</span>{b}</li>
+                  ))}
+                </ul>
+              </aside>
             </div>
 
             <div className="jn-card">
@@ -143,23 +175,37 @@ export default function JoinNetwork() {
                   <p>Thank you — your application has been received. Our medical team will be in touch within 2–3 working days.</p>
                 </div>
               ) : (
-                <form className="jn-form" onSubmit={(e) => { e.preventDefault(); setSent(true); }}>
+                <form className="jn-form" onSubmit={submit}>
                   <label className="jn-field"><span>Full Name</span><input type="text" required value={form.name} onChange={set('name')} placeholder="Dr. Full Name" /></label>
-                  <label className="jn-field"><span>Email Address</span><input type="email" required value={form.email} onChange={set('email')} placeholder="you@hospital.com" /></label>
-                  <label className="jn-field"><span>Specialization</span>
-                    <select required value={form.spec} onChange={set('spec')}><option value="" disabled>Specialization</option>{SPECIALIZATIONS.map((x) => <option key={x}>{x}</option>)}</select>
-                  </label>
+                  <div className="jn-row">
+                    <label className="jn-field"><span>Email Address</span><input type="email" required value={form.email} onChange={set('email')} placeholder="you@hospital.com" /></label>
+                    <label className="jn-field"><span>Phone Number</span><input type="tel" value={form.phone} onChange={set('phone')} placeholder="+91 98765 43210" /></label>
+                  </div>
+                  <div className="jn-row">
+                    <label className="jn-field"><span>Specialization</span>
+                      <Select value={form.spec} onChange={setV('spec')} options={SPECIALIZATIONS} placeholder="Select specialization" />
+                    </label>
+                    <label className="jn-field"><span>Medical Registration Number</span><input type="text" value={form.regNo} onChange={set('regNo')} placeholder="e.g. MCI-123456" /></label>
+                  </div>
                   <div className="jn-row">
                     <label className="jn-field"><span>Years of Experience</span>
-                      <select required value={form.exp} onChange={set('exp')}><option value="" disabled>Experience</option>{EXPERIENCE.map((x) => <option key={x}>{x}</option>)}</select>
+                      <Select value={form.exp} onChange={setV('exp')} options={EXPERIENCE} placeholder="Select experience" />
                     </label>
                     <label className="jn-field"><span>Highest Qualification</span>
-                      <select required value={form.qual} onChange={set('qual')}><option value="" disabled>Qualification</option>{QUALIFICATIONS.map((x) => <option key={x}>{x}</option>)}</select>
+                      <Select value={form.qual} onChange={setV('qual')} options={QUALIFICATIONS} placeholder="Select qualification" />
                     </label>
                   </div>
                   <label className="jn-field"><span>Country</span>
-                    <select required value={form.country} onChange={set('country')}><option value="" disabled>Country</option>{COUNTRIES.map((x) => <option key={x}>{x}</option>)}</select>
+                    <Select value={form.country} onChange={setV('country')} options={COUNTRIES} placeholder="Select country" />
                   </label>
+                  <label className="jn-field"><span>Brief About Your Experience</span>
+                    <textarea rows={2} value={form.brief} onChange={set('brief')} placeholder="Tell us about your clinical background, areas of focus, and notable work…" />
+                  </label>
+                  <label className="jn-check">
+                    <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} />
+                    <span>I agree to the <Link to="/terms">Terms &amp; Conditions</Link> and <Link to="/privacy">Privacy Policy</Link>.</span>
+                  </label>
+                  {error && <p style={{ color: '#ffd7d1', fontSize: '.82rem', fontWeight: 600, margin: 0 }}>{error}</p>}
                   <button type="submit" className="btn btn-primary jn-submit">Submit Application</button>
                   <p className="jn-member">Already a member? <Link to="/dashboard">Login</Link></p>
                 </form>

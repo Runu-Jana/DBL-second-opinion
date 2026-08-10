@@ -19,7 +19,7 @@ export default function UploadReports() {
 
   return (
     <>
-      <Header active="upload" />
+      <Header active="patients" />
 
       <section className="upl-banner">
         <div className="container upl-banner-inner">

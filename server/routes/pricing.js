@@ -2,6 +2,7 @@
 const express = require('express');
 const prisma = require('../db');
 const { requireAdmin } = require('./auth');
+const { logCrud, logActivity } = require('../lib/audit');
 
 const router = express.Router();
 
@@ -79,6 +80,7 @@ router.put('/settings', requireAdmin, async (req, res) => {
       yearlyDiscountPct: Number.isFinite(+req.body.yearlyDiscountPct) ? Math.min(90, Math.max(0, parseInt(req.body.yearlyDiscountPct, 10))) : 20,
     };
     const settings = await prisma.pricingSetting.upsert({ where: { id: 1 }, update: data, create: { id: 1, ...data } });
+    logActivity(req, { kind: 'audit', action: 'Updated pricing settings', target: 'Pricing', category: 'Pricing' });
     res.json(settings);
   } catch (e) {
     console.error(e);
@@ -91,7 +93,9 @@ router.post('/plans', requireAdmin, async (req, res) => {
   try {
     const data = parsePlan(req.body);
     if (!data.name) return res.status(400).json({ error: 'Plan name is required.' });
-    res.status(201).json(await prisma.pricingPlan.create({ data }));
+    const created = await prisma.pricingPlan.create({ data });
+    logCrud(req, 'Created', 'Pricing Plan', created.name, { activity: true });
+    res.status(201).json(created);
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not create plan.' }); }
 });
 
@@ -99,7 +103,9 @@ router.put('/plans/:id', requireAdmin, async (req, res) => {
   try {
     const data = parsePlan(req.body);
     if (!data.name) return res.status(400).json({ error: 'Plan name is required.' });
-    res.json(await prisma.pricingPlan.update({ where: { id: +req.params.id }, data }));
+    const updated = await prisma.pricingPlan.update({ where: { id: +req.params.id }, data });
+    logCrud(req, 'Updated', 'Pricing Plan', updated.name);
+    res.json(updated);
   } catch (e) {
     if (e.code === 'P2025') return res.status(404).json({ error: 'Not found.' });
     console.error(e); res.status(500).json({ error: 'Could not update plan.' });
@@ -108,7 +114,8 @@ router.put('/plans/:id', requireAdmin, async (req, res) => {
 
 router.delete('/plans/:id', requireAdmin, async (req, res) => {
   try {
-    await prisma.pricingPlan.delete({ where: { id: +req.params.id } });
+    const deleted = await prisma.pricingPlan.delete({ where: { id: +req.params.id } });
+    logCrud(req, 'Deleted', 'Pricing Plan', deleted.name);
     res.json({ ok: true });
   } catch (e) {
     if (e.code === 'P2025') return res.status(404).json({ error: 'Not found.' });
@@ -121,7 +128,9 @@ router.post('/offers', requireAdmin, async (req, res) => {
   try {
     const data = parseOffer(req.body);
     if (!data.title) return res.status(400).json({ error: 'Offer title is required.' });
-    res.status(201).json(await prisma.offer.create({ data }));
+    const created = await prisma.offer.create({ data });
+    logCrud(req, 'Created', 'Offer', created.title, { activity: true });
+    res.status(201).json(created);
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not create offer.' }); }
 });
 
@@ -129,7 +138,9 @@ router.put('/offers/:id', requireAdmin, async (req, res) => {
   try {
     const data = parseOffer(req.body);
     if (!data.title) return res.status(400).json({ error: 'Offer title is required.' });
-    res.json(await prisma.offer.update({ where: { id: +req.params.id }, data }));
+    const updated = await prisma.offer.update({ where: { id: +req.params.id }, data });
+    logCrud(req, 'Updated', 'Offer', updated.title);
+    res.json(updated);
   } catch (e) {
     if (e.code === 'P2025') return res.status(404).json({ error: 'Not found.' });
     console.error(e); res.status(500).json({ error: 'Could not update offer.' });
@@ -138,7 +149,8 @@ router.put('/offers/:id', requireAdmin, async (req, res) => {
 
 router.delete('/offers/:id', requireAdmin, async (req, res) => {
   try {
-    await prisma.offer.delete({ where: { id: +req.params.id } });
+    const deleted = await prisma.offer.delete({ where: { id: +req.params.id } });
+    logCrud(req, 'Deleted', 'Offer', deleted.title);
     res.json({ ok: true });
   } catch (e) {
     if (e.code === 'P2025') return res.status(404).json({ error: 'Not found.' });

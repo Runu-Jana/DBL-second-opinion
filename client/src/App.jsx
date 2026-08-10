@@ -5,6 +5,7 @@ import UploadModal from './components/UploadModal.jsx';
 import Home from './pages/Home.jsx';
 import Oncologists from './pages/Oncologists.jsx';
 import DoctorDetail from './pages/DoctorDetail.jsx';
+import Services from './pages/Services.jsx';
 import ServiceDetail from './pages/ServiceDetail.jsx';
 import AIFeatures from './pages/AIFeatures.jsx';
 import HowItWorks from './pages/HowItWorks.jsx';
@@ -27,6 +28,9 @@ import Payments from './pages/Payments.jsx';
 import Profile from './pages/Profile.jsx';
 import HelpCenter from './pages/HelpCenter.jsx';
 import Admin from './pages/Admin.jsx';
+import DoctorPortal from './pages/DoctorPortal.jsx';
+import PrivacyPolicy from './pages/PrivacyPolicy.jsx';
+import TermsConditions from './pages/TermsConditions.jsx';
 
 export default function App() {
   return (
@@ -35,10 +39,12 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/oncologists" element={<Oncologists />} />
         <Route path="/oncologists/:id" element={<DoctorDetail />} />
+        <Route path="/services" element={<Services />} />
         <Route path="/services/:id" element={<ServiceDetail />} />
         <Route path="/ai-features" element={<AIFeatures />} />
         <Route path="/how-it-works" element={<HowItWorks />} />
         <Route path="/upload-reports" element={<UploadReports />} />
+        <Route path="/for-patients" element={<UploadReports />} />
         <Route path="/join-network" element={<JoinNetwork />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/contact" element={<ContactUs />} />
@@ -57,6 +63,9 @@ export default function App() {
         <Route path="/dashboard/profile" element={<Profile />} />
         <Route path="/dashboard/help" element={<HelpCenter />} />
         <Route path="/admin" element={<Admin />} />
+        <Route path="/doctor" element={<DoctorPortal />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<TermsConditions />} />
         <Route path="*" element={<Home />} />
       </Routes>
       <AuthModal />

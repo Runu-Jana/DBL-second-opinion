@@ -2,6 +2,7 @@
 const express = require('express');
 const prisma = require('../db');
 const { requireAdmin } = require('./auth');
+const { logCrud } = require('../lib/audit');
 
 const router = express.Router();
 
@@ -54,6 +55,7 @@ router.post('/', requireAdmin, async (req, res) => {
       return res.status(400).json({ error: 'Title and description are required.' });
     }
     const created = await prisma.service.create({ data });
+    logCrud(req, 'Created', 'Service', created.title, { activity: true });
     res.status(201).json(created);
   } catch (e) {
     console.error(e);
@@ -69,6 +71,7 @@ router.put('/:id', requireAdmin, async (req, res) => {
       return res.status(400).json({ error: 'Title and description are required.' });
     }
     const updated = await prisma.service.update({ where: { id: +req.params.id }, data });
+    logCrud(req, 'Updated', 'Service', updated.title);
     res.json(updated);
   } catch (e) {
     if (e.code === 'P2025') return res.status(404).json({ error: 'Not found.' });
@@ -80,7 +83,8 @@ router.put('/:id', requireAdmin, async (req, res) => {
 // DELETE /api/services/:id (admin)
 router.delete('/:id', requireAdmin, async (req, res) => {
   try {
-    await prisma.service.delete({ where: { id: +req.params.id } });
+    const deleted = await prisma.service.delete({ where: { id: +req.params.id } });
+    logCrud(req, 'Deleted', 'Service', deleted.title);
     res.json({ ok: true });
   } catch (e) {
     if (e.code === 'P2025') return res.status(404).json({ error: 'Not found.' });

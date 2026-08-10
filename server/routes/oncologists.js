@@ -2,6 +2,7 @@
 const express = require('express');
 const prisma = require('../db');
 const { requireAdmin } = require('./auth');
+const { logCrud } = require('../lib/audit');
 
 const router = express.Router();
 
@@ -57,6 +58,7 @@ router.post('/', requireAdmin, async (req, res) => {
       return res.status(400).json({ error: 'Name, specialty and qualifications are required.' });
     }
     const created = await prisma.oncologist.create({ data });
+    logCrud(req, 'Created', 'Oncologist', created.name, { activity: true });
     res.status(201).json(created);
   } catch (e) {
     console.error(e);
@@ -72,6 +74,7 @@ router.put('/:id', requireAdmin, async (req, res) => {
       return res.status(400).json({ error: 'Name, specialty and qualifications are required.' });
     }
     const updated = await prisma.oncologist.update({ where: { id: +req.params.id }, data });
+    logCrud(req, 'Updated', 'Oncologist', updated.name);
     res.json(updated);
   } catch (e) {
     if (e.code === 'P2025') return res.status(404).json({ error: 'Not found.' });
@@ -83,7 +86,8 @@ router.put('/:id', requireAdmin, async (req, res) => {
 // DELETE /api/oncologists/:id (admin)
 router.delete('/:id', requireAdmin, async (req, res) => {
   try {
-    await prisma.oncologist.delete({ where: { id: +req.params.id } });
+    const deleted = await prisma.oncologist.delete({ where: { id: +req.params.id } });
+    logCrud(req, 'Deleted', 'Oncologist', deleted.name);
     res.json({ ok: true });
   } catch (e) {
     if (e.code === 'P2025') return res.status(404).json({ error: 'Not found.' });

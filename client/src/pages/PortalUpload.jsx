@@ -1,5 +1,7 @@
 import { useState, useRef } from 'react';
 import DashboardLayout from '../components/DashboardLayout.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
+import { api } from '../api.js';
 
 const s = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.7, strokeLinecap: 'round', strokeLinejoin: 'round' };
 const Ico = {
@@ -8,17 +10,47 @@ const Ico = {
   check: <svg viewBox="0 0 24 24" width="18" height="18" {...s}><path d="m5 12 4 4 10-10" /></svg>,
 };
 const RECOMMENDED = ['Pathology / Biopsy Reports', 'Imaging (CT, MRI, PET, X-Ray)', 'Lab Reports', 'Treatment / Discharge Summaries', 'Prescription & Medication Details'];
+const OK_EXT = ['pdf', 'png', 'jpg', 'jpeg'];
+const MAX = 15 * 1024 * 1024;
+const extOf = (n) => (n.split('.').pop() || '').toLowerCase();
 const fmtSize = (b) => (b < 1024 * 1024 ? (b / 1024).toFixed(0) + ' KB' : (b / 1024 / 1024).toFixed(1) + ' MB');
 
 export default function PortalUpload() {
-  const [files, setFiles] = useState([]);
+  const { session } = useAuth();
+  const [files, setFiles] = useState([]); // actual File objects
   const [drag, setDrag] = useState(false);
   const [done, setDone] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
   const inputRef = useRef(null);
 
-  const add = (list) => setFiles((f) => [...f, ...Array.from(list).map((x) => ({ name: x.name, size: x.size }))]);
+  const add = (list) => {
+    const next = [...files];
+    const rejected = [];
+    Array.from(list).forEach((file) => {
+      if (OK_EXT.indexOf(extOf(file.name)) === -1) { rejected.push(file.name + ' (unsupported type)'); return; }
+      if (file.size > MAX) { rejected.push(file.name + ' (over 15 MB)'); return; }
+      if (!next.some((f) => f.name === file.name && f.size === file.size)) next.push(file);
+    });
+    setFiles(next);
+    setError(rejected.length ? 'Skipped: ' + rejected.join(', ') : '');
+  };
   const onDrop = (e) => { e.preventDefault(); setDrag(false); if (e.dataTransfer.files?.length) add(e.dataTransfer.files); };
   const remove = (i) => setFiles((f) => f.filter((_, idx) => idx !== i));
+
+  const submit = () => {
+    if (!files.length) return;
+    setBusy(true);
+    setError('');
+    const fd = new FormData();
+    files.forEach((f) => fd.append('reports', f));
+    fd.append('patientName', session?.name || 'Website Visitor');
+    if (session?.email) fd.append('email', session.email);
+    api('/upload/report', { method: 'POST', body: fd, auth: false })
+      .then(() => { setFiles([]); setDone(true); })
+      .catch((ex) => setError(ex.message || 'Upload failed. Please try again.'))
+      .finally(() => setBusy(false));
+  };
 
   return (
     <DashboardLayout active="upload">
@@ -36,6 +68,7 @@ export default function PortalUpload() {
               <span className="need-help-ico" style={{ background: '#e6f7ec', color: '#1a8f4c' }}>{Ico.check}</span>
               <p style={{ fontWeight: 700, color: 'var(--ink)' }}>Reports submitted successfully.</p>
               <p>Our oncology team will begin the review and update your case shortly.</p>
+              <button type="button" className="btn btn-primary" style={{ marginTop: '1rem' }} onClick={() => setDone(false)}>Upload more</button>
             </div>
           ) : (
             <>
@@ -49,15 +82,17 @@ export default function PortalUpload() {
                 <h3>Drag &amp; drop your files here</h3>
                 <p>or</p>
                 <button type="button" className="btn btn-primary" onClick={() => inputRef.current?.click()}>Choose Files</button>
-                <input ref={inputRef} type="file" multiple hidden onChange={(e) => e.target.files && add(e.target.files)} />
+                <input ref={inputRef} type="file" accept=".pdf,.png,.jpg,.jpeg" multiple hidden onChange={(e) => { if (e.target.files) add(e.target.files); e.target.value = ''; }} />
                 <p style={{ marginTop: '1rem', fontSize: '.78rem' }}>Supported: PDF, JPG, PNG · Max 15 MB each</p>
               </div>
+
+              {error && <p style={{ color: '#c0392b', fontSize: '.82rem', fontWeight: 600, marginTop: '.8rem' }}>{error}</p>}
 
               {files.length > 0 && (
                 <>
                   <div className="pu-files">
                     {files.map((f, i) => (
-                      <div className="pu-file" key={i}>
+                      <div className="pu-file" key={f.name + f.size}>
                         {Ico.file}
                         <span className="nm">{f.name}</span>
                         <span className="sz">{fmtSize(f.size)}</span>
@@ -65,8 +100,8 @@ export default function PortalUpload() {
                       </div>
                     ))}
                   </div>
-                  <button type="button" className="btn btn-primary" style={{ marginTop: '1.2rem', width: '100%', justifyContent: 'center' }} onClick={() => setDone(true)}>
-                    Submit {files.length} Report{files.length > 1 ? 's' : ''}
+                  <button type="button" className="btn btn-primary" style={{ marginTop: '1.2rem', width: '100%', justifyContent: 'center' }} disabled={busy} onClick={submit}>
+                    {busy ? 'Uploading…' : `Submit ${files.length} Report${files.length > 1 ? 's' : ''}`}
                   </button>
                 </>
               )}

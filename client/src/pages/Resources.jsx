@@ -15,6 +15,7 @@ const Ico = {
 };
 
 const CATS = ['All', 'Cancer Guide', 'Patient Stories', 'Expert Insights', 'News & Updates', 'Videos & Podcasts'];
+const CAT_KEY = { All: 'res.all', 'Cancer Guide': 'res.cancerGuide', 'Patient Stories': 'res.patientStories', 'Expert Insights': 'res.expertInsights', 'News & Updates': 'res.news', 'Videos & Podcasts': 'res.videos' };
 const FALLBACK = [
   { category: 'Cancer Guide', title: 'Understanding Your Cancer Diagnosis', excerpt: 'A comprehensive guide to help you understand your diagnosis and what comes next.', date: '10 May, 2025', readTime: '5 min read', imageUrl: '/blog-1.jpg' },
   { category: 'Expert Insights', title: 'The Role of Second Opinion in Cancer Care', excerpt: 'Why a second opinion can make a big difference in your treatment journey.', date: '08 May, 2025', readTime: '6 min read', imageUrl: '/blog-2.jpg' },
@@ -28,11 +29,12 @@ const FALLBACK = [
 
 export default function Resources() {
   const { t } = useLang();
+  const catLabel = (c) => (CAT_KEY[c] ? t(CAT_KEY[c]) : c);
   const [cat, setCat] = useState('All');
   const [posts, setPosts] = useState(FALLBACK);
 
   useEffect(() => {
-    api('/blog', { auth: false }).then((d) => { if (Array.isArray(d) && d.length) setPosts(d); }).catch(() => {});
+    api('/blog', { auth: false }).then((d) => { if (Array.isArray(d)) setPosts(d); }).catch(() => {});
   }, []);
 
   const list = cat === 'All' ? posts : posts.filter((p) => p.category === cat);
@@ -44,27 +46,34 @@ export default function Resources() {
       <Header active="resources" />
       <section className="rs">
         <div className="container">
-          <nav className="breadcrumb" aria-label="Breadcrumb"><Link to="/">{t('nav.home')}</Link> <span>›</span> Resources <span>›</span> Blogs &amp; Patient Stories</nav>
+          <nav className="breadcrumb" aria-label="Breadcrumb"><Link to="/">{t('nav.home')}</Link> <span>›</span> {t('res.resources')} <span>›</span> {t('res.blogsStories')}</nav>
 
           <div className="rs-head">
-            <h1>Insights. Inspiration. Impact.</h1>
-            <p>Expert blogs, patient stories, and the latest updates in cancer care.</p>
+            <h1>{t('res.h1')}</h1>
+            <p>{t('res.sub')}</p>
           </div>
 
           <div className="chip-row">
-            {CATS.map((c) => <button key={c} type="button" className={'chip' + (cat === c ? ' active' : '')} onClick={() => setCat(c)}>{c}</button>)}
+            {CATS.map((c) => <button key={c} type="button" className={'chip' + (cat === c ? ' active' : '')} onClick={() => setCat(c)}>{catLabel(c)}</button>)}
           </div>
 
           <div className="rs-layout">
             <div className="rs-grid">
               {list.map((p, i) => (
                 <article className="rs-card" key={p.id || i}>
-                  <div className="rs-thumb">
-                    {p.imageUrl && <img src={p.imageUrl} alt={p.title} loading="lazy" />}
-                    {p.isVideo && <span className="rs-play">{Ico.play}</span>}
-                  </div>
+                  {p.isVideo && p.videoUrl ? (
+                    <a className="rs-thumb rs-thumb-link" href={p.videoUrl} target="_blank" rel="noreferrer" aria-label={`Watch: ${p.title}`}>
+                      {p.imageUrl && <img src={p.imageUrl} alt={p.title} loading="lazy" />}
+                      <span className="rs-play">{Ico.play}</span>
+                    </a>
+                  ) : (
+                    <div className="rs-thumb">
+                      {p.imageUrl && <img src={p.imageUrl} alt={p.title} loading="lazy" />}
+                      {p.isVideo && <span className="rs-play">{Ico.play}</span>}
+                    </div>
+                  )}
                   <div className="rs-body">
-                    <span className="rs-cat">{p.category}</span>
+                    <span className="rs-cat">{catLabel(p.category)}</span>
                     <h3>{p.title}</h3>
                     <p>{p.excerpt}</p>
                     <div className="rs-meta"><span>{Ico.cal} {p.date}</span><span>{Ico.clock} {p.readTime}</span></div>
@@ -74,24 +83,24 @@ export default function Resources() {
             </div>
 
             <aside className="rs-side">
-              <div className="rs-search"><span>{Ico.search}</span><input placeholder="Search articles..." /></div>
+              <div className="rs-search"><span>{Ico.search}</span><input placeholder={t('res.searchArticles')} /></div>
               <div className="dash-card">
-                <div className="dash-card-head"><h2>Categories</h2></div>
+                <div className="dash-card-head"><h2>{t('res.categories')}</h2></div>
                 <ul className="rs-cats">
-                  {CATS.filter((c) => c !== 'All').map((c) => <li key={c}><button type="button" onClick={() => setCat(c)}>{c}<span>{counts[c] || 0}</span></button></li>)}
+                  {CATS.filter((c) => c !== 'All').map((c) => <li key={c}><button type="button" onClick={() => setCat(c)}>{catLabel(c)}<span>{counts[c] || 0}</span></button></li>)}
                 </ul>
               </div>
               <div className="dash-card rs-quote">
-                <h2>Inspiring Patient Stories</h2>
-                <blockquote>"DBL International connected me with the right experts at the right time. Their support gave me confidence and hope."</blockquote>
-                <p className="rs-quote-by"><strong>— Neha Verma</strong><br />Breast Cancer Survivor</p>
+                <h2>{t('res.inspiringStories')}</h2>
+                <blockquote>{t('res.quote')}</blockquote>
+                <p className="rs-quote-by"><strong>— Neha Verma</strong><br />{t('res.quoteBy')}</p>
               </div>
               <div className="rs-news">
-                <h2>Stay Informed</h2>
-                <p>Subscribe to our newsletter for the latest updates, expert tips and inspiring stories.</p>
+                <h2>{t('res.stayInformed')}</h2>
+                <p>{t('res.newsletterSub')}</p>
                 <form onSubmit={(e) => e.preventDefault()}>
-                  <input placeholder="Enter your email address" />
-                  <button type="submit" className="btn">Subscribe {Ico.send}</button>
+                  <input placeholder={t('res.emailPlaceholder')} />
+                  <button type="submit" className="btn">{t('res.subscribe')} {Ico.send}</button>
                 </form>
               </div>
             </aside>

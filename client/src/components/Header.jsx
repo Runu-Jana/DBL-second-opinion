@@ -63,6 +63,22 @@ function UserMenu({ session, logout }) {
   );
 }
 
+function NavDropdown({ label, active, items }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className={'nav-dd' + (active ? ' active' : '')} onMouseLeave={() => setOpen(false)}>
+      <button type="button" className="nav-dd-trigger" aria-haspopup="true" aria-expanded={open}
+        onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }} onMouseEnter={() => setOpen(true)}>
+        {label}
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+      </button>
+      <div className={'nav-dd-menu' + (open ? ' open' : '')}>
+        {items.map((it) => <Link key={it.to} to={it.to} onClick={() => setOpen(false)}>{it.label}</Link>)}
+      </div>
+    </div>
+  );
+}
+
 export default function Header({ active }) {
   const { requestUpload, session, logout } = useAuth();
   const { t } = useLang();
@@ -83,10 +99,11 @@ export default function Header({ active }) {
 
         <nav className={'main-nav' + (open ? ' open' : '')} aria-label="Primary" onClick={() => setOpen(false)}>
           <Link to="/" className={is('home')}>{t('nav.home')}</Link>
-          <Link to="/how-it-works" className={is('how')}>{t('nav.how')}</Link>
           <Link to="/oncologists" className={is('oncologists')}>{t('nav.oncologists')}</Link>
-          <a href="/#services" className={is('services')}>{t('nav.services')}</a>
+          <Link to="/services" className={is('services')}>{t('nav.services')}</Link>
           <Link to="/ai-features" className={is('ai')}>{t('nav.ai')}</Link>
+          <NavDropdown label={t('nav.patients')} active={active === 'patients' || active === 'how'}
+            items={[{ to: '/how-it-works', label: t('nav.how') }, { to: '/for-patients', label: t('nav.upload') }]} />
           <Link to="/join-network" className={is('doctors')}>{t('nav.doctors')}</Link>
           <Link to="/resources" className={is('resources')}>{t('nav.resources')}</Link>
           {session && <Link to="/dashboard" className={is('dashboard')}>{t('nav.dashboard')}</Link>}

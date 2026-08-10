@@ -29,12 +29,26 @@ const STATS = [
 const WHY = [I.experts, I.shield, I.clock, I.shield, I.doctor, I.globe];
 const STEPS = ['1', '2', '3'];
 
+/* Shown when the API has no services yet (or is unreachable) — mirrors the seeded catalogue. */
+export const FALLBACK_SERVICES = [
+  { id: 1, title: 'Cancer Medical Second Opinion', icon: 'report', price: 2999, description: 'Expert opinion on your diagnosis and treatment plan.', featured: true },
+  { id: 2, title: 'Clinical Oncology Pharmacy Review', icon: 'pill', price: 999, description: 'Medication review by clinical oncology experts.' },
+  { id: 3, title: 'Multidisciplinary Tumour Board', icon: 'board', price: 12999, description: 'Case review by multiple cancer specialists together.', featured: true },
+  { id: 4, title: 'Video Consultation', icon: 'video', price: 1499, description: 'Discuss your case with experts over a video call.' },
+  { id: 5, title: 'Patient Assistance Services', icon: 'heart', price: 4999, description: 'Hospital selection, appointment booking & care coordination.' },
+  { id: 6, title: 'Treatment Plan Review', icon: 'plan', price: 2999, description: 'A thorough review of your current treatment plan.' },
+  { id: 7, title: 'Chemotherapy Review', icon: 'chemo', price: 1499, description: 'Chemotherapy medicines review and expert guidance.' },
+  { id: 8, title: 'Side-Effect Management', icon: 'shield', price: 1499, description: 'Management strategies for treatment side effects.' },
+  { id: 9, title: 'Nationwide Patient Assistance', icon: 'globe', price: 4999, description: 'Complete support for patients across the country.' },
+  { id: 10, title: 'Dedicated Care Manager', icon: 'manager', price: 9999, priceUnit: '/month', description: 'A personal care manager for complete, ongoing support.' },
+];
+
 export default function Home() {
   const { requestUpload } = useAuth();
   const { t } = useLang();
-  const [services, setServices] = useState([]);
+  const [services, setServices] = useState(FALLBACK_SERVICES);
 
-  useEffect(() => { api('/services', { auth: false }).then(setServices).catch(() => {}); }, []);
+  useEffect(() => { api('/services', { auth: false }).then((d) => { if (Array.isArray(d)) setServices(d); }).catch(() => {}); }, []);
 
   return (
     <>
@@ -76,10 +90,8 @@ export default function Home() {
           <div className="container hero-trust-row">
             <div className="trust-card">
               <div className="trust-avatars" aria-hidden="true">
-                {[0, 1, 2, 3, 4, 5].map((i) => (
-                  <span className="tavatar" key={i}>
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="#fff"><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6Z" /></svg>
-                  </span>
+                {['/avatar-1.jpg', '/avatar-2.jpg', '/avatar-3.jpg', '/avatar-4.jpg', '/avatar-5.jpg'].map((src, i) => (
+                  <span className="tavatar" key={i}><img src={src} alt="" loading="lazy" /></span>
                 ))}
               </div>
               <div className="trust-card-text">

@@ -48,6 +48,7 @@ export default function AuthModal() {
           </span>
           <h3>Patient Portal Access</h3>
           <p className="modal-sub">Sign in to securely share your medical reports with our oncology team. Your privacy comes first.</p>
+          
         </div>
 
         <div className="auth-tabs" role="tablist">

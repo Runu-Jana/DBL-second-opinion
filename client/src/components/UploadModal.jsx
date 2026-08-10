@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
+import { api } from '../api.js';
 
 const OK_EXT = ['pdf', 'png', 'jpg', 'jpeg'];
 const MAX = 15 * 1024 * 1024;
@@ -46,12 +47,17 @@ export default function UploadModal() {
     if (!files.length || !session) return;
     setBusy(true);
     setStatus({ msg: 'Securely uploading ' + files.length + ' file(s)…', kind: 'progress' });
-    setTimeout(() => {
-      const count = files.length;
-      setFiles([]);
-      setBusy(false);
-      setStatus({ msg: '✓ ' + count + ' report(s) received. Our oncology team will review them and respond within 24–48 hours.', kind: 'success' });
-    }, 1400);
+    const fd = new FormData();
+    files.forEach((f) => fd.append('reports', f));
+    fd.append('patientName', session?.name || 'Website Visitor');
+    if (session?.email) fd.append('email', session.email);
+    api('/upload/report', { method: 'POST', body: fd, auth: false })
+      .then((r) => {
+        setFiles([]);
+        setStatus({ msg: '✓ ' + (r.count || files.length) + ' report(s) received. Our oncology team will review them and respond within 24–48 hours.', kind: 'success' });
+      })
+      .catch((ex) => setStatus({ msg: ex.message || 'Upload failed. Please try again.', kind: 'warn' }))
+      .finally(() => setBusy(false));
   };
 
   return (

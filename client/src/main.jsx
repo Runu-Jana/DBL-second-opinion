@@ -6,6 +6,7 @@ import { LanguageProvider } from './i18n.jsx';
 import './styles/styles.css';
 import './styles/pages.css';
 import './styles/dashboard.css';
+import './styles/admin-dash.css';
 import './styles/report.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
