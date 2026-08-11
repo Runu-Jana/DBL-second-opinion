@@ -1,58 +1,65 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { api, patientApi, getPatientToken, setPatientToken, clearPatientToken } from '../api.js';
 
-/* Patient portal auth (front-end prototype — accounts in localStorage, as before).
-   NOTE: front-end demo only; real PHI needs a secure backend. */
+/* Patient portal auth — now backed by the real Express/Prisma backend.
+   Signup/login hit /api/auth/patient-*, the JWT lives in localStorage['dbl_patient_token'],
+   and `session` is the patient's real DB record (shared with admin + doctor panels). */
 const AuthCtx = createContext(null);
 
-const USERS_KEY = 'dbl_users';
-const SESSION_KEY = 'dbl_session';
-
-function readUsers() { try { return JSON.parse(localStorage.getItem(USERS_KEY)) || []; } catch { return []; } }
-function writeUsers(u) { localStorage.setItem(USERS_KEY, JSON.stringify(u)); }
-function encode(str) { try { return btoa(unescape(encodeURIComponent(str))); } catch { return str; } }
 export function validEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
 
 export function AuthProvider({ children }) {
-  const [session, setSession] = useState(() => {
-    try { return JSON.parse(sessionStorage.getItem(SESSION_KEY)); } catch { return null; }
-  });
+  const [session, setSession] = useState(null); // the logged-in patient record, or null
+  const [loading, setLoading] = useState(true);
   const [authOpen, setAuthOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
+
+  // Restore the session from the stored token on load.
+  useEffect(() => {
+    if (!getPatientToken()) { setLoading(false); return; }
+    patientApi('/portal/me')
+      .then((r) => setSession(r.patient))
+      .catch(() => clearPatientToken())
+      .finally(() => setLoading(false));
+  }, []);
 
   const requestUpload = useCallback(() => {
     if (session) setUploadOpen(true);
     else setAuthOpen(true);
   }, [session]);
 
-  const finishLogin = useCallback((user) => {
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
-    setSession(user);
+  const finishLogin = useCallback((token, patient) => {
+    setPatientToken(token);
+    setSession(patient);
     setAuthOpen(false);
   }, []);
 
-  const signup = useCallback(({ name, email, password }) => {
-    email = email.trim().toLowerCase();
-    const users = readUsers();
-    if (users.some((u) => u.email === email)) throw new Error('An account with this email already exists. Please log in.');
-    users.push({ name, email, pass: encode(password) });
-    writeUsers(users);
-    finishLogin({ name, email });
+  const signup = useCallback(async ({ name, email, password }) => {
+    const r = await api('/auth/patient-signup', { method: 'POST', auth: false, body: JSON.stringify({ name, email, password }) });
+    finishLogin(r.token, r.patient);
   }, [finishLogin]);
 
-  const login = useCallback(({ email, password }) => {
-    email = email.trim().toLowerCase();
-    const user = readUsers().find((u) => u.email === email);
-    if (!user || user.pass !== encode(password)) throw new Error('Email or password is incorrect. Please try again.');
-    finishLogin({ name: user.name, email: user.email });
+  const login = useCallback(async ({ email, password }) => {
+    const r = await api('/auth/patient-login', { method: 'POST', auth: false, body: JSON.stringify({ email, password }) });
+    finishLogin(r.token, r.patient);
   }, [finishLogin]);
 
   const logout = useCallback(() => {
-    sessionStorage.removeItem(SESSION_KEY);
+    clearPatientToken();
     setSession(null);
     setUploadOpen(false);
   }, []);
 
-  const value = { session, authOpen, setAuthOpen, uploadOpen, setUploadOpen, requestUpload, login, signup, logout };
+  // Re-fetch the patient record (e.g. after a profile edit or a fresh upload).
+  const refreshSession = useCallback(async () => {
+    try { const r = await patientApi('/portal/me'); setSession(r.patient); return r.patient; }
+    catch { return null; }
+  }, []);
+
+  const value = {
+    session, loading, authOpen, setAuthOpen, uploadOpen, setUploadOpen,
+    requestUpload, login, signup, logout, refreshSession, setSession,
+  };
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
 }
 

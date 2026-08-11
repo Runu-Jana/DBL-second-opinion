@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext.jsx';
+import ScrollToTop from './components/ScrollToTop.jsx';
 import AuthModal from './components/AuthModal.jsx';
 import UploadModal from './components/UploadModal.jsx';
 import Home from './pages/Home.jsx';
@@ -35,6 +36,7 @@ import TermsConditions from './pages/TermsConditions.jsx';
 export default function App() {
   return (
     <AuthProvider>
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/oncologists" element={<Oncologists />} />

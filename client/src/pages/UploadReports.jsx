@@ -72,8 +72,10 @@ export default function UploadReports() {
           <div className="upl-next">
             {[1, 2, 3, 4].map((i) => (
               <div className="upl-next-item" key={i}>
-                <span className="upl-next-icon">{NextIcon[i - 1]}</span>
-                <h4>{t(`upl.n${i}t`)}</h4>
+                <div className="card-head center">
+                  <span className="upl-next-icon">{NextIcon[i - 1]}</span>
+                  <h4>{t(`upl.n${i}t`)}</h4>
+                </div>
                 <p>{t(`upl.n${i}d`)}</p>
                 {i < 4 && <span className="upl-next-arrow" aria-hidden="true">→</span>}
               </div>

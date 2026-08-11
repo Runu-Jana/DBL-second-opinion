@@ -17,7 +17,7 @@
 .dash-nav-item.active{background:#fff;color:var(--teal-dark);box-shadow:0 8px 20px rgba(0,0,0,.16);font-weight:700}
 .dash-nav-item.soon{cursor:default}
 .dash-nav-item.soon:hover{background:rgba(255,255,255,.07);color:rgba(233,255,251,.9)}
-.dash-nav-badge{margin-left:auto;background:#ef4444;color:#fff;font-size:.66rem;font-weight:800;
+.dash-nav-badge{margin-left:auto;background:#ef4444;color:#fff;font-size:.66rem;font-weight:400;line-height:1;
   min-width:20px;height:20px;display:grid;place-items:center;border-radius:999px;padding:0 5px}
 .dash-nav-item.logout{margin-top:.5rem;color:#ffd7d1}
 .dash-nav-item.logout:hover{background:rgba(255,90,70,.2);color:#fff}
@@ -130,8 +130,19 @@
   border:1.5px solid var(--line);background:#fff;color:var(--ink-soft);cursor:pointer;transition:border-color .15s ease,color .15s ease}
 .header-bell:hover{border-color:var(--teal);color:var(--teal-dark)}
 .header-bell svg{width:19px;height:19px}
-.header-bell .dot{position:absolute;top:-5px;right:-5px;min-width:17px;height:17px;padding:0 4px;border-radius:999px;
-  background:#ef4444;color:#fff;font-size:.62rem;font-weight:800;display:grid;place-items:center;border:2px solid #fff}
+.header-bell .dot{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 4px;border-radius:999px;
+  background:#ef4444;color:#fff;font-size:.62rem;line-height:1;font-weight:400;display:grid;place-items:center;border:2px solid #fff}
+
+/* Patient dashboard header only: shrink the logo a little and shift it left so it stays inside
+   the 250px sidebar's width (the tiny tagline gets clamped larger by the browser min font size). */
+.site-header:has(+ .dash-body) .header-inner{padding-left:16px}
+.site-header:has(+ .dash-body) .brand-mark svg{width:40px;height:48px}
+.site-header:has(+ .dash-body) .brand-name{font-size:1.28rem}
+.site-header:has(+ .dash-body) .brand-sub{font-size:.7rem;letter-spacing:1.8px}
+.site-header:has(+ .dash-body) .brand-tag{font-size:.48rem}
+/* font-size can't shrink the tagline below the browser's minimum, so scale the whole logo
+   down (transform isn't clamped) until it clears the 250px sidebar. */
+.site-header:has(+ .dash-body) .brand{gap:.45rem;transform:scale(.78);transform-origin:left center}
 .user-menu{position:relative}
 .user-chip{display:flex;align-items:center;gap:.5rem;border:1.5px solid var(--line);background:#fff;border-radius:999px;
   padding:.28rem .7rem .28rem .28rem;cursor:pointer;font:inherit;transition:border-color .15s ease,box-shadow .15s ease}
@@ -170,6 +181,7 @@
   .dash-stats{grid-template-columns:1fr}
   .dash-duo{grid-template-columns:1fr}
   .user-name{display:none}
+  .header-bell{display:none}   /* free space so the logged-in header fits a phone (notifications live in the dashboard) */
 }
 
 /* ============================================================

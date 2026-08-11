@@ -33,13 +33,16 @@ const NAV = [
 ];
 
 export default function DashboardLayout({ active = 'dashboard', children }) {
-  const { session, logout, setAuthOpen } = useAuth();
+  const { session, loading, logout, setAuthOpen } = useAuth();
   const navigate = useNavigate();
   const doLogout = () => { logout(); navigate('/'); };
 
+  // Wait for the token-restore fetch to finish before deciding — otherwise we'd bounce
+  // a logged-in patient to the home page during the brief async session load.
   useEffect(() => {
-    if (!session) { setAuthOpen(true); navigate('/'); }
-  }, [session, setAuthOpen, navigate]);
+    if (!loading && !session) { setAuthOpen(true); navigate('/'); }
+  }, [loading, session, setAuthOpen, navigate]);
+  if (loading) return null;
   if (!session) return null;
 
   return (

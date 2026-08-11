@@ -45,6 +45,14 @@ a[href],button,select,label,summary,[role="button"],[role="option"],[role="tab"]
 button:disabled,[disabled]{cursor:not-allowed}
 .container{width:100%;max-width:var(--maxw);margin:0 auto;padding:0 clamp(18px,4vw,40px)}
 
+/* Reusable card header: puts a card's icon badge inline BESIDE its heading (instead of
+   stacked above it). Wrap the icon + heading in <div class="card-head">. Used across pages.
+   Add "center" for cards whose content is centered. */
+.card-head{display:flex;align-items:center;gap:.75rem;margin-bottom:.9rem;min-width:0}
+.card-head.center{justify-content:center}
+.card-head>:first-child{margin:0;flex:0 0 auto}
+.card-head>h2,.card-head>h3,.card-head>h4{margin:0;min-width:0}
+
 /* ---------- Buttons ---------- */
 .btn{
   display:inline-flex;align-items:center;gap:.55rem;
@@ -71,17 +79,19 @@ button:disabled,[disabled]{cursor:not-allowed}
   backdrop-filter:saturate(160%) blur(12px);
   border-bottom:1px solid var(--line);
 }
-.header-inner{display:flex;align-items:center;gap:1.1rem;height:76px}
-.brand{display:flex;align-items:center;gap:.65rem;color:var(--teal)}
+/* Full-width header bar: logo sits at the left edge, nav + CTA use the whole width
+   (overrides the .container 1240 cap so wide screens don't leave a big side gap). */
+.header-inner{display:flex;align-items:center;gap:.85rem;min-height:88px;padding-top:8px;padding-bottom:8px;max-width:none}
+.brand{display:flex;align-items:center;gap:.65rem;color:var(--teal);flex-shrink:0}
 .brand-mark{display:grid;place-items:center;color:var(--teal)}
 .brand-text{display:flex;flex-direction:column;line-height:1}
 .brand-name{font-weight:800;font-size:1.5rem;letter-spacing:.5px;color:var(--teal);line-height:1}
 .brand-sub{font-weight:800;font-size:.8rem;letter-spacing:2.5px;color:var(--ink);line-height:1;margin-top:3px}
-.brand-tag{font-size:.52rem;letter-spacing:.3px;color:var(--muted);font-weight:600;margin-top:4px;line-height:1.35;text-transform:none}
+.brand-tag{font-size:.52rem;letter-spacing:.3px;color:var(--muted);font-weight:600;margin-top:4px;line-height:1.35;text-transform:none;white-space:nowrap}
 
-.main-nav{display:flex;gap:1.05rem;margin-left:auto}
+.main-nav{display:flex;gap:.62rem;margin-left:auto}
 .main-nav a{
-  font-weight:600;color:var(--ink-soft);font-size:.85rem;white-space:nowrap;
+  font-weight:600;color:var(--ink-soft);font-size:.82rem;white-space:nowrap;
   position:relative;padding:.4rem 0;transition:color .16s;
 }
 .main-nav a:hover{color:var(--teal)}
@@ -96,7 +106,7 @@ button:disabled,[disabled]{cursor:not-allowed}
 /* nav dropdown (For Patients) */
 .nav-dd{position:relative;display:inline-flex}
 .nav-dd-trigger{position:relative;display:inline-flex;align-items:center;gap:.25rem;border:0;background:none;cursor:pointer;
-  font:inherit;font-weight:600;font-size:.85rem;color:var(--ink-soft);padding:.4rem 0;white-space:nowrap;transition:color .16s ease}
+  font:inherit;font-weight:600;font-size:.82rem;color:var(--ink-soft);padding:.4rem 0;white-space:nowrap;transition:color .16s ease}
 .nav-dd{flex:0 0 auto}
 .nav-dd-trigger:hover,.nav-dd.active .nav-dd-trigger{color:var(--teal)}
 .nav-dd-trigger svg{transition:transform .2s ease}
@@ -113,8 +123,8 @@ button:disabled,[disabled]{cursor:not-allowed}
 .nav-dd-menu a{display:block;padding:.55rem .7rem;border-radius:8px;font-size:.88rem;font-weight:600;color:var(--ink);white-space:nowrap;transition:background .14s ease,color .14s ease}
 .nav-dd-menu a::after{display:none}
 .nav-dd-menu a:hover{background:var(--teal-050);color:var(--teal-dark)}
-.header-actions{display:flex;align-items:center;gap:.5rem;margin-left:.5rem}
-.header-cta{margin-left:0;padding:.7rem 1.15rem;font-size:.9rem;white-space:nowrap}
+.header-actions{display:flex;align-items:center;gap:.45rem;margin-left:.35rem}
+.header-cta{margin-left:0;padding:.62rem .95rem;font-size:.85rem;white-space:nowrap}
 
 /* ---------- Language switcher ---------- */
 .lang-switch{position:relative}
@@ -122,7 +132,7 @@ button:disabled,[disabled]{cursor:not-allowed}
   border-radius:10px;padding:.5rem .7rem;font:inherit;font-size:.88rem;font-weight:600;color:var(--ink-soft);cursor:pointer;transition:.15s}
 .lang-btn:hover{border-color:var(--teal)}
 .lang-globe{color:var(--teal);flex:0 0 auto}
-.lang-current{max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lang-current{max-width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lang-caret{transition:transform .2s ease}
 .lang-caret.up{transform:rotate(180deg)}
 .lang-menu{position:absolute;top:calc(100% + 8px);right:0;z-index:60;min-width:184px;margin:0;padding:.4rem;list-style:none;
@@ -179,7 +189,7 @@ html[dir="rtl"] .lang-item,html[dir="rtl"] .hero-trust,html[dir="rtl"] .btn-stac
 .trust-card{width:min(430px,52%);pointer-events:auto;display:flex;align-items:center;gap:1rem;
   background:rgba(255,255,255,.96);backdrop-filter:blur(6px);border-radius:16px;padding:.85rem 1.1rem;box-shadow:var(--shadow-lg)}
 .trust-avatars{display:flex}
-.trust-avatars .tavatar{width:38px;height:38px;border-radius:50%;margin-left:-12px;border:2.5px solid #fff;
+.trust-avatars .tavatar{width:54px;height:54px;border-radius:50%;margin-left:-16px;border:1.5px solid #fff;
   overflow:hidden;background:var(--teal-050);box-shadow:0 2px 6px rgba(4,28,25,.14)}
 .trust-avatars .tavatar img{width:100%;height:100%;object-fit:cover;display:block}
 .trust-avatars .tavatar:first-child{margin-left:0}
@@ -193,7 +203,8 @@ html[dir="rtl"] .lang-item,html[dir="rtl"] .hero-trust,html[dir="rtl"] .btn-stac
 .stats-bar{background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line);
   padding:clamp(22px,3vw,36px) 0}
 .stats-grid{display:grid;grid-template-columns:repeat(5,1fr)}
-.stat{display:flex;align-items:center;gap:.85rem;padding:.3rem 1.3rem;position:relative}
+.stat{display:flex;align-items:flex-start;gap:.85rem;padding:.3rem 1.3rem;position:relative}
+.stat-icon{align-self:flex-start;margin-top:2px}   /* sit the icon up beside the number, not centred on the whole body */
 .stat+.stat::before{content:"";position:absolute;left:0;top:8%;bottom:8%;width:1px;background:var(--line)}
 .stat-icon{display:inline-grid;place-items:center;width:52px;height:52px;border-radius:50%;
   background:var(--teal-050);color:var(--teal);flex:0 0 auto}
@@ -269,6 +280,11 @@ html[dir="rtl"] .lang-item,html[dir="rtl"] .hero-trust,html[dir="rtl"] .btn-stac
 .service-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);border-color:var(--teal-100)}
 .service-icon{display:inline-grid;place-items:center;width:52px;height:52px;border-radius:14px;
   background:var(--teal-050);color:var(--teal);margin-bottom:.9rem}
+/* Small dark-yellow "Popular" tag in the top-right corner — matches the doctor cards' badge
+   (scaled down so it clears the centred icon). */
+.service-card .doc-badge{position:absolute;top:12px;right:12px;left:auto;
+  transform:scale(.58);transform-origin:top right;
+  background:#3b82f6;color:#fff;font-size:11px;font-weight:800;letter-spacing:.3px;padding:.14rem .5rem}
 .service-card h3{margin:0 0 .5rem;font-size:.95rem;font-weight:800;color:var(--ink);line-height:1.25}
 .service-card p{margin:0 0 .85rem;font-size:.8rem;color:var(--muted);line-height:1.45}
 .service-price{margin:0 0 .9rem;font-size:.85rem;color:var(--ink-soft);font-weight:600}
@@ -305,9 +321,12 @@ html[dir="rtl"] .lang-item,html[dir="rtl"] .hero-trust,html[dir="rtl"] .btn-stac
 }
 
 /* ---------- Responsive ---------- */
-@media (max-width:1080px){
-  .main-nav{gap:1.3rem}
-  .header-cta{display:none}
+/* Below ~1240px the full 9-item nav no longer fits the full-width bar, so collapse it
+   into the hamburger; the CTA + language switcher stay visible beside it. */
+@media (max-width:1240px){
+  .main-nav{display:none}
+  .nav-toggle{display:flex}
+  .header-actions{margin-left:auto}   /* nav is hidden, so push language + CTA + hamburger to the right */
 }
 @media (max-width:980px){
   .stats-grid{grid-template-columns:repeat(3,1fr);gap:1.4rem 0}
@@ -317,12 +336,28 @@ html[dir="rtl"] .lang-item,html[dir="rtl"] .hero-trust,html[dir="rtl"] .btn-stac
   .main-nav{display:none}
   .nav-toggle{display:flex}
   .steps-light{grid-template-columns:1fr}
-  .hero{min-height:0;padding-bottom:clamp(120px,30vw,180px)}
+  /* Stack the hero vertically and drop the trust card into normal flow so it no longer
+     overlaps the trust items (it was position:absolute, pinned to the hero bottom). */
+  .hero{min-height:0;flex-direction:column;align-items:stretch;padding-bottom:clamp(28px,6vw,44px)}
   .hero-bg-photo img{object-position:78% center}
-  .hero-overlay{background:linear-gradient(180deg,rgba(238,247,246,.95) 0%,rgba(238,247,246,.88) 40%,rgba(238,247,246,.55) 100%)}
+  /* Keep only a subtle photo hint behind the heading; make the lower area (trust items + card)
+     a clean solid background so nothing sits on a busy photo. */
+  .hero-overlay{background:linear-gradient(180deg,rgba(238,247,246,.82) 0%,rgba(238,247,246,.97) 42%,#eef7f6 60%)}
   .hero-copy{max-width:none}
+  .hero-trust-wrap{position:static;pointer-events:auto;margin-top:1.5rem}
   .hero-trust-row{justify-content:center}
   .trust-card{width:min(430px,94%)}
+}
+@media (max-width:620px){
+  .header-cta{display:none}          /* on phones the CTA would crowd the brand + hamburger */
+  .brand-tag{display:none}           /* the tiny tagline is unreadable on phones */
+  .lang-current{display:none}        /* compact language switcher (globe only) so the hamburger keeps its edge margin */
+  /* Logged-in header: compact the user cluster so brand + avatar + hamburger fit a phone
+     (.header-bell is hidden in dashboard.css, which loads after this file) */
+  .user-caret{display:none}          /* the avatar itself opens the menu */
+  .brand-sub{letter-spacing:1.2px}   /* trim the wide "INTERNATIONAL" so the brand is narrower */
+  .header-inner{gap:.5rem}
+  .header-actions{gap:.35rem}
 }
 @media (max-width:600px){
   .stats-grid{grid-template-columns:repeat(2,1fr)}
@@ -336,6 +371,11 @@ html[dir="rtl"] .lang-item,html[dir="rtl"] .hero-trust,html[dir="rtl"] .btn-stac
 }
 @media (max-width:520px){
   .hero-actions .btn{flex:1 1 auto;justify-content:center}
+}
+@media (max-width:440px){
+  /* Compact brand on phones (shield + "DBL") so the logged-in header fits down to 320px */
+  .brand-sub{display:none}
+  .stats-grid{grid-template-columns:1fr}   /* stat tiles are too wide for 2 columns on small phones */
 }
 
 /* ============================================================
@@ -438,7 +478,7 @@ html[dir="rtl"] .lang-item,html[dir="rtl"] .hero-trust,html[dir="rtl"] .btn-stac
 
 /* Mobile nav open state */
 .main-nav.open{
-  display:flex;flex-direction:column;position:absolute;top:76px;left:0;right:0;
+  display:flex;flex-direction:column;position:absolute;top:100%;left:0;right:0;
   background:#fff;padding:1rem 1.4rem 1.6rem;gap:.4rem;
   box-shadow:var(--shadow-md);border-bottom:1px solid var(--line);
 }

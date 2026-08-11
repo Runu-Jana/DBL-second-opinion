@@ -105,6 +105,13 @@
 .doc-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}
 .doc-badge{position:absolute;top:14px;right:14px;background:var(--teal-050);color:var(--teal-dark);
   font-size:.68rem;font-weight:700;letter-spacing:.4px;padding:.25rem .55rem;border-radius:999px;text-transform:uppercase}
+/* Small dark-yellow "Featured" tag pinned to the card's top-right corner, with margin from the
+   edges — the avatar stays centred (badge is absolutely positioned, out of flow). */
+/* font-size alone can't go below the browser's minimum font size, so we scale the whole
+   tag down with a transform (which the minimum doesn't clamp) to get genuinely tiny text. */
+.doc-card .doc-badge{position:absolute;top:12px;right:12px;left:auto;
+  transform:scale(.58);transform-origin:top right;
+  background:#eab308;color:#4a3a00;font-size:11px;font-weight:800;letter-spacing:.3px;padding:.14rem .5rem}
 .doc-avatar{
   width:88px;height:88px;border-radius:50%;overflow:hidden;margin-bottom:1rem;
   display:grid;place-items:center;
@@ -159,7 +166,7 @@
 
 .admin-table-wrap{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-sm);overflow:auto}
 table.admin-table{width:100%;border-collapse:collapse;min-width:720px}
-.admin-table th,.admin-table td{padding:.9rem 1rem;text-align:left;font-size:.9rem;border-bottom:1px solid var(--line);vertical-align:middle}
+.admin-table th,.admin-table td{padding:.9rem 1rem;text-align:left;font-size:.9rem;border-bottom:1px solid var(--line);vertical-align:top;white-space:nowrap}
 .admin-table th{background:var(--teal-050);color:var(--teal-dark);font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:.4px}
 .admin-table tr:last-child td{border-bottom:0}
 .admin-table .t-name{font-weight:700;color:var(--ink)}
@@ -383,11 +390,18 @@ table.admin-table{width:100%;border-collapse:collapse;min-width:720px}
   .upl-next{grid-template-columns:repeat(2,1fr);gap:1.6rem 0}
   .upl-next-arrow{display:none}
 }
+@media (max-width:600px){
+  .upl-banner-art{display:none}      /* drop the decorative document/upload graphic on phones */
+}
 @media (max-width:560px){
   .why-grid.five{grid-template-columns:repeat(2,1fr)}
   .stats-strip-grid{grid-template-columns:repeat(2,1fr)}
   .ss-stat::before{display:none}
-  .upl-privacy,.upl-help-grid{grid-template-columns:1fr}
+  .upl-privacy{grid-template-columns:1fr}
+  /* keep the two help cards side by side so their buttons sit beside each other */
+  .upl-help-grid{gap:.9rem}
+  .upl-help-grid>div{align-items:stretch}
+  .upl-help-grid .btn{width:100%;justify-content:center;margin-top:auto;padding:.6rem .5rem;font-size:.82rem}
 }
 
 /* ============================================================
@@ -740,7 +754,7 @@ table.admin-table{width:100%;border-collapse:collapse;min-width:720px}
    Footer (site-wide)
    ============================================================ */
 .site-footer{background:linear-gradient(160deg,var(--teal-deep),#05433c);color:#cfeee9}
-.ft-grid{display:grid;grid-template-columns:1.5fr 1fr 1fr 1.3fr;gap:2rem;padding:clamp(30px,4vw,52px) 0 2rem}
+.ft-grid{display:grid;grid-template-columns:1.5fr 1fr 1fr 1.3fr;gap:2rem;padding:clamp(30px,4vw,52px) clamp(18px,4vw,40px) 2rem}
 .ft-logo{display:flex;align-items:center;gap:.6rem}
 .ft-name{font-weight:800;font-size:1.25rem;color:#fff;letter-spacing:.5px}
 .ft-name em{font-style:normal;color:#8fe0d5}
@@ -759,7 +773,7 @@ table.admin-table{width:100%;border-collapse:collapse;min-width:720px}
 .ft-trust{display:flex;flex-wrap:wrap;gap:.5rem}
 .ft-trust span{font-size:.72rem;font-weight:700;color:#bfeae2;border:1px solid rgba(255,255,255,.2);padding:.3rem .6rem;border-radius:8px}
 .ft-bottom{border-top:1px solid rgba(255,255,255,.12)}
-.ft-bottom-inner{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;padding:1.1rem 0;font-size:.8rem;color:rgba(207,238,233,.7)}
+.ft-bottom-inner{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;padding:1.1rem clamp(18px,4vw,40px);font-size:.8rem;color:rgba(207,238,233,.7)}
 @media (max-width:860px){.ft-grid{grid-template-columns:1fr 1fr}}
 @media (max-width:520px){.ft-grid{grid-template-columns:1fr}}
 

@@ -178,6 +178,7 @@ model Patient {
   gender     String?                            // Male / Female / Other
   phone      String?
   email      String?
+  password   String?                            // bcrypt hash — enables the patient portal login (claimed on signup)
   city       String?
   cancerType String?                            // e.g. "Colon Cancer"
   stage      String?                            // e.g. "Stage II"
@@ -358,4 +359,18 @@ model Setting {
   smsNotifications   Boolean  @default(false)
   maintenanceMode    Boolean  @default(false)
   updatedAt          DateTime @updatedAt
+}
+
+// Public "Contact Us" submissions — land here + surface in the admin activity feed.
+model ContactMessage {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  subject   String?
+  message   String
+  status    String   @default("New")            // New / Read / Replied / Archived
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
 }

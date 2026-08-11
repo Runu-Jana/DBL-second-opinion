@@ -494,6 +494,8 @@
   .adm-stats{grid-template-columns:1fr 1fr}
   .adm-quick{grid-template-columns:1fr 1fr}
   .adm-user-meta{display:none}
+  .adm-search{min-width:0}                 /* let the search field shrink instead of forcing overflow */
   .adm-search input::placeholder{color:transparent}
+  .hide-sm{display:none}                    /* fullscreen + language buttons: hide on phones (the class had no rule) */
   .adm-analytics-grid{grid-template-columns:1fr}
 }

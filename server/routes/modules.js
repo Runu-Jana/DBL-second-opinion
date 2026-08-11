@@ -28,6 +28,51 @@ const reports = crudRouter({
   },
 });
 
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+// Push a report's triage result onto the linked Patient record AND the patient's second-opinion
+// case, so the Patient Management and "Review & Second Opinion" tabs stay in sync with the report.
+async function syncTriageToPatient(report, category, assigned) {
+  const nameMatch = { name: { equals: report.patientName, mode: 'insensitive' } };
+  const patient = await prisma.patient.findFirst({
+    where: report.patientUhid ? { OR: [{ uhid: report.patientUhid }, nameMatch] } : nameMatch,
+  });
+  if (patient) {
+    await prisma.patient.update({
+      where: { id: patient.id },
+      data: {
+        cancerType: category,
+        ...(assigned ? { doctor: assigned } : {}),
+        ...(patient.status === 'New Patient' ? { status: 'Under Treatment' } : {}),
+      },
+    });
+  }
+
+  // One second-opinion case per patient — upsert by uhid (or name).
+  const soMatch = report.patientUhid
+    ? { patientUhid: report.patientUhid }
+    : { patientName: { equals: report.patientName, mode: 'insensitive' } };
+  const so = await prisma.secondOpinion.findFirst({ where: soMatch });
+  const now = new Date();
+  const submitted = report.date || `${now.getDate()} ${MONTHS[now.getMonth()]} ${now.getFullYear()}`;
+  const liveStatus = assigned ? 'Under Review' : 'Awaiting Review';
+  if (so) {
+    // don't downgrade a case that's already been reviewed/delivered
+    const keep = so.status === 'Opinion Ready' || so.status === 'Delivered';
+    await prisma.secondOpinion.update({
+      where: { id: so.id },
+      data: { expert: assigned, cancerType: category, status: keep ? so.status : liveStatus },
+    });
+  } else {
+    await prisma.secondOpinion.create({
+      data: {
+        patientName: report.patientName, patientUhid: report.patientUhid || null,
+        expert: assigned, cancerType: category, priority: 'Normal', submittedDate: submitted, status: liveStatus,
+      },
+    });
+  }
+}
+
 // POST /api/reports/:id/categorise — counselor sets the category; the report is auto-routed to the
 // least-loaded active specialist tagged with that category (round-robin by current workload).
 reports.post('/:id/categorise', requireAdmin, async (req, res) => {
@@ -56,6 +101,10 @@ reports.post('/:id/categorise', requireAdmin, async (req, res) => {
       where: { id: report.id },
       data: { category, doctor: assigned },
     });
+
+    // Keep the patient record + second-opinion case in sync with this triage.
+    await syncTriageToPatient(report, category, assigned);
+
     logActivity(req, { kind: 'audit', action: `Triaged as ${category}${assigned ? ` → ${assigned}` : ''}`, target: `Report · ${report.patientName}`, category: 'Report' });
     logActivity(req, { kind: 'activity', action: `Report for ${report.patientName} categorised as ${category}${assigned ? ` and routed to ${assigned}` : ''}`, category: 'Report' });
     res.json({ ...updated, assignedTo: assigned, eligibleCount: eligible.length });

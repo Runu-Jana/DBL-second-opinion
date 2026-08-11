@@ -14,7 +14,8 @@
     "generate": "prisma generate",
     "db:push": "prisma db push",
     "migrate": "prisma migrate dev --name init",
-    "seed": "node prisma/seed.js"
+    "seed": "node prisma/seed.js",
+    "i18n:sync": "node scripts/i18n-sync.js"
   },
   "engines": {
     "node": ">=18"
@@ -32,6 +33,7 @@
     "multer": "^2.2.0"
   },
   "devDependencies": {
+    "@anthropic-ai/sdk": "^0.116.0",
     "prisma": "^6.2.1"
   }
 }

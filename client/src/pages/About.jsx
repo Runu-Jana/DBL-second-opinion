@@ -79,8 +79,10 @@ export default function About() {
             <div className="ab-do-grid">
               {DO.map((d) => (
                 <article className="ab-do-card" key={d.t}>
-                  <span className="ab-do-ico">{d.icon}</span>
-                  <h3>{d.t}</h3>
+                  <div className="card-head">
+                    <span className="ab-do-ico">{d.icon}</span>
+                    <h3>{d.t}</h3>
+                  </div>
                   <ul>{d.items.map((it) => <li key={it}><span className="ab-tick">{Check}</span>{it}</li>)}</ul>
                 </article>
               ))}
@@ -91,22 +93,32 @@ export default function About() {
           <div className="ab-vm">
             <div className="ab-vm-card ab-vision">
               <span className="ab-vm-bg" aria-hidden="true">{Ico.eye}</span>
-              <span className="ab-vm-ico">{Ico.eye}</span>
-              <h3>Our Vision</h3>
+              <div className="card-head">
+                <span className="ab-vm-ico">{Ico.eye}</span>
+                <h3>Our Vision</h3>
+              </div>
               <p>To become one of the world's most trusted digital cancer care platforms by delivering high-quality oncology pharmacy services, expert second opinions, and personalized patient support.</p>
             </div>
             <div className="ab-vm-card">
               <span className="ab-vm-bg" aria-hidden="true">{Ico.target}</span>
-              <span className="ab-vm-ico">{Ico.target}</span>
-              <h3>Our Mission</h3>
+              <div className="card-head">
+                <span className="ab-vm-ico">{Ico.target}</span>
+                <h3>Our Mission</h3>
+              </div>
               <ul className="ab-check">{MISSION.map((m) => <li key={m}><span className="ab-tick">{Check}</span>{m}</li>)}</ul>
             </div>
           </div>
 
-          {/* why choose */}
-          <div className="ab-block">
-            <h2 className="ab-h2">Why Choose DBL International?</h2>
-            <ul className="ab-why">{WHY.map((w) => <li key={w}><span className="ab-tick">{Check}</span>{w}</li>)}</ul>
+          {/* why choose — styled as an ab-vm card so it matches the Vision/Mission cards */}
+          <div className="ab-block ab-why-block">
+            <div className="ab-vm-card ab-why-card">
+              <span className="ab-vm-bg" aria-hidden="true">{Ico.shield}</span>
+              <div className="card-head">
+                <span className="ab-vm-ico">{Ico.shield}</span>
+                <h3>Why Choose DBL International?</h3>
+              </div>
+              <ul className="ab-why">{WHY.map((w) => <li key={w}><span className="ab-tick">{Check}</span>{w}</li>)}</ul>
+            </div>
           </div>
 
           {/* values */}

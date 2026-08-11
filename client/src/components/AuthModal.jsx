@@ -7,6 +7,7 @@ export default function AuthModal() {
   const navigate = useNavigate();
   const [tab, setTab] = useState('login');
   const [err, setErr] = useState('');
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => { if (authOpen) { setTab('login'); setErr(''); } }, [authOpen]);
   useEffect(() => {
@@ -19,15 +20,16 @@ export default function AuthModal() {
 
   if (!authOpen) return null;
 
-  const onLogin = (e) => {
+  const onLogin = async (e) => {
     e.preventDefault();
     const f = e.target;
     const email = f.email.value.trim(), password = f.password.value;
     if (!validEmail(email)) return setErr('Please enter a valid email address.');
     if (!password) return setErr('Please enter your password.');
-    try { login({ email, password }); navigate('/dashboard'); } catch (ex) { setErr(ex.message); }
+    setErr(''); setBusy(true);
+    try { await login({ email, password }); navigate('/dashboard'); } catch (ex) { setErr(ex.message); } finally { setBusy(false); }
   };
-  const onSignup = (e) => {
+  const onSignup = async (e) => {
     e.preventDefault();
     const f = e.target;
     const name = f.name.value.trim(), email = f.email.value.trim(), password = f.password.value, confirm = f.confirm.value;
@@ -35,7 +37,8 @@ export default function AuthModal() {
     if (!validEmail(email)) return setErr('Please enter a valid email address.');
     if (password.length < 6) return setErr('Password must be at least 6 characters.');
     if (password !== confirm) return setErr('Passwords do not match.');
-    try { signup({ name, email, password }); navigate('/dashboard'); } catch (ex) { setErr(ex.message); }
+    setErr(''); setBusy(true);
+    try { await signup({ name, email, password }); navigate('/dashboard'); } catch (ex) { setErr(ex.message); } finally { setBusy(false); }
   };
 
   return (
@@ -61,7 +64,7 @@ export default function AuthModal() {
             <label>Email address<input type="email" name="email" autoComplete="email" placeholder="you@example.com" required /></label>
             <label>Password<input type="password" name="password" autoComplete="current-password" placeholder="Your password" required /></label>
             {err && <p className="form-error">{err}</p>}
-            <button type="submit" className="btn btn-primary btn-block">Login &amp; Continue</button>
+            <button type="submit" className="btn btn-primary btn-block" disabled={busy}>{busy ? 'Signing in…' : 'Login & Continue'}</button>
           </form>
         ) : (
           <form className="auth-form" onSubmit={onSignup} noValidate>
@@ -70,7 +73,7 @@ export default function AuthModal() {
             <label>Create password<input type="password" name="password" autoComplete="new-password" placeholder="At least 6 characters" required /></label>
             <label>Confirm password<input type="password" name="confirm" autoComplete="new-password" placeholder="Re-enter password" required /></label>
             {err && <p className="form-error">{err}</p>}
-            <button type="submit" className="btn btn-primary btn-block">Create Account &amp; Continue</button>
+            <button type="submit" className="btn btn-primary btn-block" disabled={busy}>{busy ? 'Creating…' : 'Create Account & Continue'}</button>
           </form>
         )}
 

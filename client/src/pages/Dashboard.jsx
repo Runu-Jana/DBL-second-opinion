@@ -1,33 +1,50 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
+import { patientApi } from '../api.js';
 
 const s = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.7, strokeLinecap: 'round', strokeLinejoin: 'round' };
 const Ico = {
   cases: <svg viewBox="0 0 24 24" {...s}><path d="M7 3h7l4 4v14H7z" /><path d="M14 3v4h4M9.5 12h5M9.5 15h5" /></svg>,
   reports: <svg viewBox="0 0 24 24" {...s}><path d="M6 3h9l3 3v15H6z" /><path d="M9 8h6M9 12h6M9 16h4" /></svg>,
   review: <svg viewBox="0 0 24 24" {...s}><circle cx="12" cy="12" r="9" /><path d="m8.5 12 2.3 2.3L15.5 9.5" /></svg>,
-  video: <svg viewBox="0 0 24 24" {...s}><rect x="3" y="6" width="12" height="12" rx="2" /><path d="m15 10 6-3v10l-6-3Z" /></svg>,
   coord: <svg viewBox="0 0 24 24" {...s}><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6" /></svg>,
   headset: <svg viewBox="0 0 24 24" {...s}><path d="M4 13v-1a8 8 0 0 1 16 0v1M4 13a2 2 0 0 0-2 2v1a2 2 0 0 0 2 2h1v-5H4M20 13a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2h-1v-5h1M20 18v1a3 3 0 0 1-3 3h-3" /></svg>,
   check: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 4 4 10-10" /></svg>,
 };
 
-const CASES = [
-  { id: 'DBL-2025-001', type: 'Breast Cancer', date: '10 May, 2025', status: 'In Review', tone: 'review' },
-  { id: 'DBL-2025-002', type: 'Lung Cancer', date: '05 May, 2025', status: 'Report Ready', tone: 'ready' },
-];
+const STONE = { 'Pending Review': 'amber', Reviewed: 'green', Uploaded: 'blue', Archived: 'gray' };
+const pad = (n) => String(n).padStart(2, '0');
 
-const PROGRESS = [
-  { t: 'Report Uploaded', s: 'Completed', state: 'done' },
-  { t: 'Under Review', s: 'In Progress', state: 'active' },
-  { t: 'Expert Opinion', s: 'Pending', state: 'todo' },
-  { t: 'Consultation', s: 'Pending', state: 'todo' },
-];
+// Overall journey progress, derived from the patient's most recent report.
+function progressFor(r) {
+  if (!r) return [
+    { t: 'Report Uploaded', state: 'todo' },
+    { t: 'Triaged & Categorised', state: 'todo' },
+    { t: 'Specialist Assigned', state: 'todo' },
+    { t: 'Expert Opinion', state: 'todo' },
+  ];
+  const done = [true, !!r.category, !!r.doctor, r.status === 'Reviewed' || r.status === 'Archived'];
+  const step = done.filter(Boolean).length;
+  const labels = ['Report Uploaded', 'Triaged & Categorised', 'Specialist Assigned', 'Expert Opinion'];
+  return labels.map((t, i) => ({ t, state: i < step ? 'done' : i === step ? 'active' : 'todo' }));
+}
 
 export default function Dashboard() {
   const { session } = useAuth();
-  const name = session?.name || 'Rajesh Kumar';
+  const name = session?.name || 'there';
+  const [stats, setStats] = useState(null);
+  const [reports, setReports] = useState(null);
+
+  useEffect(() => {
+    patientApi('/portal/me').then((r) => setStats(r.stats)).catch(() => setStats({ reports: 0, pendingReports: 0, appointments: 0, cases: 0 }));
+    patientApi('/portal/reports').then(setReports).catch(() => setReports([]));
+  }, []);
+
+  const recent = (reports || []).slice(0, 5);
+  const latest = (reports || [])[0];
+  const progress = progressFor(latest);
 
   return (
     <DashboardLayout active="dashboard">
@@ -44,24 +61,24 @@ export default function Dashboard() {
               <span className="stat-ico">{Ico.cases}</span>
               <div className="stat-meta">
                 <span className="stat-label">My Cases</span>
-                <span className="stat-value">02</span>
-                <span className="stat-sub">Active Cases</span>
+                <span className="stat-value">{stats ? pad(stats.cases) : '—'}</span>
+                <span className="stat-sub">Second-opinion cases</span>
               </div>
             </div>
             <div className="stat-card">
               <span className="stat-ico">{Ico.reports}</span>
               <div className="stat-meta">
                 <span className="stat-label">Reports Uploaded</span>
-                <span className="stat-value">03</span>
+                <span className="stat-value">{stats ? pad(stats.reports) : '—'}</span>
                 <span className="stat-sub">Total Reports</span>
               </div>
             </div>
             <div className="stat-card">
               <span className="stat-ico ok">{Ico.review}</span>
               <div className="stat-meta">
-                <span className="stat-label">Reports Under Review</span>
-                <span className="stat-value sm">15 May, 2025</span>
-                <span className="stat-sub">10:30 AM</span>
+                <span className="stat-label">Awaiting Review</span>
+                <span className="stat-value">{stats ? pad(stats.pendingReports) : '—'}</span>
+                <span className="stat-sub">Pending specialist</span>
               </div>
             </div>
           </div>
@@ -70,60 +87,53 @@ export default function Dashboard() {
           <section className="dash-card">
             <div className="dash-card-head">
               <h2>Recent Cases</h2>
-              <button type="button" className="dash-link" title="Coming soon">View All</button>
+              <Link to="/dashboard/cases" className="dash-link">View All</Link>
             </div>
             <div className="dash-table-wrap">
-              <table className="dash-table">
-                <thead>
-                  <tr><th>Case ID</th><th>Disease Type</th><th>Date</th><th>Status</th><th>Action</th></tr>
-                </thead>
-                <tbody>
-                  {CASES.map((c) => (
-                    <tr key={c.id}>
-                      <td className="mono">{c.id}</td>
-                      <td>{c.type}</td>
-                      <td>{c.date}</td>
-                      <td><span className={'pill pill-' + c.tone}>{c.status}</span></td>
-                      <td><button type="button" className="dash-link" title="Coming soon">View</button></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              {recent.length ? (
+                <table className="dash-table">
+                  <thead>
+                    <tr><th>Case ID</th><th>Report Type</th><th>Date</th><th>Status</th><th>Action</th></tr>
+                  </thead>
+                  <tbody>
+                    {recent.map((r) => (
+                      <tr key={r.id}>
+                        <td className="mono">DBL-{String(r.id).padStart(4, '0')}</td>
+                        <td>{r.type}{r.category ? ` · ${r.category}` : ''}</td>
+                        <td>{r.date || '—'}</td>
+                        <td><span className={'pill pill-' + (STONE[r.status] || 'blue')}>{r.status}</span></td>
+                        <td><Link to={'/dashboard/cases/' + r.id} className="dash-link">View</Link></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="empty" style={{ padding: '2rem 1rem' }}>
+                  <p>{reports === null ? 'Loading…' : 'No reports yet.'} <Link to="/dashboard/upload" className="dash-link">Upload your first report →</Link></p>
+                </div>
+              )}
             </div>
           </section>
 
-          {/* appointment + messages */}
-          <div className="dash-duo">
-            <section className="dash-card">
-              <div className="dash-card-head"><h2>Appointment</h2></div>
-              <div className="appt">
-                <div className="appt-date">
-                  <strong>15</strong>
-                  <span>10:30 AM</span>
-                </div>
-                <div className="appt-info">
-                  <h3>Dr. Priya Sharma</h3>
-                  <p>Medical Oncologist</p>
-                  <p className="appt-mode"><span className="appt-mode-ico">{Ico.video}</span> Video Consultation</p>
-                  <button type="button" className="btn btn-primary appt-btn" title="Coming soon">Join Meeting</button>
-                </div>
+          {/* messages */}
+          <section className="dash-card">
+            <div className="dash-card-head"><h2>Latest Update</h2></div>
+            <div className="msg">
+              <span className="msg-ico">{Ico.coord}</span>
+              <div className="msg-body">
+                <div className="msg-top"><strong>Care Coordinator</strong><span>{latest?.date || ''}</span></div>
+                <p>{latest
+                  ? (latest.status === 'Reviewed' || latest.status === 'Archived'
+                    ? `Your report has been reviewed${latest.doctor ? ` by ${latest.doctor}` : ''}. Your expert opinion is ready.`
+                    : latest.doctor
+                      ? `${latest.doctor} has been assigned to your ${latest.category || ''} case and is reviewing your report.`
+                      : latest.category
+                        ? `Your report has been categorised as ${latest.category}. A specialist is being assigned.`
+                        : 'We have received your report and our team is triaging it.')
+                  : 'Upload a report to begin your second-opinion journey.'}</p>
               </div>
-            </section>
-
-            <section className="dash-card">
-              <div className="dash-card-head">
-                <h2>Messages</h2>
-                <button type="button" className="dash-link" title="Coming soon">View All</button>
-              </div>
-              <div className="msg">
-                <span className="msg-ico">{Ico.coord}</span>
-                <div className="msg-body">
-                  <div className="msg-top"><strong>Care Coordinator</strong><span>10 May, 2025</span></div>
-                  <p>Your report has been reviewed by our experts.</p>
-                </div>
-              </div>
-            </section>
-          </div>
+            </div>
+          </section>
         </div>
 
         {/* right column */}
@@ -131,12 +141,12 @@ export default function Dashboard() {
           <section className="dash-card">
             <div className="dash-card-head"><h2>Case Progress</h2></div>
             <ul className="progress-list">
-              {PROGRESS.map((p, i) => (
+              {progress.map((p, i) => (
                 <li className={'progress-step ' + p.state} key={i}>
                   <span className="step-dot">{p.state === 'done' ? Ico.check : null}</span>
                   <div className="step-text">
                     <strong>{p.t}</strong>
-                    <span>{p.s}</span>
+                    <span>{p.state === 'done' ? 'Completed' : p.state === 'active' ? 'In Progress' : 'Pending'}</span>
                   </div>
                 </li>
               ))}
@@ -144,10 +154,12 @@ export default function Dashboard() {
           </section>
 
           <section className="dash-card need-help">
-            <span className="need-help-ico">{Ico.headset}</span>
-            <h3>Need Help?</h3>
+            <div className="card-head center">
+              <span className="need-help-ico">{Ico.headset}</span>
+              <h3>Need Help?</h3>
+            </div>
             <p>Our care team is here to assist you.</p>
-            <button type="button" className="btn btn-primary" title="Coming soon">Contact Support</button>
+            <Link to="/contact" className="btn btn-primary">Contact Support</Link>
           </section>
         </aside>
       </div>

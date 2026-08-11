@@ -2,37 +2,57 @@ import { useState, useEffect } from 'react';
 import DashboardLayout from '../components/DashboardLayout.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { Select } from '../components/AdminFields.jsx';
+import { patientApi } from '../api.js';
 import { initials } from './portalData.js';
 
 const GENDERS = ['Male', 'Female', 'Other'];
 const BLOOD = ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'];
-const profileKey = (email) => 'dbl_profile_' + (email || 'guest').toLowerCase();
+// dob / bloodGroup / allergies aren't columns on the Patient model, so they stay client-side.
+const extraKey = (email) => 'dbl_profile_extra_' + (email || 'guest').toLowerCase();
 
 export default function Profile() {
-  const { session } = useAuth();
+  const { session, setSession } = useAuth();
   const email = session?.email || '';
-  const name = session?.name || '';
 
-  // A brand-new user starts with everything blank except the name & email they signed up with.
-  const [f, setF] = useState({ fullName: name, email, phone: '', dob: '', gender: '', city: '', bloodGroup: '', allergies: '' });
+  const [f, setF] = useState({ fullName: '', email: '', phone: '', dob: '', gender: '', age: '', city: '', bloodGroup: '', allergies: '' });
   const [saved, setSaved] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
 
-  // Load this user's saved profile (if they've filled it before); otherwise keep just name + email.
+  // Seed from the live session record, then layer the client-only extras on top.
   useEffect(() => {
-    let stored = null;
-    try { stored = JSON.parse(localStorage.getItem(profileKey(email))); } catch { /* none yet */ }
-    setF((prev) => (stored
-      ? { ...prev, ...stored, fullName: stored.fullName || name, email }
-      : { ...prev, fullName: name, email }));
-  }, [email]); // eslint-disable-line react-hooks/exhaustive-deps
+    let extra = {};
+    try { extra = JSON.parse(localStorage.getItem(extraKey(email))) || {}; } catch { /* none */ }
+    setF({
+      fullName: session?.name || '',
+      email: session?.email || '',
+      phone: session?.phone || '',
+      gender: session?.gender || '',
+      age: session?.age != null ? String(session.age) : '',
+      city: session?.city || '',
+      dob: extra.dob || '',
+      bloodGroup: extra.bloodGroup || '',
+      allergies: extra.allergies || '',
+    });
+  }, [session, email]);
 
   const set = (k) => (e) => { setF({ ...f, [k]: e.target.value }); setSaved(false); };
   const setV = (k) => (v) => { setF({ ...f, [k]: v }); setSaved(false); };
 
-  const save = (e) => {
+  const save = async (e) => {
     e.preventDefault();
-    try { localStorage.setItem(profileKey(email), JSON.stringify(f)); } catch { /* storage full */ }
-    setSaved(true);
+    setErr(''); setBusy(true);
+    try {
+      // Core fields → real Patient row (shared with admin + doctor panels).
+      const r = await patientApi('/portal/me', {
+        method: 'PUT',
+        body: JSON.stringify({ name: f.fullName, phone: f.phone, city: f.city, gender: f.gender, age: f.age }),
+      });
+      setSession(r.patient);
+      // Extras → localStorage.
+      try { localStorage.setItem(extraKey(email), JSON.stringify({ dob: f.dob, bloodGroup: f.bloodGroup, allergies: f.allergies })); } catch { /* full */ }
+      setSaved(true);
+    } catch (ex) { setErr(ex.message); } finally { setBusy(false); }
   };
 
   return (
@@ -46,9 +66,9 @@ export default function Profile() {
 
       <form className="dash-card" onSubmit={save}>
         <div className="pf-avatar">
-          <span className="av">{initials(f.fullName || name || 'U')}</span>
+          <span className="av">{initials(f.fullName || 'U')}</span>
           <div>
-            <h3>{f.fullName || name || 'Your Name'}</h3>
+            <h3>{f.fullName || 'Your Name'}</h3>
             <p>{email || 'your@email.com'}</p>
           </div>
         </div>
@@ -56,9 +76,10 @@ export default function Profile() {
         <div className="pf-section-title">Personal Details</div>
         <div className="pf-grid">
           <label className="pf-field"><span>Full Name</span><input value={f.fullName} onChange={set('fullName')} placeholder="Your full name" /></label>
-          <label className="pf-field"><span>Email Address</span><input type="email" value={f.email} onChange={set('email')} placeholder="you@example.com" /></label>
+          <label className="pf-field"><span>Email Address</span><input type="email" value={f.email} readOnly title="Email can't be changed" placeholder="you@example.com" /></label>
           <label className="pf-field"><span>Phone</span><input value={f.phone} onChange={set('phone')} placeholder="Add your phone number" /></label>
           <label className="pf-field"><span>Date of Birth</span><input type="date" value={f.dob} onChange={set('dob')} /></label>
+          <label className="pf-field"><span>Age</span><input type="number" min="0" value={f.age} onChange={set('age')} placeholder="Age" /></label>
           <label className="pf-field"><span>Gender</span><Select value={f.gender} onChange={setV('gender')} options={GENDERS} placeholder="Select gender" /></label>
           <label className="pf-field"><span>City</span><input value={f.city} onChange={set('city')} placeholder="Add your city" /></label>
         </div>
@@ -70,8 +91,9 @@ export default function Profile() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '1.4rem' }}>
-          <button type="submit" className="btn btn-primary" style={{ padding: '.7rem 1.4rem' }}>Save Changes</button>
+          <button type="submit" className="btn btn-primary" style={{ padding: '.7rem 1.4rem' }} disabled={busy}>{busy ? 'Saving…' : 'Save Changes'}</button>
           {saved && <span style={{ color: '#1a8f4c', fontSize: '.85rem', fontWeight: 700 }}>✓ Changes saved</span>}
+          {err && <span style={{ color: '#c0392b', fontSize: '.85rem', fontWeight: 700 }}>{err}</span>}
         </div>
       </form>
     </DashboardLayout>

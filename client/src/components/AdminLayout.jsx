@@ -84,7 +84,6 @@ export default function AdminLayout({ section, onNavigate, adminName, onLogout, 
           <span className="adm-brand-text">
             <span className="adm-brand-name">DBL</span>
             <span className="adm-brand-sub">INTERNATIONAL</span>
-            <span className="adm-brand-tag">Clinical Oncology Pharmacy &amp;<br/>Cancer Second Opinion Centre</span>
           </span>
         </div>
 

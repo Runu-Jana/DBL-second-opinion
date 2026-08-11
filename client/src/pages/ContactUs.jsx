@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../components/Header.jsx';
 import Footer from '../components/Footer.jsx';
+import { api } from '../api.js';
 import { useLang } from '../i18n.jsx';
 import { ComposableMap, Geographies, Geography, Marker } from 'react-simple-maps';
 
@@ -62,6 +63,25 @@ const SUBJECTS = ['General Inquiry', 'Get a Second Opinion', 'Partnership / Busi
 export default function ContactUs() {
   const { t } = useLang();
   const [sent, setSent] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+
+  const submit = async (e) => {
+    e.preventDefault();
+    const f = e.target;
+    const body = {
+      name: f.name.value.trim(),
+      email: f.email.value.trim(),
+      subject: f.subject.value,
+      message: f.message.value.trim(),
+    };
+    setErr(''); setBusy(true);
+    try {
+      await api('/contact', { method: 'POST', auth: false, body: JSON.stringify(body) });
+      setSent(true);
+    } catch (ex) { setErr(ex.message || 'Could not send your message. Please try again.'); }
+    finally { setBusy(false); }
+  };
 
   return (
     <>
@@ -81,14 +101,15 @@ export default function ContactUs() {
                   <p>Thanks for reaching out — our team will get back to you within 24 hours.</p>
                 </div>
               ) : (
-                <form className="ct-form" onSubmit={(e) => { e.preventDefault(); setSent(true); }}>
-                  <label className="ct-field"><span>Full Name</span><input type="text" required placeholder="Your full name" /></label>
-                  <label className="ct-field"><span>Email Address</span><input type="email" required placeholder="you@example.com" /></label>
+                <form className="ct-form" onSubmit={submit}>
+                  <label className="ct-field"><span>Full Name</span><input name="name" type="text" required placeholder="Your full name" /></label>
+                  <label className="ct-field"><span>Email Address</span><input name="email" type="email" required placeholder="you@example.com" /></label>
                   <label className="ct-field"><span>Subject</span>
-                    <select required defaultValue=""><option value="" disabled>Select Subject</option>{SUBJECTS.map((x) => <option key={x}>{x}</option>)}</select>
+                    <select name="subject" required defaultValue=""><option value="" disabled>Select Subject</option>{SUBJECTS.map((x) => <option key={x}>{x}</option>)}</select>
                   </label>
-                  <label className="ct-field"><span>Your Message</span><textarea rows="5" required placeholder="How can we help you?" /></label>
-                  <button type="submit" className="btn btn-primary ct-send">Send Message</button>
+                  <label className="ct-field"><span>Your Message</span><textarea name="message" rows="5" required placeholder="How can we help you?" /></label>
+                  {err && <p className="form-error" style={{ color: '#c0392b', fontWeight: 600 }}>{err}</p>}
+                  <button type="submit" className="btn btn-primary ct-send" disabled={busy}>{busy ? 'Sending…' : 'Send Message'}</button>
                 </form>
               )}
             </div>
