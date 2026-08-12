@@ -82,7 +82,7 @@ export default function PortalUpload() {
                 <h3>Drag &amp; drop your files here</h3>
                 <p>or</p>
                 <button type="button" className="btn btn-primary" onClick={() => inputRef.current?.click()}>Choose Files</button>
-                <input ref={inputRef} type="file" accept=".pdf,.png,.jpg,.jpeg" multiple hidden onChange={(e) => { if (e.target.files) add(e.target.files); e.target.value = ''; }} />
+                <input ref={inputRef} type="file" accept="application/pdf,image/*" multiple hidden onChange={(e) => { if (e.target.files) add(e.target.files); e.target.value = ''; }} />
                 <p style={{ marginTop: '1rem', fontSize: '.78rem' }}>Supported: PDF, JPG, PNG · Max 15 MB each</p>
               </div>
 

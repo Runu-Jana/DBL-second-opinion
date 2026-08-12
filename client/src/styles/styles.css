@@ -524,3 +524,8 @@ html[dir="rtl"] .lang-item,html[dir="rtl"] .hero-trust,html[dir="rtl"] .btn-stac
   .lead-banner-text{padding-right:124px}
   .lead-banner-text h3{font-size:1.02rem}
 }
+
+/* Stop iOS Safari from auto-zooming when a form field is focused (needs >=16px) */
+@media (max-width:768px){
+  input:not([type=checkbox]):not([type=radio]),textarea,select{font-size:16px}
+}

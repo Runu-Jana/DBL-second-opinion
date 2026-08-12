@@ -79,7 +79,7 @@ export default function UploadModal() {
           onDragLeave={(e) => { e.preventDefault(); setDrag(false); }}
           onDrop={(e) => { e.preventDefault(); setDrag(false); if (e.dataTransfer?.files) addFiles(e.dataTransfer.files); }}
         >
-          <input ref={inputRef} type="file" accept=".pdf,.png,.jpg,.jpeg" multiple hidden
+          <input ref={inputRef} type="file" accept="application/pdf,image/*" multiple hidden
             onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
           <span className="dropzone-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 16V6m0 0-4 4m4-4 4 4" /><path d="M5 15v2.5A2.5 2.5 0 0 0 7.5 20h9a2.5 2.5 0 0 0 2.5-2.5V15" /></svg>

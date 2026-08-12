@@ -756,6 +756,7 @@ table.admin-table{width:100%;border-collapse:collapse;min-width:720px}
 @media (max-width:620px){
   .ct-grid{grid-template-columns:1fr}
   .ct-send{align-self:stretch}
+  .ct-support-grid{grid-template-columns:1fr;max-width:340px}
 }
 
 /* ============================================================

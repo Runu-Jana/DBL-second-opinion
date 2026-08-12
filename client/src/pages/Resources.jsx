@@ -70,7 +70,6 @@ export default function Resources() {
                   ) : (
                     <div className="rs-thumb">
                       {p.imageUrl && <img src={p.imageUrl} alt={p.title} loading="lazy" />}
-                      {p.isVideo && <span className="rs-play">{Ico.play}</span>}
                     </div>
                   )}
                   <div className="rs-body">
