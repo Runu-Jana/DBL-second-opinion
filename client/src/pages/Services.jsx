@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import Header from '../components/Header.jsx';
 import Footer from '../components/Footer.jsx';
 import { useLang } from '../i18n.jsx';
-import { api, rupees } from '../api.js';
+import { api } from '../api.js';
 import { ServiceIcon } from '../lib/icons.jsx';
 import { FALLBACK_SERVICES } from './Home.jsx';
 
@@ -39,7 +39,6 @@ export default function Services() {
                 <span className="service-icon"><ServiceIcon k={s.icon} /></span>
                 <h3>{s.title}</h3>
                 <p>{s.description}</p>
-                <p className="service-price">{t('services.from')} <strong>{rupees(s.price)}</strong>{s.priceUnit && <span className="price-unit"> {s.priceUnit}</span>}</p>
                 <Link className="service-link" to={`/services/${s.id}`}>{t('services.viewDetails')} &rarr;</Link>
               </article>
             ))}

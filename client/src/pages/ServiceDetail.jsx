@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import Header from '../components/Header.jsx';
 import Footer from '../components/Footer.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
-import { api, rupees } from '../api.js';
+import { api } from '../api.js';
 import { useLang } from '../i18n.jsx';
 import { ServiceIcon } from '../lib/icons.jsx';
 import { FALLBACK_SERVICES } from './Home.jsx';
@@ -47,11 +47,26 @@ export default function ServiceDetail() {
                 <div className="svc-about">
                   <h2>{t('detail.aboutService')}</h2>
                   <p>{s.longDescription || s.description}</p>
+
+                  <h3 className="svc-sub">What&rsquo;s included</h3>
+                  <ul className="svc-list">
+                    <li>Review by experienced oncology specialists</li>
+                    <li>Clear, written guidance you can keep and share</li>
+                    <li>Secure, confidential handling of your medical records</li>
+                    <li>Follow-up support from your dedicated care team</li>
+                  </ul>
+
+                  <h3 className="svc-sub">How it works</h3>
+                  <ol className="svc-steps">
+                    <li><strong>Share your details</strong><span>Upload your reports or send us a message — it only takes a few minutes.</span></li>
+                    <li><strong>Expert review</strong><span>Our specialists review your case thoroughly and carefully.</span></li>
+                    <li><strong>Get your guidance</strong><span>Receive clear, actionable advice — usually within 24&ndash;48 hours.</span></li>
+                  </ol>
                 </div>
                 <aside className="svc-buy">
-                  <p className="svc-price">{t('services.from')} <strong>{rupees(s.price)}</strong>{s.priceUnit && <span className="price-unit"> {s.priceUnit}</span>}</p>
+                  <h3 className="svc-buy-head">Ready to get expert guidance?</h3>
                   <button className="btn btn-primary btn-block" onClick={requestUpload}>{t('detail.getStarted')}</button>
-                  <a className="btn btn-outline btn-block" href="/#contact">{t('detail.talkToCare')}</a>
+                  <Link className="btn btn-outline btn-block" to="/contact">{t('detail.talkToCare')}</Link>
                   <p className="svc-note">{t('detail.svcNote')}</p>
                 </aside>
               </div>

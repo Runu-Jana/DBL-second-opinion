@@ -5,7 +5,7 @@ import Footer from '../components/Footer.jsx';
 import LeadPopup from '../components/LeadPopup.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useLang } from '../i18n.jsx';
-import { api, rupees } from '../api.js';
+import { api } from '../api.js';
 import { ServiceIcon } from '../lib/icons.jsx';
 
 const I = {
@@ -156,7 +156,6 @@ export default function Home() {
                 <span className="service-icon"><ServiceIcon k={s.icon} /></span>
                 <h3>{s.title}</h3>
                 <p>{s.description}</p>
-                <p className="service-price">{t('services.from')} <strong>{rupees(s.price)}</strong>{s.priceUnit && <span className="price-unit"> {s.priceUnit}</span>}</p>
                 <a className="service-link" href={`/services/${s.id}`}>{t('services.viewDetails')} &rarr;</a>
               </article>
             ))}
