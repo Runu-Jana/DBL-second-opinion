@@ -18,6 +18,7 @@ const doctorRouter = require('./routes/doctor');
 const patientPortalRouter = require('./routes/patient');
 const doctorApplicationsRouter = require('./routes/doctorApplications');
 const contactRouter = require('./routes/contact');
+const storage = require('./lib/storage');
 const M = require('./routes/modules');
 
 const app = express();
@@ -56,8 +57,16 @@ app.use('/api/settings', M.settings);
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 
-// ---- Uploaded doctor photos ----
-app.use('/uploads', express.static(path.join(ROOT, 'uploads')));
+// ---- Uploaded files (doctor photos, patient reports) — streamed from R2 or local disk ----
+app.get('/uploads/:key', async (req, res) => {
+  try {
+    const found = await storage.streamTo(req.params.key, res);
+    if (!found && !res.headersSent) res.status(404).send('Not found');
+  } catch (e) {
+    console.error('file stream error:', e);
+    if (!res.headersSent) res.status(500).send('Error serving file');
+  }
+});
 
 // ---- Built React app (client/dist) ----
 app.use(express.static(CLIENT_DIST));
