@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../components/Header.jsx';
 import Footer from '../components/Footer.jsx';
@@ -48,8 +48,23 @@ export default function Home() {
   const { requestUpload } = useAuth();
   const { t } = useLang();
   const [services, setServices] = useState(FALLBACK_SERVICES);
+  const stepsRef = useRef(null);
 
   useEffect(() => { api('/services', { auth: false }).then((d) => { if (Array.isArray(d)) setServices(d); }).catch(() => {}); }, []);
+
+  // Reveal the "How It Works" steps as they scroll into view (desktop + mobile).
+  // Arm the hidden state only when we can observe — otherwise the steps stay visible.
+  useEffect(() => {
+    const el = stepsRef.current;
+    if (!el || !('IntersectionObserver' in window)) return;
+    el.classList.add('will-reveal');
+    const io = new IntersectionObserver((entries) => {
+      // Toggle (not once): replay the reveal each time the section scrolls back into view.
+      entries.forEach((e) => el.classList.toggle('in-view', e.isIntersecting));
+    }, { threshold: 0.2 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
 
   return (
     <>
@@ -163,7 +178,7 @@ export default function Home() {
           <div className="services-cta">
             <div className="cta-left">
               <span className="cta-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20 12a7 7 0 0 1-7 7H7l-3 2 1-3.5A7 7 0 1 1 20 12Z" /><path d="M12 8v.5M12 11v3" /></svg>
+                <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.6-.8L3 21l1.8-5.9A8.38 8.38 0 0 1 4 11.5 8.5 8.5 0 0 1 12.5 3 8.38 8.38 0 0 1 21 11.5Z" /><path d="M8.5 12h7M8.5 9h4" /></svg>
               </span>
               <div><strong>{t('services.ctaTitle')}</strong><span>{t('services.ctaSub')}</span></div>
             </div>
@@ -176,7 +191,7 @@ export default function Home() {
       <section className="how-light" id="how">
         <div className="container">
           <div className="section-head"><h2>{t('how.title')}</h2><span className="section-underline" /></div>
-          <div className="steps-light">
+          <div className="steps-light" ref={stepsRef}>
             {STEPS.map((n, i) => (
               <div className="step-light" key={n}>
                 <span className="step-num">{n}</span>

@@ -207,12 +207,23 @@ html[dir="rtl"] .lang-item,html[dir="rtl"] .hero-trust,html[dir="rtl"] .btn-stac
 
 /* ---------- How it works (light) ---------- */
 .how-light{position:relative;overflow:hidden;background:#eef7f6;padding:clamp(46px,6vw,78px) 0}
-.how-light::before{content:"";position:absolute;inset:0;z-index:0;background:url('/doctor-handshake.jpg') center/cover no-repeat}
+.how-light::before{content:"";position:absolute;inset:0;z-index:0;background:url('/doctor-handshake.jpg') center 5%/cover no-repeat}
 .how-light::after{content:"";position:absolute;inset:0;z-index:0;
-  background:linear-gradient(180deg,rgba(238,247,246,.93) 0%,rgba(231,245,242,.8) 45%,rgba(229,244,240,.86) 100%)}
+  background:linear-gradient(180deg,rgba(238,247,246,.72) 0%,rgba(231,245,242,.5) 45%,rgba(229,244,240,.66) 100%)}
 .how-light > .container{position:relative;z-index:1}
 .steps-light{display:grid;grid-template-columns:repeat(3,1fr);gap:1.4rem;max-width:920px;margin:0 auto}
 .step-light{background:#fff;border:1px solid var(--line);border-radius:16px;padding:1.8rem 1.4rem;text-align:center;box-shadow:var(--shadow-sm)}
+/* Scroll reveal — only armed once JS adds .will-reveal, so steps stay visible if JS never runs.
+   Transition lives on the .in-view (reveal) state so arming hides instantly (no fade-out flash). */
+.steps-light.will-reveal .step-light{opacity:0;transform:translateY(26px)}
+.steps-light.will-reveal.in-view .step-light{opacity:1;transform:none;
+  transition:opacity .6s ease,transform .6s cubic-bezier(.22,.61,.36,1)}
+.steps-light.will-reveal.in-view .step-light:nth-child(1){transition-delay:.05s}
+.steps-light.will-reveal.in-view .step-light:nth-child(2){transition-delay:.18s}
+.steps-light.will-reveal.in-view .step-light:nth-child(3){transition-delay:.31s}
+@media (prefers-reduced-motion:reduce){
+  .steps-light.will-reveal .step-light{opacity:1;transform:none;transition:none}
+}
 .step-num{display:inline-grid;place-items:center;width:48px;height:48px;border-radius:50%;font-weight:800;font-size:1.2rem;
   background:linear-gradient(135deg,var(--teal),var(--teal-dark));color:#fff;margin-bottom:1rem;box-shadow:0 8px 20px rgba(14,159,142,.3)}
 .step-light h4{margin:0 0 .5rem;font-size:1.1rem;font-weight:800;color:var(--ink)}
@@ -297,7 +308,9 @@ html[dir="rtl"] .lang-item,html[dir="rtl"] .hero-trust,html[dir="rtl"] .btn-stac
 .cta-icon{display:inline-grid;place-items:center;width:52px;height:52px;border-radius:50%;
   background:rgba(255,255,255,.16);color:#fff;flex:0 0 auto}
 .cta-left strong{display:block;font-size:1.12rem;font-weight:800}
-.cta-left span{display:block;font-size:.9rem;opacity:.9;margin-top:.15rem;max-width:52ch}
+/* Scope to the text block only — a bare `.cta-left span` also hit .cta-icon and forced it to
+   display:block, breaking its grid centering so the icon sat in the circle's top-left corner. */
+.cta-left>div span{display:block;font-size:.9rem;opacity:.9;margin-top:.15rem;max-width:52ch}
 .services-cta .btn{background:#fff;color:var(--teal-dark);white-space:nowrap}
 .services-cta .btn:hover{background:#eafff9;transform:translateY(-2px)}
 
@@ -426,6 +439,14 @@ html[dir="rtl"] .lang-item,html[dir="rtl"] .hero-trust,html[dir="rtl"] .btn-stac
   border-radius:11px;background:#fbfdfd;transition:.15s;
 }
 .auth-form input:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 4px rgba(14,159,142,.14);background:#fff}
+/* Password field with show/hide eye toggle */
+.pw-wrap{position:relative;display:block}
+.pw-wrap input{width:100%;padding-right:2.9rem}
+.pw-toggle{position:absolute;top:0;bottom:0;right:.35rem;margin:auto;width:2.1rem;height:2.1rem;
+  display:grid;place-items:center;border:0;background:transparent;border-radius:8px;
+  color:var(--muted);cursor:pointer;transition:color .15s,background .15s}
+.pw-toggle:hover{color:var(--teal-dark);background:rgba(14,159,142,.08)}
+.pw-toggle:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
 .form-error{margin:0;color:#c0392b;font-size:.85rem;font-weight:600}
 .btn-block{width:100%;justify-content:center;margin-top:.3rem}
 
