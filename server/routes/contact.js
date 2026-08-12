@@ -3,6 +3,7 @@ const express = require('express');
 const prisma = require('../db');
 const { requireAdmin } = require('./auth');
 const { logActivity } = require('../lib/audit');
+const { sendContactNotification } = require('../lib/email');
 
 const router = express.Router();
 const STATUSES = ['New', 'Read', 'Replied', 'Archived'];
@@ -19,6 +20,8 @@ router.post('/', async (req, res) => {
 
     const created = await prisma.contactMessage.create({ data: { name, email, subject, message, status: 'New' } });
     logActivity(req, { kind: 'activity', actor: name, action: `New contact message: ${subject}`, target: email, category: 'Contact' });
+    // Email the team (best-effort — never block or fail the submission on an email hiccup).
+    sendContactNotification({ name, email, subject, message }).catch((e) => console.error('contact email failed:', e.message));
     res.status(201).json({ ok: true, id: created.id });
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not send your message. Please try again.' }); }
 });
