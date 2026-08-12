@@ -91,6 +91,8 @@ export default function Home() {
           </div>
         </div>
 
+        {/* Trust card hidden for now — flip `false` to `true` to bring it back */}
+        {false && (
         <div className="hero-trust-wrap">
           <div className="container hero-trust-row">
             <div className="trust-card">
@@ -106,9 +108,11 @@ export default function Home() {
             </div>
           </div>
         </div>
+        )}
       </section>
 
-      {/* STATS BAR */}
+      {/* STATS BAR — hidden for now; flip `false` to `true` to bring it back */}
+      {false && (
       <section className="stats-bar">
         <div className="container stats-grid">
           {STATS.map((s) => (
@@ -123,6 +127,7 @@ export default function Home() {
           ))}
         </div>
       </section>
+      )}
 
       {/* WHY CHOOSE */}
       <section className="why-choose" id="why-choose">

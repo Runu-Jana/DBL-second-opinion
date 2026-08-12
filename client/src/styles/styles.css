@@ -206,7 +206,11 @@ html[dir="rtl"] .lang-item,html[dir="rtl"] .hero-trust,html[dir="rtl"] .btn-stac
 .stat-body em{font-style:normal;font-size:.75rem;color:var(--muted);margin-top:2px}
 
 /* ---------- How it works (light) ---------- */
-.how-light{background:var(--bg);padding:clamp(46px,6vw,78px) 0}
+.how-light{position:relative;overflow:hidden;background:#eef7f6;padding:clamp(46px,6vw,78px) 0}
+.how-light::before{content:"";position:absolute;inset:0;z-index:0;background:url('/doctor-handshake.jpg') center/cover no-repeat}
+.how-light::after{content:"";position:absolute;inset:0;z-index:0;
+  background:linear-gradient(180deg,rgba(238,247,246,.93) 0%,rgba(231,245,242,.8) 45%,rgba(229,244,240,.86) 100%)}
+.how-light > .container{position:relative;z-index:1}
 .steps-light{display:grid;grid-template-columns:repeat(3,1fr);gap:1.4rem;max-width:920px;margin:0 auto}
 .step-light{background:#fff;border:1px solid var(--line);border-radius:16px;padding:1.8rem 1.4rem;text-align:center;box-shadow:var(--shadow-sm)}
 .step-num{display:inline-grid;place-items:center;width:48px;height:48px;border-radius:50%;font-weight:800;font-size:1.2rem;
