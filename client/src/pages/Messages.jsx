@@ -1,65 +1,67 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import DashboardLayout from '../components/DashboardLayout.jsx';
-import { initials } from './portalData.js';
+import { patientApi } from '../api.js';
 
-const THREADS = [
-  {
-    id: 't1', name: 'Care Coordinator', preview: 'Your report has been reviewed…',
-    msgs: [
-      { me: false, text: 'Hello Rajesh, welcome to DBL International. How can we help you today?', t: '09:15 AM' },
-      { me: true, text: 'Hi, I just uploaded my biopsy report for a second opinion.', t: '09:18 AM' },
-      { me: false, text: 'Thank you. Your report has been reviewed by our experts. The detailed opinion will be ready within 24–48 hours.', t: '10:02 AM' },
-    ],
-  },
-  {
-    id: 't2', name: 'Dr. Priya Sharma', preview: 'Let’s discuss on the call…',
-    msgs: [
-      { me: false, text: 'I’ve reviewed your case. Let’s discuss the findings on our scheduled call.', t: 'Yesterday' },
-    ],
-  },
-];
+const timeOf = (iso) => {
+  try { return new Date(iso).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); }
+  catch { return ''; }
+};
 
 export default function Messages() {
-  const [active, setActive] = useState('t1');
+  const [msgs, setMsgs] = useState([]);
   const [text, setText] = useState('');
-  const thread = THREADS.find((t) => t.id === active);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const bodyRef = useRef(null);
+
+  const load = () => patientApi('/portal/messages')
+    .then((list) => { setMsgs(Array.isArray(list) ? list : []); setLoading(false); })
+    .catch(() => setLoading(false));
+
+  useEffect(() => { load(); const id = setInterval(load, 20000); return () => clearInterval(id); }, []);
+  useEffect(() => { if (bodyRef.current) bodyRef.current.scrollTop = bodyRef.current.scrollHeight; }, [msgs]);
+
+  const send = async (e) => {
+    e.preventDefault();
+    const body = text.trim();
+    if (!body || busy) return;
+    setBusy(true); setErr('');
+    const optimistic = { id: 'tmp' + Date.now(), sender: 'patient', body, createdAt: new Date().toISOString() };
+    setMsgs((m) => [...m, optimistic]); setText('');
+    try {
+      const saved = await patientApi('/portal/messages', { method: 'POST', body: JSON.stringify({ body }) });
+      setMsgs((m) => m.map((x) => (x.id === optimistic.id ? saved : x)));
+    } catch (ex) {
+      setErr(ex.message || 'Could not send. Please try again.');
+      setMsgs((m) => m.filter((x) => x.id !== optimistic.id)); setText(body);
+    } finally { setBusy(false); }
+  };
 
   return (
     <DashboardLayout active="messages">
       <div className="pg-head">
-        <div>
-          <h1>Messages</h1>
-          <p>Chat with your care team and specialists.</p>
-        </div>
+        <div><h1>Messages</h1><p>Chat with your care team — we usually reply within a few hours.</p></div>
       </div>
 
-      <div className="chat">
-        <div className="chat-list">
-          {THREADS.map((t) => (
-            <button key={t.id} type="button" className={'chat-item' + (t.id === active ? ' active' : '')} onClick={() => setActive(t.id)}>
-              <span className="av">{initials(t.name.replace('Dr. ', ''))}</span>
-              <span style={{ minWidth: 0 }}>
-                <span className="nm" style={{ display: 'block' }}>{t.name}</span>
-                <span className="pv" style={{ display: 'block' }}>{t.preview}</span>
-              </span>
-            </button>
+      <div className="chat-single">
+        <div className="chat-head"><span className="chat-head-av">DBL</span> Care Team</div>
+        <div className="chat-body" ref={bodyRef}>
+          {loading && <p className="chat-empty">Loading…</p>}
+          {!loading && msgs.length === 0 && (
+            <p className="chat-empty">No messages yet. Send us a message and our care team will get back to you.</p>
+          )}
+          {msgs.map((m) => (
+            <div className={'bubble ' + (m.sender === 'patient' ? 'me' : 'them')} key={m.id}>
+              {m.body}<span className="tm">{timeOf(m.createdAt)}</span>
+            </div>
           ))}
         </div>
-
-        <div className="chat-thread">
-          <div className="chat-head">{thread.name}</div>
-          <div className="chat-body">
-            {thread.msgs.map((m, i) => (
-              <div className={'bubble ' + (m.me ? 'me' : 'them')} key={i}>
-                {m.text}<span className="tm">{m.t}</span>
-              </div>
-            ))}
-          </div>
-          <form className="chat-compose" onSubmit={(e) => { e.preventDefault(); setText(''); }}>
-            <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Type a message…" />
-            <button type="submit" className="btn btn-primary" style={{ padding: '.6rem 1.1rem' }}>Send</button>
-          </form>
-        </div>
+        {err && <p className="chat-err">{err}</p>}
+        <form className="chat-compose" onSubmit={send}>
+          <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Type a message…" aria-label="Type a message" />
+          <button type="submit" className="btn btn-primary" disabled={busy} style={{ padding: '.6rem 1.1rem' }}>{busy ? '…' : 'Send'}</button>
+        </form>
       </div>
     </DashboardLayout>
   );

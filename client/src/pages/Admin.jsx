@@ -15,9 +15,10 @@ import MODULE_CONFIGS from './admin/moduleConfigs.jsx';
 import AnalyticsAdmin from './admin/AnalyticsAdmin.jsx';
 import SettingsAdmin from './admin/SettingsAdmin.jsx';
 import ActivityAdmin from './admin/ActivityAdmin.jsx';
+import MessagesAdmin from './admin/MessagesAdmin.jsx';
 
 const CONTENT_SECTION = 'content';
-const BESPOKE_SECTIONS = ['patients', 'staff', 'appointments', 'consultations', 'applications', 'reports'];
+const BESPOKE_SECTIONS = ['patients', 'staff', 'appointments', 'consultations', 'applications', 'reports', 'communication'];
 const SPECIAL_SECTIONS = ['analytics', 'settings', 'system-activity', 'audit'];
 const REAL_SECTIONS = [...BESPOKE_SECTIONS, ...Object.keys(MODULE_CONFIGS), ...SPECIAL_SECTIONS]; // fully-built sections
 const sectionLabel = (key) => (ADMIN_NAV.find((n) => n.key === key)?.label || 'Section');
@@ -397,6 +398,7 @@ export default function Admin() {
       {section === 'applications' && <ApplicationsAdmin flash={flash} on401={on401} />}
 
       {section === 'reports' && <ReportsAdmin flash={flash} on401={on401} />}
+      {section === 'communication' && <MessagesAdmin flash={flash} on401={on401} />}
 
       {MODULE_CONFIGS[section] && <AdminCrud key={section} cfg={MODULE_CONFIGS[section]} flash={flash} on401={on401} />}
 

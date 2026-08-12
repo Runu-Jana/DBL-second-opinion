@@ -362,6 +362,21 @@ model Setting {
   updatedAt          DateTime @updatedAt
 }
 
+// Patient <-> care-team chat. One ongoing conversation per patient (keyed by uhid/name).
+model Message {
+  id            Int      @id @default(autoincrement())
+  patientUhid   String?
+  patientName   String
+  sender        String   @default("patient")   // 'patient' | 'care'
+  body          String
+  readByCare    Boolean  @default(false)        // false = unread in the admin inbox
+  readByPatient Boolean  @default(true)         // false = unread for the patient
+  createdAt     DateTime @default(now())
+
+  @@index([patientUhid])
+  @@index([createdAt])
+}
+
 // Public "Contact Us" submissions — land here + surface in the admin activity feed.
 model ContactMessage {
   id        Int      @id @default(autoincrement())

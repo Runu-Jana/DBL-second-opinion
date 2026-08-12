@@ -170,6 +170,33 @@
 .ai-caveat{margin:0;font-size:.8rem;color:#b45309;background:#fffbeb;border-radius:8px;padding:.4rem .55rem}
 .ai-disclaimer{margin:0;font-size:.72rem;color:var(--muted,#94a3b8);font-style:italic}
 
+/* Patient Messages (admin) — conversation list + thread */
+.mchat{display:grid;grid-template-columns:300px 1fr;gap:1rem;height:min(640px,72vh)}
+.mchat-list{border:1px solid var(--line,#e2e8f0);border-radius:14px;overflow-y:auto;background:#fff}
+.mchat-empty{padding:1.4rem;color:#94a3b8;font-size:.86rem;text-align:center}
+.mchat-item{display:flex;align-items:center;gap:.7rem;width:100%;text-align:left;border:0;border-bottom:1px solid #eef2f7;background:none;cursor:pointer;padding:.8rem .9rem;font:inherit}
+.mchat-item:hover{background:#f6faf9}
+.mchat-item.active{background:#e7f6f4}
+.mchat-av{width:36px;height:36px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center;color:#fff;font-weight:800;font-size:.72rem;background:linear-gradient(135deg,#12897b,#0b5952)}
+.mchat-meta{min-width:0;flex:1;display:flex;flex-direction:column}
+.mchat-nm{font-size:.85rem;font-weight:700;color:#0f1b2d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mchat-nm em{font-style:normal;color:#94a3b8;font-weight:600}
+.mchat-pv{font-size:.77rem;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mchat-unread{flex:0 0 auto;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:#e11d48;color:#fff;font-size:.7rem;font-weight:800;display:grid;place-items:center}
+.mchat-thread{display:flex;flex-direction:column;border:1px solid var(--line,#e2e8f0);border-radius:14px;overflow:hidden;background:#fff}
+.mchat-none{margin:auto;color:#94a3b8;font-size:.9rem;padding:2rem;text-align:center}
+.mchat-head{display:flex;align-items:center;gap:.5rem;padding:.9rem 1.1rem;border-bottom:1px solid var(--line,#e2e8f0);font-weight:800;color:#0f1b2d}
+.mchat-head em{font-style:normal;color:#94a3b8;font-weight:600}
+.mchat-back{display:none;border:0;background:none;font-size:1.5rem;line-height:1;color:#0b5952;cursor:pointer;padding:0 .3rem}
+@media (max-width:820px){
+  .mchat{grid-template-columns:1fr;height:auto}
+  .mchat-list{max-height:62vh}
+  .mchat-thread{display:none}
+  .mchat.has-sel .mchat-list{display:none}
+  .mchat.has-sel .mchat-thread{display:flex;min-height:62vh}
+  .mchat-back{display:inline-block}
+}
+
 /* category chips — staff modal multi-select + table tags */
 .adm-cat-field{display:flex;flex-direction:column;gap:.55rem}
 .adm-cat-label{font-size:.82rem;font-weight:700;color:var(--ink-soft,#475569)}

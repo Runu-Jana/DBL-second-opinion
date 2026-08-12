@@ -61,7 +61,7 @@ export const ADMIN_NAV = [
   { key: 'lab', label: 'Lab & Investigations', icon: AI.lab },
   { key: 'content', label: 'Content Management', icon: AI.content },
   { key: 'analytics', label: 'AI & Analytics', icon: AI.analytics },
-  { key: 'communication', label: 'Communication', icon: AI.comms, badge: 7 },
+  { key: 'communication', label: 'Patient Messages', icon: AI.comms },
   { key: 'settings', label: 'Settings', icon: AI.settings },
   { key: 'system-activity', label: 'System Activity', icon: AI.activity },
   { key: 'audit', label: 'Audit Logs', icon: AI.audit },

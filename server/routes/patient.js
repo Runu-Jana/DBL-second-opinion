@@ -83,4 +83,29 @@ router.get('/invoices', requirePatient, async (req, res) => {
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not load your invoices.' }); }
 });
 
+// GET /api/portal/messages — this patient's conversation with the care team (oldest first)
+router.get('/messages', requirePatient, async (req, res) => {
+  try {
+    const where = safeWhere(req);
+    const list = await prisma.message.findMany({ where, orderBy: [{ createdAt: 'asc' }] });
+    // mark care -> patient messages as read now that the patient is viewing them
+    await prisma.message.updateMany({ where: { AND: [where, { sender: 'care', readByPatient: false }] }, data: { readByPatient: true } });
+    res.json(list);
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not load your messages.' }); }
+});
+
+// POST /api/portal/messages — patient sends a message to the care team
+router.post('/messages', requirePatient, async (req, res) => {
+  try {
+    const body = String((req.body || {}).body || '').trim();
+    if (!body) return res.status(400).json({ error: 'Message cannot be empty.' });
+    if (body.length > 4000) return res.status(400).json({ error: 'Message is too long.' });
+    const msg = await prisma.message.create({
+      data: { patientUhid: req.patient.uhid || null, patientName: req.patient.name, sender: 'patient', body, readByCare: false, readByPatient: true },
+    });
+    logActivity(null, { kind: 'activity', actor: req.patient.name, action: 'Sent a message to the care team', target: `Patient · ${req.patient.name}`, category: 'Message' });
+    res.status(201).json(msg);
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not send your message.' }); }
+});
+
 module.exports = router;
