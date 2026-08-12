@@ -57,7 +57,11 @@ export default function Home() {
       {/* HERO — full-bleed photo background */}
       <section className="hero" id="home">
         <div className="hero-bg-photo" aria-hidden="true">
-          <img src="/hero.png" alt="" />
+          <picture>
+            {/* portrait doctor image on phones/tablets; the wide photo on desktop */}
+            <source media="(max-width:900px)" srcSet="/hero-mobile.jpg" />
+            <img src="/hero.png" alt="" />
+          </picture>
         </div>
         <div className="hero-overlay" aria-hidden="true" />
 
