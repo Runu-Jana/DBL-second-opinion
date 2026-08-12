@@ -3,6 +3,7 @@
 const emailConfigured = () => !!process.env.RESEND_API_KEY;
 
 const esc = (s) => String(s || '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const looksEmail = (s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(s || ''));
 
 // Notify the team of a new contact-form submission. Best-effort: throws on failure so the
 // caller can log it, but the caller must not block the user's request on this.
@@ -29,7 +30,8 @@ async function sendContactNotification({ name, email, subject, message }) {
     body: JSON.stringify({
       from,
       to,
-      reply_to: email, // so hitting "Reply" answers the customer directly
+      // so hitting "Reply" answers the customer directly (only when we have a real email)
+      ...(looksEmail(email) ? { reply_to: email } : {}),
       subject: `New enquiry: ${subject || 'Contact form'}`,
       html,
     }),

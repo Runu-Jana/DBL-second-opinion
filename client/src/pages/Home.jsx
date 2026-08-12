@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../components/Header.jsx';
 import Footer from '../components/Footer.jsx';
+import LeadPopup from '../components/LeadPopup.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useLang } from '../i18n.jsx';
 import { api, rupees } from '../api.js';
@@ -184,6 +185,7 @@ export default function Home() {
       </section>
 
       <Footer />
+      <LeadPopup />
     </>
   );
 }

@@ -26,6 +26,21 @@ router.post('/', async (req, res) => {
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not send your message. Please try again.' }); }
 });
 
+// POST /api/contact/lead  (PUBLIC — the "Second Opinion" home-page pop-up: name + phone only)
+router.post('/lead', async (req, res) => {
+  try {
+    const b = req.body || {};
+    const name = clean(b.name), phone = clean(b.phone);
+    if (!name || !phone) return res.status(400).json({ error: 'Name and phone number are required.' });
+    const created = await prisma.contactMessage.create({
+      data: { name, email: '', subject: 'Second Opinion Lead', message: `Second-opinion request via website pop-up.\nPhone: ${phone}`, status: 'New' },
+    });
+    logActivity(req, { kind: 'activity', actor: name, action: 'New second-opinion lead (pop-up)', target: phone, category: 'Contact' });
+    sendContactNotification({ name, email: '', subject: 'Second Opinion Lead', message: `Phone: ${phone}` }).catch((e) => console.error('lead email failed:', e.message));
+    res.status(201).json({ ok: true, id: created.id });
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not submit. Please try again.' }); }
+});
+
 // GET /api/contact  (admin) — ?status, ?q
 router.get('/', requireAdmin, async (req, res) => {
   try {
