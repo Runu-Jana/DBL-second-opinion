@@ -317,7 +317,10 @@ html[dir="rtl"] .lang-item,html[dir="rtl"] .hero-trust,html[dir="rtl"] .btn-stac
 }
 @media (max-width:460px){
   .services-grid{grid-template-columns:1fr}
-  .services-cta{flex-direction:column;align-items:flex-start;text-align:left}
+  .services-cta{flex-direction:column;align-items:stretch;text-align:left;padding:1.4rem}
+  .cta-left{align-items:flex-start}      /* icon lines up with the first line of text */
+  .cta-icon{width:46px;height:46px}
+  .services-cta .btn{width:100%;justify-content:center;margin-top:.2rem}
 }
 
 /* ---------- Responsive ---------- */
@@ -339,10 +342,10 @@ html[dir="rtl"] .lang-item,html[dir="rtl"] .hero-trust,html[dir="rtl"] .btn-stac
   /* Stack the hero vertically and drop the trust card into normal flow so it no longer
      overlaps the trust items (it was position:absolute, pinned to the hero bottom). */
   .hero{min-height:0;flex-direction:column;align-items:stretch;padding-bottom:clamp(28px,6vw,44px)}
-  .hero-bg-photo img{object-position:78% center}
-  /* Keep only a subtle photo hint behind the heading; make the lower area (trust items + card)
-     a clean solid background so nothing sits on a busy photo. */
-  .hero-overlay{background:linear-gradient(180deg,rgba(238,247,246,.82) 0%,rgba(238,247,246,.97) 42%,#eef7f6 60%)}
+  .hero-bg-photo img{object-position:center 22%;transform:none}
+  /* Let the hero photo fill the whole banner on mobile with a light, even wash that
+     still keeps the dark headline and trust text readable. */
+  .hero-overlay{background:linear-gradient(180deg,rgba(238,247,246,.70) 0%,rgba(238,247,246,.76) 52%,rgba(238,247,246,.84) 100%)}
   .hero-copy{max-width:none}
   .hero-trust-wrap{position:static;pointer-events:auto;margin-top:1.5rem}
   .hero-trust-row{justify-content:center}
@@ -350,12 +353,13 @@ html[dir="rtl"] .lang-item,html[dir="rtl"] .hero-trust,html[dir="rtl"] .btn-stac
 }
 @media (max-width:620px){
   .header-cta{display:none}          /* on phones the CTA would crowd the brand + hamburger */
-  .brand-tag{display:none}           /* the tiny tagline is unreadable on phones */
+  .brand-tag{font-size:.44rem;line-height:1.3}   /* full tagline kept, shrunk to fit phones */
+  .brand-name{font-size:1.2rem}
   .lang-current{display:none}        /* compact language switcher (globe only) so the hamburger keeps its edge margin */
   /* Logged-in header: compact the user cluster so brand + avatar + hamburger fit a phone
      (.header-bell is hidden in dashboard.css, which loads after this file) */
   .user-caret{display:none}          /* the avatar itself opens the menu */
-  .brand-sub{letter-spacing:1.2px}   /* trim the wide "INTERNATIONAL" so the brand is narrower */
+  .brand-sub{font-size:.64rem;letter-spacing:1.2px}   /* keep "INTERNATIONAL", just narrower */
   .header-inner{gap:.5rem}
   .header-actions{gap:.35rem}
 }
@@ -373,8 +377,10 @@ html[dir="rtl"] .lang-item,html[dir="rtl"] .hero-trust,html[dir="rtl"] .btn-stac
   .hero-actions .btn{flex:1 1 auto;justify-content:center}
 }
 @media (max-width:440px){
-  /* Compact brand on phones (shield + "DBL") so the logged-in header fits down to 320px */
-  .brand-sub{display:none}
+  /* Keep the full logo visible on small phones — just scale it down a bit more */
+  .brand-name{font-size:1.06rem}
+  .brand-sub{font-size:.56rem;letter-spacing:.6px}
+  .brand-tag{font-size:.4rem}
   .stats-grid{grid-template-columns:1fr}   /* stat tiles are too wide for 2 columns on small phones */
 }
 
