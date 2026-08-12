@@ -36,13 +36,14 @@ const WHY = [
   'Confidential and secure handling of medical records',
 ];
 const VALUES = [
-  { t: 'Patient First', img: '/value-1.jpg', icon: <svg viewBox="0 0 24 24" {...s}><path d="M12 20s-7-4.4-9.2-9.1C1.3 7.7 3 4.8 6 4.8c1.9 0 3.2 1.1 4 2.3.8-1.2 2.1-2.3 4-2.3 3 0 4.7 2.9 3.2 6.1C19 15.6 12 20 12 20Z" /></svg> },
-  { t: 'Clinical Excellence', img: '/value-2.jpg', icon: <svg viewBox="0 0 24 24" {...s}><circle cx="12" cy="8" r="5" /><path d="M9 12.5 8 21l4-2.5L16 21l-1-8.5" /></svg> },
-  { t: 'Integrity', img: '/value-3.jpg', icon: <svg viewBox="0 0 24 24" {...s}><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3Z" /><path d="m9 12 2 2 4-4" /></svg> },
-  { t: 'Compassion', img: '/value-4.jpg', icon: <svg viewBox="0 0 24 24" {...s}><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V12M11 12V4a1.5 1.5 0 0 1 3 0v8M14 12V6a1.5 1.5 0 0 1 3 0v7c0 3.5-2.4 6-6 6-2.2 0-3.6-1-5-2.4L4.4 13.9a1.6 1.6 0 0 1 2.3-2.2L8 13.2" /></svg> },
-  { t: 'Innovation', img: '/value-5.jpg', icon: <svg viewBox="0 0 24 24" {...s}><path d="M9 18h6M10 21h4" /><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.4 1 1.1 1 1.8v.3h5v-.3c0-.7.4-1.4 1-1.8A6 6 0 0 0 12 3Z" /></svg> },
-  { t: 'Confidentiality', img: '/value-6.jpg', icon: <svg viewBox="0 0 24 24" {...s}><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg> },
-  { t: 'Collaboration', img: '/value-7.jpg', icon: <svg viewBox="0 0 24 24" {...s}><circle cx="9" cy="8" r="3" /><path d="M3 20c0-3 2.5-5 6-5s6 2 6 5" /><path d="M16 6.5a3 3 0 0 1 0 5.8M21 20c0-2.3-1.4-4-3.5-4.7" /></svg> },
+  { t: 'Patient First', img: '/value-1.jpg', d: 'Every decision begins with what’s best for you — your comfort, clarity, and outcome always come first.', icon: <svg viewBox="0 0 24 24" {...s}><path d="M12 20s-7-4.4-9.2-9.1C1.3 7.7 3 4.8 6 4.8c1.9 0 3.2 1.1 4 2.3.8-1.2 2.1-2.3 4-2.3 3 0 4.7 2.9 3.2 6.1C19 15.6 12 20 12 20Z" /></svg> },
+  { t: 'Clinical Excellence', img: '/value-2.jpg', d: 'Our second opinions are grounded in current evidence and reviewed by leading oncology specialists.', icon: <svg viewBox="0 0 24 24" {...s}><circle cx="12" cy="8" r="5" /><path d="M9 12.5 8 21l4-2.5L16 21l-1-8.5" /></svg> },
+  { t: 'Integrity', img: '/value-3.jpg', d: 'We give honest, unbiased guidance — even when it’s difficult — because your trust means everything to us.', icon: <svg viewBox="0 0 24 24" {...s}><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3Z" /><path d="m9 12 2 2 4-4" /></svg> },
+  { t: 'Compassion', img: '/value-4.jpg', d: 'Behind every report is a person facing uncertainty; we respond with empathy, patience, and genuine care.', icon: <svg viewBox="0 0 24 24" {...s}><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V12M11 12V4a1.5 1.5 0 0 1 3 0v8M14 12V6a1.5 1.5 0 0 1 3 0v7c0 3.5-2.4 6-6 6-2.2 0-3.6-1-5-2.4L4.4 13.9a1.6 1.6 0 0 1 2.3-2.2L8 13.2" /></svg> },
+  { t: 'Innovation', img: '/value-5.jpg', d: 'We use modern technology and AI-assisted insights to make expert cancer guidance faster and clearer.', icon: <svg viewBox="0 0 24 24" {...s}><path d="M9 18h6M10 21h4" /><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.4 1 1.1 1 1.8v.3h5v-.3c0-.7.4-1.4 1-1.8A6 6 0 0 0 12 3Z" /></svg> },
+  { t: 'Confidentiality', img: '/value-6.jpg', d: 'Your medical records are handled with strict privacy safeguards and never shared without your consent.', icon: <svg viewBox="0 0 24 24" {...s}><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg> },
+  { t: 'Collaboration', img: '/value-7.jpg', d: 'Specialists and care teams work together across borders to give you one clear, unified recommendation.', icon: <svg viewBox="0 0 24 24" {...s}><circle cx="9" cy="8" r="3" /><path d="M3 20c0-3 2.5-5 6-5s6 2 6 5" /><path d="M16 6.5a3 3 0 0 1 0 5.8M21 20c0-2.3-1.4-4-3.5-4.7" /></svg> },
+  { t: 'Accessibility', img: '/value-8.jpg', d: 'World-class oncology guidance shouldn’t depend on where you live — we bring expert care within everyone’s reach.', icon: <svg viewBox="0 0 24 24" {...s}><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c2.5 2.5 3.8 5.7 3.8 9S14.5 18.5 12 21C9.5 18.5 8.2 15.3 8.2 12S9.5 5.5 12 3Z" /></svg> },
 ];
 
 export default function About() {
@@ -125,10 +126,19 @@ export default function About() {
           <div className="ab-block">
             <h2 className="ab-h2">Our Values</h2>
             <div className="ab-values">{VALUES.map((v) => (
-              <figure className="ab-value" key={v.t}>
-                <img src={v.img} alt={v.t} loading="lazy" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                <figcaption>{v.t}</figcaption>
-              </figure>
+              <div className="ab-value" key={v.t} tabIndex={0}>
+                <div className="ab-value-inner">
+                  <figure className="ab-value-front">
+                    <img src={v.img} alt={v.t} loading="lazy" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                    <figcaption>{v.t}</figcaption>
+                  </figure>
+                  <div className="ab-value-back">
+                    <span className="ab-value-ico" aria-hidden="true">{v.icon}</span>
+                    <h3>{v.t}</h3>
+                    <p>{v.d}</p>
+                  </div>
+                </div>
+              </div>
             ))}</div>
           </div>
 

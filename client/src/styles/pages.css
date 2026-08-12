@@ -877,21 +877,28 @@ table.admin-table{width:100%;border-collapse:collapse;min-width:720px}
 .ab-vm-card:not(.ab-vision) p{color:var(--ink-soft)}
 
 .ab-why{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:1rem 1.6rem}
-.ab-values{display:grid;grid-template-columns:repeat(7,1fr);gap:.6rem}
-.ab-value{position:relative;margin:0;border-radius:14px;overflow:hidden;aspect-ratio:4/5;background:var(--teal-050);
-  box-shadow:var(--shadow-sm);transition:transform .35s ease,box-shadow .35s ease}
-.ab-value:hover{transform:scale(1.05);z-index:3;box-shadow:var(--shadow-md)}
-.ab-value img{width:100%;height:100%;object-fit:cover;display:block}
-.ab-value::after{content:"";position:absolute;inset:0;transition:background .35s ease;
-  background:linear-gradient(to top,rgba(4,42,38,.85) 0%,rgba(4,42,38,.25) 50%,rgba(4,42,38,0) 100%)}
-.ab-value:hover::after{background:linear-gradient(to top,rgba(4,42,38,.72),rgba(4,42,38,.5))}
-.ab-value figcaption{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:.6rem .4rem;color:#fff;font-weight:700;
-  font-size:.8rem;line-height:1.2;text-align:center;text-shadow:0 1px 3px rgba(0,0,0,.45);
-  transition:bottom .35s ease,transform .35s ease,font-size .25s ease}
-.ab-value:hover figcaption{bottom:50%;transform:translateY(50%);font-weight:800;font-size:.9rem}
-@media (max-width:1000px){.ab-values{grid-template-columns:repeat(4,1fr)}}
-@media (max-width:640px){.ab-values{grid-template-columns:repeat(2,1fr)}}
-@media (prefers-reduced-motion:reduce){.ab-value,.ab-value figcaption,.ab-value::after{transition:none}.ab-value:hover{transform:none}}
+.ab-values{display:grid;grid-template-columns:repeat(4,1fr);gap:.9rem}
+/* flip card — front photo flips to a teal panel with the value description */
+.ab-value{position:relative;margin:0;aspect-ratio:4/5;perspective:1200px;cursor:pointer;outline:none}
+.ab-value-inner{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .6s cubic-bezier(.4,.15,.2,1)}
+.ab-value:hover .ab-value-inner,.ab-value:focus .ab-value-inner,.ab-value:focus-within .ab-value-inner{transform:rotateY(180deg)}
+.ab-value-front,.ab-value-back{position:absolute;inset:0;margin:0;border-radius:14px;overflow:hidden;
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;box-shadow:var(--shadow-sm)}
+.ab-value-front{background:var(--teal-050)}
+.ab-value-front img{width:100%;height:100%;object-fit:cover;display:block}
+.ab-value-front figcaption{position:absolute;left:0;right:0;bottom:0;padding:.6rem .4rem;color:#fff;font-weight:800;
+  font-size:.85rem;line-height:1.2;text-align:center;text-shadow:0 1px 3px rgba(0,0,0,.5);
+  background:linear-gradient(to top,rgba(4,42,38,.88) 0%,rgba(4,42,38,.25) 65%,rgba(4,42,38,0) 100%)}
+.ab-value-back{transform:rotateY(180deg);background:linear-gradient(150deg,var(--teal) 0%,var(--teal-deep) 100%);
+  color:#eafffb;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:1rem .9rem;gap:.55rem}
+.ab-value-back .ab-value-ico{display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.16);color:#fff;flex:0 0 auto}
+.ab-value-back .ab-value-ico svg{width:22px;height:22px}
+.ab-value-back h3{margin:0;font-size:.98rem;font-weight:800;color:#fff}
+.ab-value-back p{margin:0;font-size:.8rem;line-height:1.5;color:#eafffb}
+@media (max-width:1000px){.ab-values{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:720px){.ab-values{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:420px){.ab-value-back p{font-size:.76rem}}
+@media (prefers-reduced-motion:reduce){.ab-value-inner{transition:none}}
 
 .ab-notice{display:flex;gap:1rem;align-items:flex-start;margin:clamp(20px,3vw,36px) 0 clamp(30px,4vw,52px);
   background:var(--teal-050);border:1px solid var(--teal-100);border-left:4px solid var(--teal);border-radius:14px;padding:1.3rem 1.4rem}
