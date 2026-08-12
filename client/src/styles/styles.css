@@ -487,18 +487,20 @@ html[dir="rtl"] .lang-item,html[dir="rtl"] .hero-trust,html[dir="rtl"] .btn-stac
 .lead-overlay{position:fixed;inset:0;z-index:2000;display:flex;align-items:center;justify-content:center;
   background:rgba(8,20,18,.6);padding:16px;animation:leadFade .2s ease}
 @keyframes leadFade{from{opacity:0}to{opacity:1}}
-.lead-modal{position:relative;width:100%;max-width:440px;background:#fff;border-radius:18px;overflow:hidden;
+.lead-modal{position:relative;width:100%;max-width:440px;background:#fff;border-radius:18px;overflow:visible;
   box-shadow:0 24px 60px rgba(0,0,0,.35);animation:leadPop .3s cubic-bezier(.2,.8,.3,1)}
 @keyframes leadPop{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:none}}
-.lead-close{position:absolute;top:10px;right:10px;z-index:3;width:32px;height:32px;border:0;border-radius:50%;
+.lead-close{position:absolute;top:10px;right:10px;z-index:6;width:32px;height:32px;border:0;border-radius:50%;
   background:rgba(255,255,255,.9);color:#0b5952;font-size:22px;line-height:1;cursor:pointer;display:grid;place-items:center;box-shadow:0 2px 8px rgba(0,0,0,.15)}
 .lead-close:hover{background:#fff}
-.lead-banner{display:flex;align-items:flex-end;gap:.5rem;padding:1.3rem 0 0 1.3rem;overflow:hidden;
-  background:linear-gradient(135deg,var(--teal),var(--teal-deep));color:#fff;min-height:172px}
-.lead-banner-text{padding-bottom:1.3rem}
-.lead-banner-text h3{margin:0 0 .5rem;font-size:1.22rem;font-weight:800;line-height:1.2}
-.lead-banner-text p{margin:0;font-size:.9rem;opacity:.92;line-height:1.45}
-.lead-doc{width:132px;flex:0 0 132px;align-self:stretch;object-fit:cover;object-position:top center;display:block}
+.lead-banner{position:relative;display:flex;align-items:center;border-radius:18px 18px 0 0;padding:1.3rem;overflow:visible;
+  background:linear-gradient(135deg,var(--teal),var(--teal-deep));color:#fff;min-height:176px}
+.lead-banner-text{padding-right:150px}
+.lead-banner-text h3{margin:0 0 .5rem;font-size:1.16rem;font-weight:800;line-height:1.2}
+.lead-banner-text p{margin:0;font-size:.88rem;opacity:.92;line-height:1.45}
+/* cut-out doctor rises above the panel with a drop shadow — reads as a 3D pop-out */
+.lead-doc{position:absolute;right:6px;bottom:0;height:216px;width:auto;object-fit:contain;pointer-events:none;
+  filter:drop-shadow(0 12px 15px rgba(0,0,0,.42));z-index:2}
 .lead-form{display:flex;flex-direction:column;gap:1rem;padding:1.3rem}
 .lead-field{display:flex;flex-direction:column;gap:.35rem}
 .lead-field span{font-size:.82rem;font-weight:600;color:var(--ink-soft)}
@@ -513,7 +515,8 @@ html[dir="rtl"] .lang-item,html[dir="rtl"] .hero-trust,html[dir="rtl"] .btn-stac
 .lead-done h4{margin:.2rem 0 0;font-size:1.15rem;color:var(--ink)}
 .lead-done p{margin:0;color:var(--ink-soft);font-size:.92rem;line-height:1.5}
 .lead-done .btn{margin-top:.5rem}
-@media (max-width:380px){
-  .lead-doc{width:104px;flex-basis:104px}
-  .lead-banner-text h3{font-size:1.06rem}
+@media (max-width:420px){
+  .lead-doc{height:190px}
+  .lead-banner-text{padding-right:124px}
+  .lead-banner-text h3{font-size:1.02rem}
 }

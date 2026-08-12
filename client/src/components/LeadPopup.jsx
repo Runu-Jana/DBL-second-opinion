@@ -54,7 +54,7 @@ export default function LeadPopup() {
             <h3>Not Sure About Your Diagnosis or Treatment?</h3>
             <p>Get an expert second opinion from our oncology specialists.</p>
           </div>
-          <img className="lead-doc" src="/hero-mobile.jpg" alt="" loading="lazy" />
+          <img className="lead-doc" src="/doc-cutout.webp" alt="" loading="lazy" />
         </div>
 
         {sent ? (
