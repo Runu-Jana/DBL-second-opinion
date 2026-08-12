@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { useLang } from '../i18n.jsx';
 import { api } from '../api.js';
 import { ServiceIcon } from '../lib/icons.jsx';
+import { FALLBACK_DOCS } from './Oncologists.jsx';
 
 const I = {
   cloud: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 16V4m0 0-4 4m4-4 4 4" /><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" /></svg>,
@@ -30,6 +31,31 @@ const STATS = [
 const WHY = [I.experts, I.shield, I.clock, I.shield, I.doctor, I.globe];
 const STEPS = ['1', '2', '3'];
 
+/* PLACEHOLDER affiliation logos — swap the marks/names for real institution logos when available. */
+const PARTNERS = [
+  { name: 'Apex Cancer Institute', mark: 'ACI' },
+  { name: 'Meditrust Hospital', mark: 'MT' },
+  { name: 'Sunrise Oncology', mark: 'SO' },
+  { name: 'National Cancer Grid', mark: 'NCG' },
+  { name: 'CarePlus Network', mark: 'C+' },
+  { name: 'HealthBridge', mark: 'HB' },
+];
+
+/* PLACEHOLDER testimonials — replace with real, consented patient stories once collected. */
+const TESTIMONIALS = [
+  { name: 'Ritu Agarwal', city: 'Kolkata, West Bengal', condition: 'Breast Cancer', rating: 5, photo: '/avatar-1.jpg',
+    quote: "The second opinion gave us the confidence to adjust the treatment. Every option was explained in plain, caring language." },
+  { name: 'Suresh Iyer', city: 'Pune, Maharashtra', condition: 'Colon Cancer', rating: 5, photo: '/avatar-2.jpg',
+    quote: 'Within two days I had a clear plan from a specialist — without travelling to another city. Truly reassuring.' },
+  { name: 'Meena Reddy', city: 'Hyderabad, Telangana', condition: 'Lymphoma', rating: 5, photo: '/avatar-3.jpg',
+    quote: "Compassionate, thorough and fast. It felt like the experts genuinely cared about my father's recovery." },
+];
+
+/* PLACEHOLDER doctor photos for the carousel — used only when a doctor has no real photoUrl. */
+const EXPERT_PHOTOS = ['/avatar-1.jpg', '/avatar-2.jpg', '/avatar-3.jpg', '/avatar-4.jpg', '/avatar-5.jpg', '/doctor.jpg'];
+
+const starRow = (r = 5) => '★★★★★'.slice(0, Math.round(r)) + '☆☆☆☆☆'.slice(0, 5 - Math.round(r));
+
 /* Shown when the API has no services yet (or is unreachable) — mirrors the seeded catalogue. */
 export const FALLBACK_SERVICES = [
   { id: 1, title: 'Cancer Medical Second Opinion', icon: 'report', price: 2999, description: 'Expert opinion on your diagnosis and treatment plan.', featured: true },
@@ -48,9 +74,47 @@ export default function Home() {
   const { requestUpload } = useAuth();
   const { t } = useLang();
   const [services, setServices] = useState(FALLBACK_SERVICES);
+  const [experts, setExperts] = useState(FALLBACK_DOCS);
   const stepsRef = useRef(null);
 
   useEffect(() => { api('/services', { auth: false }).then((d) => { if (Array.isArray(d)) setServices(d); }).catch(() => {}); }, []);
+  useEffect(() => { api('/oncologists', { auth: false }).then((d) => { if (Array.isArray(d) && d.length) setExperts(d); }).catch(() => {}); }, []);
+
+  // Carousel: featured doctors first, then the rest.
+  const carouselExperts = [...experts].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+  const expTrackRef = useRef(null);
+
+  const scrollExperts = (dir) => {
+    const t = expTrackRef.current;
+    if (!t) return;
+    const card = t.querySelector('.ecard');
+    const step = card ? card.getBoundingClientRect().width + 20 : 300;
+    const maxLeft = t.scrollWidth - t.clientWidth;
+    if (dir > 0 && t.scrollLeft >= maxLeft - 4) t.scrollTo({ left: 0, behavior: 'smooth' });
+    else if (dir < 0 && t.scrollLeft <= 4) t.scrollTo({ left: maxLeft, behavior: 'smooth' });
+    else t.scrollBy({ left: dir * step, behavior: 'smooth' });
+  };
+
+  // Gentle autoplay; pauses on interaction and respects reduced-motion.
+  useEffect(() => {
+    const t = expTrackRef.current;
+    if (!t || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    let paused = false;
+    const pause = () => { paused = true; };
+    const resume = () => { paused = false; };
+    t.addEventListener('pointerenter', pause);
+    t.addEventListener('pointerleave', resume);
+    t.addEventListener('pointerdown', pause);
+    t.addEventListener('focusin', pause);
+    const id = setInterval(() => { if (!paused) scrollExperts(1); }, 4500);
+    return () => {
+      clearInterval(id);
+      t.removeEventListener('pointerenter', pause);
+      t.removeEventListener('pointerleave', resume);
+      t.removeEventListener('pointerdown', pause);
+      t.removeEventListener('focusin', pause);
+    };
+  }, [experts]);
 
   // Reveal the "How It Works" steps as they scroll into view (desktop + mobile).
   // Arm the hidden state only when we can observe — otherwise the steps stay visible.
@@ -126,6 +190,25 @@ export default function Home() {
         )}
       </section>
 
+      {/* AFFILIATIONS — hidden for now. Only enable once real, VERIFIED institution
+          affiliations exist; showing unverified logos could misrepresent the doctors.
+          Flip `false` to `true` (and swap PARTNERS for real logos) to bring it back. */}
+      {false && (
+      <section className="partners" aria-label="Affiliations">
+        <div className="container">
+          <p className="partners-title">{t('partners.title')}</p>
+          <div className="partners-row">
+            {PARTNERS.map((p) => (
+              <span className="partner-logo" key={p.name} title={p.name}>
+                <span className="partner-mark" aria-hidden="true">{p.mark}</span>
+                <span className="partner-name">{p.name}</span>
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+      )}
+
       {/* STATS BAR — hidden for now; flip `false` to `true` to bring it back */}
       {false && (
       <section className="stats-bar">
@@ -198,6 +281,76 @@ export default function Home() {
                 <h4>{t(`how.t${i + 1}`)}</h4>
                 <p>{t(`how.d${i + 1}`)}</p>
               </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FEATURED EXPERTS — pulled from the live oncologist roster (falls back to samples) */}
+      <section className="home-experts" id="experts">
+        <div className="container">
+          <div className="section-head">
+            <p className="section-eyebrow">{t('experts.eyebrow')}</p>
+            <h2>{t('experts.title')}</h2>
+            <span className="section-underline" />
+            <p className="section-sub">{t('experts.sub')}</p>
+          </div>
+          <div className="ecarousel">
+            <button type="button" className="ecar-arrow ecar-prev" onClick={() => scrollExperts(-1)} aria-label="Previous experts">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+            </button>
+            <div className="ecar-track" ref={expTrackRef}>
+              {carouselExperts.map((d, i) => (
+                <article className="ecard" key={d.id}>
+                  <div className="ecard-photo">
+                    <img src={d.photoUrl || EXPERT_PHOTOS[i % EXPERT_PHOTOS.length]} alt={d.name} loading="lazy" />
+                    {d.featured && <span className="ecard-badge">{t('detail.featured')}</span>}
+                  </div>
+                  <div className="ecard-body">
+                    <h3 className="ecard-name"><Link to={`/oncologists/${d.id}`}>{d.name}</Link></h3>
+                    <p className="ecard-spec">{d.specialty}</p>
+                    <p className="ecard-place">{[d.hospital, d.city].filter(Boolean).join(' · ')}</p>
+                    <div className="ecard-meta">
+                      <span>{d.experience}+ {t('detail.yrsExp')}</span>
+                      {d.rating && <span className="ecard-stars" title={`${d.rating} / 5`}>{starRow(d.rating)}</span>}
+                    </div>
+                    <Link className="ecard-cta" to={`/oncologists/${d.id}`}>{t('detail.viewProfile')} &rarr;</Link>
+                  </div>
+                </article>
+              ))}
+            </div>
+            <button type="button" className="ecar-arrow ecar-next" onClick={() => scrollExperts(1)} aria-label="Next experts">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
+            </button>
+          </div>
+          <div className="fexp-all">
+            <Link className="btn btn-outline" to="/oncologists">{t('experts.viewAll')} &rarr;</Link>
+          </div>
+        </div>
+      </section>
+
+      {/* TESTIMONIALS — placeholder patient stories; replace with real, consented ones */}
+      <section className="reviews" id="reviews">
+        <div className="container">
+          <div className="section-head">
+            <p className="section-eyebrow">{t('reviews.eyebrow')}</p>
+            <h2>{t('reviews.title')}</h2>
+            <span className="section-underline" />
+            <p className="section-sub">{t('reviews.sub')}</p>
+          </div>
+          <div className="reviews-grid">
+            {TESTIMONIALS.map((r) => (
+              <figure className="review-card" key={r.name}>
+                <div className="review-stars" aria-label={`${r.rating} out of 5`}>{starRow(r.rating)}</div>
+                <blockquote className="review-quote">“{r.quote}”</blockquote>
+                <figcaption className="review-person">
+                  <img className="review-photo" src={r.photo} alt="" loading="lazy" />
+                  <span className="review-id">
+                    <strong>{r.name}</strong>
+                    <span className="review-meta">{r.condition} · {r.city}</span>
+                  </span>
+                </figcaption>
+              </figure>
             ))}
           </div>
         </div>

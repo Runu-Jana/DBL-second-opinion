@@ -293,5 +293,19 @@
     "disclaimer": "AI assistant · not medical advice. A specialist reviews your reports for any diagnosis.",
     "errNoReply": "Sorry, I couldn't respond. Please try our contact form.",
     "errConnect": "Sorry, I'm having trouble connecting. Please use the contact form and our team will help."
+  },
+  "partners": {
+    "title": "In association with leading cancer institutions"
+  },
+  "experts": {
+    "eyebrow": "Our Panel",
+    "title": "Meet Our Expert Oncologists",
+    "sub": "Board-certified specialists from India's top cancer centres personally review your case.",
+    "viewAll": "View all oncologists"
+  },
+  "reviews": {
+    "eyebrow": "Patient Stories",
+    "title": "Trusted by Patients Worldwide",
+    "sub": "Real experiences from families who found clarity and confidence with us."
   }
 }

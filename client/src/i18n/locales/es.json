@@ -293,5 +293,19 @@
     "disclaimer": "Asistente de IA · no es consejo médico. Un especialista revisa tus informes para cualquier diagnóstico.",
     "errNoReply": "Lo siento, no pude responder. Prueba nuestro formulario de contacto.",
     "errConnect": "Lo siento, tengo problemas para conectarme. Usa el formulario de contacto y nuestro equipo te ayudará."
+  },
+  "partners": {
+    "title": "En asociación con instituciones oncológicas líderes"
+  },
+  "experts": {
+    "eyebrow": "Nuestro panel",
+    "title": "Conozca a nuestros oncólogos expertos",
+    "sub": "Especialistas certificados de los mejores centros oncológicos de la India revisan personalmente su caso.",
+    "viewAll": "Ver todos los oncólogos"
+  },
+  "reviews": {
+    "eyebrow": "Historias de pacientes",
+    "title": "La confianza de pacientes de todo el mundo",
+    "sub": "Experiencias reales de familias que encontraron claridad y confianza con nosotros."
   }
 }

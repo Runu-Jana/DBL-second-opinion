@@ -293,5 +293,19 @@
     "disclaimer": "Assistant IA · pas un avis médical. Un spécialiste examine vos comptes rendus pour tout diagnostic.",
     "errNoReply": "Désolé, je n'ai pas pu répondre. Veuillez essayer notre formulaire de contact.",
     "errConnect": "Désolé, j'ai des difficultés à me connecter. Veuillez utiliser le formulaire de contact et notre équipe vous aidera."
+  },
+  "partners": {
+    "title": "En partenariat avec de grandes institutions d’oncologie"
+  },
+  "experts": {
+    "eyebrow": "Notre panel",
+    "title": "Rencontrez nos oncologues experts",
+    "sub": "Des spécialistes certifiés des meilleurs centres anticancéreux d’Inde examinent personnellement votre dossier.",
+    "viewAll": "Voir tous les oncologues"
+  },
+  "reviews": {
+    "eyebrow": "Témoignages de patients",
+    "title": "La confiance des patients du monde entier",
+    "sub": "Des expériences réelles de familles qui ont trouvé clarté et confiance avec nous."
   }
 }

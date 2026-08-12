@@ -257,6 +257,73 @@ html[dir="rtl"] .lang-item,html[dir="rtl"] .hero-trust,html[dir="rtl"] .btn-stac
 .footer-note{margin:0;font-size:.85rem;opacity:.7}
 
 /* ---------- Section heading ---------- */
+/* ---------- Social proof: affiliations, featured experts, testimonials ---------- */
+.section-eyebrow{margin:0 0 .55rem;font-size:.78rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--teal-dark)}
+.section-sub{display:block;max-width:58ch;margin:1rem auto 0;color:var(--muted);font-size:.98rem;line-height:1.65}
+
+.partners{background:#fff;border-bottom:1px solid var(--line);padding:clamp(1.6rem,3vw,2.4rem) 0}
+.partners-title{text-align:center;margin:0 0 1.2rem;font-size:.8rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.partners-row{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:1.1rem 2.4rem}
+.partner-logo{display:inline-flex;align-items:center;gap:.6rem;filter:grayscale(1);opacity:.62;transition:filter .2s,opacity .2s}
+.partner-logo:hover{filter:grayscale(0);opacity:1}
+.partner-mark{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:9px;background:var(--teal-050);color:var(--teal-dark);font-weight:800;font-size:.8rem;letter-spacing:.02em}
+.partner-name{font-weight:700;color:var(--ink-soft);font-size:.95rem;white-space:nowrap}
+
+.home-experts{padding:clamp(46px,6vw,80px) 0;background:var(--bg)}
+/* Expert carousel — native scroll-snap track (swipe on touch), arrows on larger screens */
+.ecarousel{position:relative;display:flex;align-items:center;gap:.5rem}
+.ecar-track{flex:1;display:flex;gap:1.3rem;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;
+  padding:.4rem .3rem 1.1rem;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.ecar-track::-webkit-scrollbar{display:none}
+.ecard{scroll-snap-align:start;flex:0 0 clamp(196px,calc(25% - .98rem),230px);
+  position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;
+  background:#fff;border:1px solid var(--line);border-radius:16px;padding:1.5rem 1.1rem 1.35rem;
+  box-shadow:var(--shadow-sm);transition:transform .2s,box-shadow .2s}
+.ecard:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}
+.ecard-photo{width:88px;height:88px;border-radius:50%;overflow:hidden;background:var(--teal-050);
+  border:3px solid #fff;box-shadow:0 6px 16px rgba(4,28,25,.12);margin-bottom:.85rem}
+.ecard-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.ecard-badge{position:absolute;top:.7rem;right:.7rem;background:var(--teal-050);color:var(--teal-dark);
+  font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:.2rem .48rem;border-radius:999px}
+.ecard-body{flex:1;display:flex;flex-direction:column;align-items:center;width:100%}
+.ecard-name{margin:0 0 .12rem;font-size:1rem;font-weight:800}
+.ecard-name a{color:var(--ink);text-decoration:none}
+.ecard-name a:hover{color:var(--teal-dark)}
+.ecard-spec{margin:0 0 .22rem;color:var(--teal-dark);font-weight:700;font-size:.84rem}
+.ecard-place{margin:0 0 .5rem;color:var(--muted);font-size:.8rem}
+.ecard-meta{display:flex;align-items:center;gap:.6rem;font-size:.79rem;color:var(--ink-soft);font-weight:600;margin-bottom:.7rem}
+.ecard-stars{color:#f5a623;letter-spacing:1px}
+.ecard-cta{margin-top:auto;color:var(--teal-dark);font-weight:700;font-size:.83rem;text-decoration:none}
+.ecard-cta:hover{color:var(--teal)}
+.ecar-arrow{flex:0 0 auto;width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:#fff;
+  display:grid;place-items:center;cursor:pointer;color:var(--teal-dark);box-shadow:var(--shadow-sm);transition:.15s;z-index:2}
+.ecar-arrow:hover{background:var(--teal-050);border-color:var(--teal-100);transform:scale(1.06)}
+.fexp-all{text-align:center;margin-top:2.1rem}
+
+.reviews{padding:clamp(46px,6vw,80px) 0;background:#fff}
+.reviews-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.4rem}
+.review-card{margin:0;display:flex;flex-direction:column;gap:1rem;background:var(--bg);
+  border:1px solid var(--line);border-radius:16px;padding:1.7rem 1.5rem;box-shadow:var(--shadow-sm)}
+.review-stars{color:#f5a623;letter-spacing:2px;font-size:1rem}
+.review-quote{margin:0;color:var(--ink-soft);font-size:.98rem;line-height:1.7;font-style:italic}
+.review-person{display:flex;align-items:center;gap:.8rem;margin-top:auto}
+.review-photo{width:46px;height:46px;border-radius:50%;object-fit:cover;flex:0 0 auto}
+.review-id strong{display:block;color:var(--ink);font-size:.95rem}
+.review-meta{display:block;color:var(--muted);font-size:.82rem;margin-top:2px}
+@media (max-width:820px){.ecard{flex-basis:calc(33.333% - .87rem)}}   /* ~3 cards on tablet */
+@media (max-width:900px){.reviews-grid{grid-template-columns:1fr}}
+@media (max-width:560px){
+  /* Phones: a compact card with a peek of the next (signals swipe); hide arrows. */
+  .home-experts{padding:34px 0}
+  .home-experts .section-head{margin-bottom:1.5rem}
+  .ecarousel{gap:0}
+  .ecar-arrow{display:none}
+  .ecar-track{gap:.85rem;padding-bottom:.9rem}
+  .ecard{flex-basis:62%;padding:1.2rem .9rem 1.1rem}
+  .ecard-photo{width:74px;height:74px}
+  .fexp-all{margin-top:1.4rem}
+}
+
 .section-head{text-align:center;margin-bottom:clamp(2rem,4vw,3rem)}
 .section-head h2{margin:0 0 .8rem;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:var(--ink)}
 .section-underline{display:inline-block;width:64px;height:4px;border-radius:3px;background:var(--teal)}
@@ -323,6 +390,14 @@ html[dir="rtl"] .lang-item,html[dir="rtl"] .hero-trust,html[dir="rtl"] .btn-stac
 }
 @media (max-width:640px){
   .why-grid{grid-template-columns:repeat(2,1fr)}
+  /* Compact the How It Works section on phones — the stacked cards made it very tall. */
+  .how-light{padding:30px 0}
+  .how-light .section-head{margin-bottom:1.4rem}
+  .steps-light{gap:.75rem;max-width:400px}
+  .step-light{padding:1.1rem 1.2rem}
+  .step-num{width:40px;height:40px;font-size:1.05rem;margin-bottom:.6rem}
+  .step-light h4{font-size:1rem;margin:0 0 .3rem}
+  .step-light p{font-size:.85rem;line-height:1.45}
 }
 @media (max-width:460px){
   .services-grid{grid-template-columns:1fr}
@@ -362,6 +437,7 @@ html[dir="rtl"] .lang-item,html[dir="rtl"] .hero-trust,html[dir="rtl"] .btn-stac
 }
 @media (max-width:620px){
   .header-cta{display:none}          /* on phones the CTA would crowd the brand + hamburger */
+  .nav-toggle{margin-left:.55rem}    /* breathing room between the language switcher and the hamburger */
   .brand-tag{font-size:.44rem;line-height:1.3}   /* full tagline kept, shrunk to fit phones */
   .brand-name{font-size:1.2rem}
   .lang-current{display:none}        /* compact language switcher (globe only) so the hamburger keeps its edge margin */
