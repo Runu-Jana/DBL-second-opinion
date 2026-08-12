@@ -222,6 +222,7 @@ model Report {
   fileUrl     String?
   status      String   @default("Pending Review") // Pending Review / Reviewed / Uploaded / Archived
   notes       String?
+  aiSummary   String?                             // AI-generated reading (decision-support for the counselor/doctor)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

@@ -5,6 +5,7 @@ const { requireAdmin } = require('./auth');
 const { crudRouter, str, int, inSet } = require('./_crud');
 const { CATEGORIES, splitCategories } = require('../lib/categories');
 const { logActivity } = require('../lib/audit');
+const reportAI = require('../lib/reportAI');
 
 const need = (v) => (v && String(v).trim() ? String(v).trim() : '');
 
@@ -109,6 +110,31 @@ reports.post('/:id/categorise', requireAdmin, async (req, res) => {
     logActivity(req, { kind: 'activity', action: `Report for ${report.patientName} categorised as ${category}${assigned ? ` and routed to ${assigned}` : ''}`, category: 'Report' });
     res.json({ ...updated, assignedTo: assigned, eligibleCount: eligible.length });
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not categorise the report.' }); }
+});
+
+// POST /api/reports/:id/analyze — Claude reads the uploaded file and returns a structured summary
+// + a suggested category (decision-support). The summary is saved on the report for the doctor.
+reports.post('/:id/analyze', requireAdmin, async (req, res) => {
+  try {
+    const report = await prisma.report.findUnique({ where: { id: +req.params.id } });
+    if (!report) return res.status(404).json({ error: 'Report not found.' });
+    if (!report.fileUrl) return res.status(400).json({ error: 'This report has no file to analyse.' });
+
+    const result = await reportAI.analyzeReport(report);
+    const summaryText = [
+      result.summary || '',
+      result.keyFindings?.length ? '• ' + result.keyFindings.join('\n• ') : '',
+      result.caveats ? `Caveat: ${result.caveats}` : '',
+    ].filter(Boolean).join('\n');
+    await prisma.report.update({ where: { id: report.id }, data: { aiSummary: summaryText } });
+    logActivity(req, { kind: 'activity', action: `AI read ${report.patientName}'s report → suggests ${result.suggestedCategory}`, category: 'Report' });
+    res.json(result);
+  } catch (e) {
+    if (e.code === 'NOT_CONFIGURED') return res.status(503).json({ error: e.message });
+    if (e.code === 'NO_FILE' || e.code === 'UNSUPPORTED') return res.status(400).json({ error: e.message });
+    console.error('report AI error:', e);
+    res.status(500).json({ error: 'AI analysis failed. Please try again.' });
+  }
 });
 
 const treatmentPlans = crudRouter({

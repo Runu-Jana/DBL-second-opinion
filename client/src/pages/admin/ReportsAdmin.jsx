@@ -18,6 +18,17 @@ function TriageModal({ report, onClose, onDone, on401 }) {
   const [category, setCategory] = useState(report.category || '');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
+  const [ai, setAi] = useState(null);
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiErr, setAiErr] = useState('');
+
+  const runAI = () => {
+    setAiBusy(true); setAiErr(''); setAi(null);
+    api(`/reports/${report.id}/analyze`, { method: 'POST', on401 })
+      .then((r) => { setAi(r); if (r.suggestedCategory && !category) setCategory(r.suggestedCategory); })
+      .catch((e) => setAiErr(e.message))
+      .finally(() => setAiBusy(false));
+  };
 
   const submit = () => {
     if (!category) return setErr('Pick a category to route this report.');
@@ -40,6 +51,27 @@ function TriageModal({ report, onClose, onDone, on401 }) {
           {report.fileUrl
             ? <a className="triage-file" href={report.fileUrl} target="_blank" rel="noreferrer">{TagIcon}<span>Open the report file</span><span aria-hidden="true">↗</span></a>
             : <span className="triage-file muted">No file attached</span>}
+
+          {report.fileUrl && (
+            <button type="button" className="ai-read-btn" disabled={aiBusy} onClick={runAI}>
+              <span aria-hidden="true">✨</span> {aiBusy ? 'Reading the report…' : ai ? 'Re-read with AI' : 'Read with AI'}
+            </button>
+          )}
+          {aiErr && <p className="admin-msg err show">{aiErr}</p>}
+          {ai && (
+            <div className="ai-read-result">
+              <div className="ai-read-top">
+                AI suggests <span className={'adm-badge ' + (CATEGORY_TONE[ai.suggestedCategory] || 'gray')}>{ai.suggestedCategory}</span>
+                <span className="ai-conf">{ai.confidence} confidence</span>
+                {ai.suggestedCategory !== category && <button type="button" className="ai-use" onClick={() => setCategory(ai.suggestedCategory)}>Use this</button>}
+              </div>
+              {ai.reportType && ai.reportType !== 'Unknown' && <p className="ai-meta">Report type: <strong>{ai.reportType}</strong></p>}
+              {ai.summary && <p className="ai-summary">{ai.summary}</p>}
+              {ai.keyFindings?.length > 0 && <ul className="ai-findings">{ai.keyFindings.map((f, i) => <li key={i}>{f}</li>)}</ul>}
+              {ai.caveats && <p className="ai-caveat">⚠ {ai.caveats}</p>}
+              <p className="ai-disclaimer">AI decision-support — verify against the file. The specialist makes the diagnosis.</p>
+            </div>
+          )}
 
           <span className="adm-cat-label">Choose a category</span>
           <div className="adm-cat-checks">

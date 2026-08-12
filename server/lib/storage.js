@@ -72,4 +72,32 @@ async function streamTo(key, res) {
   return true;
 }
 
-module.exports = { useR2, keyFor, saveBuffer, streamTo, LOCAL_DIR };
+// Fetch a stored object's bytes + content type (for server-side processing, e.g. AI analysis).
+// Returns null if the object doesn't exist.
+async function getBuffer(key) {
+  const k = safeKey(key);
+  if (useR2) {
+    const { GetObjectCommand } = require('@aws-sdk/client-s3');
+    try {
+      const obj = await s3.send(new GetObjectCommand({ Bucket: R2.bucket, Key: k }));
+      const chunks = [];
+      for await (const chunk of obj.Body) chunks.push(chunk);
+      return { buffer: Buffer.concat(chunks), contentType: obj.ContentType || 'application/octet-stream' };
+    } catch (e) {
+      if (e.name === 'NoSuchKey' || e.$metadata?.httpStatusCode === 404) return null;
+      throw e;
+    }
+  }
+  const full = path.join(LOCAL_DIR, k);
+  if (!fs.existsSync(full)) return null;
+  const ext = path.extname(k).toLowerCase();
+  const contentType = ext === '.pdf' ? 'application/pdf'
+    : ext === '.png' ? 'image/png'
+      : (ext === '.jpg' || ext === '.jpeg') ? 'image/jpeg' : 'application/octet-stream';
+  return { buffer: fs.readFileSync(full), contentType };
+}
+
+// Extract the <key> from a stored /uploads/<key> URL (or return the string as-is).
+const keyFromUrl = (url) => String(url || '').replace(/^.*\/uploads\//, '');
+
+module.exports = { useR2, keyFor, saveBuffer, streamTo, getBuffer, keyFromUrl, LOCAL_DIR };
