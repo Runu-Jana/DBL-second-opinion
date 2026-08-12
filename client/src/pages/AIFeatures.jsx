@@ -50,7 +50,7 @@ export default function AIFeatures() {
               </div>
               <p className="ai-tagline">{t('aif.' + active.g)}</p>
               <div className="ai-role-visual">
-                <img key={tab} src={`/ai/${tab}.png`} width="1280" height="853" loading="lazy"
+                <img key={tab} src={`/ai/${tab}.jpg`} width="1200" height="675" loading="lazy"
                   alt={`${t('aif.' + active.l)} — how DBL's AI helps`} />
               </div>
             </div>
