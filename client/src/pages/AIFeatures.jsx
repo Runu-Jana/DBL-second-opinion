@@ -23,86 +23,6 @@ const TABS = [
   { key: 'admin', l: 'tabAdmin', g: 'tagAdmin' },
 ];
 
-function AiVisual() {
-  const cx = 230, cy = 150, h = 46;                 // chip centre + half-size
-  const L = cx - h, R = cx + h, T = cy - h, B = cy + h;
-  const pinOff = [-30, -10, 10, 30];                 // connector pins per edge
-
-  // PCB-style right-angle traces — each polyline ends at a solder pad
-  const traces = [
-    [[L - 8, 120], [110, 120], [110, 78], [62, 78]],
-    [[L - 8, 180], [124, 180], [124, 224], [70, 224]],
-    [[R + 8, 120], [352, 120], [352, 76], [402, 76]],
-    [[R + 8, 180], [338, 180], [338, 222], [400, 222]],
-    [[200, T - 8], [200, 56], [150, 56]],
-    [[260, T - 8], [260, 46]],
-    [[200, B + 8], [200, 248], [150, 248]],
-    [[260, B + 8], [260, 258]],
-  ];
-  const dataDots = [[110, 120], [124, 205], [352, 100], [338, 205], [200, 70], [200, 232]];
-
-  return (
-    <div className="ai-visual">
-      <svg viewBox="0 0 460 300" role="img" aria-label="AI processor at the centre of connected oncology systems">
-        <defs>
-          <radialGradient id="aiHalo" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="rgba(92,240,218,.42)" />
-            <stop offset="55%" stopColor="rgba(92,240,218,.10)" />
-            <stop offset="100%" stopColor="rgba(92,240,218,0)" />
-          </radialGradient>
-          <radialGradient id="aiCoreFill" cx="50%" cy="38%" r="70%">
-            <stop offset="0%" stopColor="#12897b" />
-            <stop offset="60%" stopColor="#0b5952" />
-            <stop offset="100%" stopColor="#073b35" />
-          </radialGradient>
-          <pattern id="aiGrid" width="22" height="22" patternUnits="userSpaceOnUse">
-            <path className="ai-grid-line" d="M22 0H0V22" />
-          </pattern>
-        </defs>
-
-        {/* technical grid background */}
-        <rect x="0" y="0" width="460" height="300" fill="url(#aiGrid)" />
-
-        {/* HUD corner brackets */}
-        <path className="ai-hud" d="M20 42V20H42" />
-        <path className="ai-hud" d="M440 42V20H418" />
-        <path className="ai-hud" d="M20 258V280H42" />
-        <path className="ai-hud" d="M440 258V280H418" />
-
-        {/* circuit traces + solder pads */}
-        <g>
-          {traces.map((pts, i) => {
-            const [px, py] = pts[pts.length - 1];
-            return (
-              <g key={i}>
-                <polyline className="ai-trace" points={pts.map((p) => p.join(',')).join(' ')} />
-                <rect className="ai-pad" x={px - 5} y={py - 5} width="10" height="10" rx="2.5" />
-                <circle className="ai-pad-dot" cx={px} cy={py} r="2" />
-              </g>
-            );
-          })}
-        </g>
-        {dataDots.map(([x, y], i) => <circle key={i} className="ai-data" cx={x} cy={y} r="2.6" />)}
-
-        {/* connector pins around the chip */}
-        <g className="ai-pins">
-          {pinOff.map((o, i) => <rect key={'l' + i} x={L - 8} y={cy + o - 1.5} width="8" height="3" rx="1" />)}
-          {pinOff.map((o, i) => <rect key={'r' + i} x={R} y={cy + o - 1.5} width="8" height="3" rx="1" />)}
-          {pinOff.map((o, i) => <rect key={'t' + i} x={cx + o - 1.5} y={T - 8} width="3" height="8" rx="1" />)}
-          {pinOff.map((o, i) => <rect key={'b' + i} x={cx + o - 1.5} y={B} width="3" height="8" rx="1" />)}
-        </g>
-
-        {/* processor chip */}
-        <circle className="ai-chip-halo" cx={cx} cy={cy} r="66" />
-        <rect className="ai-chip" x={L} y={T} width={h * 2} height={h * 2} rx="12" />
-        <rect className="ai-chip-inner" x={L + 11} y={T + 11} width={h * 2 - 22} height={h * 2 - 22} rx="7" />
-        <path className="ai-chip-cross" d={`M${cx} ${T + 11}V${B - 11}M${L + 11} ${cy}H${R - 11}`} />
-        <text x={cx} y={cy + 1} className="ai-text" textAnchor="middle" dominantBaseline="central">AI</text>
-      </svg>
-    </div>
-  );
-}
-
 export default function AIFeatures() {
   const { requestUpload } = useAuth();
   const { t } = useLang();
@@ -129,7 +49,10 @@ export default function AIFeatures() {
                 ))}
               </div>
               <p className="ai-tagline">{t('aif.' + active.g)}</p>
-              <AiVisual />
+              <div className="ai-role-visual">
+                <img key={tab} src={`/ai/${tab}.png`} width="1280" height="853" loading="lazy"
+                  alt={`${t('aif.' + active.l)} — how DBL's AI helps`} />
+              </div>
             </div>
 
             <div className="ai-right">
