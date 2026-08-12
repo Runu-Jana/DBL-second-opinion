@@ -243,9 +243,9 @@ table.admin-table{width:100%;border-collapse:collapse;min-width:720px}
   box-shadow:var(--shadow-md);border:1px solid rgba(57,230,207,.25)}
 .ai-visual svg{display:block;width:100%;height:auto}
 /* Per-role illustration (Patients / Pharmacists / Doctors / Admin) */
-.ai-role-visual{border-radius:20px;overflow:hidden;background:#f2faf8;aspect-ratio:2/1;
+.ai-role-visual{border-radius:20px;overflow:hidden;background:#f2faf8;aspect-ratio:16/9;
   box-shadow:var(--shadow-md);border:1px solid rgba(18,137,123,.18)}
-.ai-role-visual img{display:block;width:100%;height:100%;object-fit:cover;object-position:center;animation:aiRoleFade .35s ease}
+.ai-role-visual img{display:block;width:100%;height:100%;object-fit:cover;object-position:center top;animation:aiRoleFade .35s ease}
 @keyframes aiRoleFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .ai-grid-line{fill:none;stroke:rgba(120,240,220,.07);stroke-width:1}
 .ai-hud{fill:none;stroke:rgba(120,240,220,.45);stroke-width:1.6;stroke-linecap:round}
