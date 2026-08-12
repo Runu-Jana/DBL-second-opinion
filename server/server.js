@@ -19,6 +19,7 @@ const patientPortalRouter = require('./routes/patient');
 const doctorApplicationsRouter = require('./routes/doctorApplications');
 const contactRouter = require('./routes/contact');
 const messagesRouter = require('./routes/messages');
+const chatRouter = require('./routes/chat');
 const storage = require('./lib/storage');
 const M = require('./routes/modules');
 
@@ -46,6 +47,7 @@ app.use('/api/portal', patientPortalRouter);
 app.use('/api/doctor-applications', doctorApplicationsRouter);
 app.use('/api/contact', contactRouter);
 app.use('/api/messages', messagesRouter);
+app.use('/api/chat', chatRouter);
 app.use('/api/reports', M.reports);
 app.use('/api/treatment-plans', M.treatmentPlans);
 app.use('/api/second-opinions', M.secondOpinions);

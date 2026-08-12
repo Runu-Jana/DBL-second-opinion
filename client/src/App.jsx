@@ -32,6 +32,7 @@ import Admin from './pages/Admin.jsx';
 import DoctorPortal from './pages/DoctorPortal.jsx';
 import PrivacyPolicy from './pages/PrivacyPolicy.jsx';
 import TermsConditions from './pages/TermsConditions.jsx';
+import ChatWidget from './components/ChatWidget.jsx';
 
 export default function App() {
   return (
@@ -72,6 +73,7 @@ export default function App() {
       </Routes>
       <AuthModal />
       <UploadModal />
+      <ChatWidget />
     </AuthProvider>
   );
 }

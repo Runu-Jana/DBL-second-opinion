@@ -529,3 +529,41 @@ html[dir="rtl"] .lang-item,html[dir="rtl"] .hero-trust,html[dir="rtl"] .btn-stac
 @media (max-width:768px){
   input:not([type=checkbox]):not([type=radio]),textarea,select{font-size:16px}
 }
+
+/* ---------- Floating AI chat widget ---------- */
+.chatw-fab{position:fixed;right:20px;bottom:20px;z-index:900;width:58px;height:58px;border:0;border-radius:50%;cursor:pointer;
+  display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,var(--teal),var(--teal-deep));
+  box-shadow:0 10px 26px rgba(11,89,82,.4);transition:transform .2s ease,box-shadow .2s ease}
+.chatw-fab:hover{transform:translateY(-2px) scale(1.04);box-shadow:0 14px 30px rgba(11,89,82,.5)}
+.chatw-fab.open{background:var(--teal-deep)}
+.chatw-panel{position:fixed;right:20px;bottom:88px;z-index:950;width:min(380px,calc(100vw - 32px));height:min(560px,72vh);
+  display:flex;flex-direction:column;background:#fff;border-radius:18px;overflow:hidden;
+  box-shadow:0 24px 60px rgba(0,0,0,.28);animation:chatwPop .25s cubic-bezier(.2,.8,.3,1)}
+@keyframes chatwPop{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:none}}
+.chatw-head{display:flex;align-items:center;gap:.6rem;padding:.85rem 1rem;color:#fff;background:linear-gradient(135deg,var(--teal),var(--teal-deep))}
+.chatw-head-av{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.2);font-weight:800;font-size:.72rem;flex:0 0 auto}
+.chatw-head-meta{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}
+.chatw-head-meta strong{font-size:.95rem;font-weight:800}
+.chatw-head-meta span{font-size:.72rem;opacity:.9}
+.chatw-close{border:0;background:none;color:#fff;font-size:1.5rem;line-height:1;cursor:pointer;padding:0 .2rem;opacity:.9}
+.chatw-close:hover{opacity:1}
+.chatw-body{flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.6rem;background:#f2faf8}
+.chatw-msg{max-width:82%;padding:.6rem .85rem;border-radius:14px;font-size:.88rem;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+.chatw-msg.them{background:#fff;border:1px solid var(--line);color:var(--ink);border-bottom-left-radius:5px;align-self:flex-start}
+.chatw-msg.me{background:linear-gradient(135deg,var(--teal),var(--teal-dark));color:#fff;border-bottom-right-radius:5px;align-self:flex-end}
+.chatw-typing{display:flex;gap:4px;align-items:center}
+.chatw-typing span{width:7px;height:7px;border-radius:50%;background:var(--teal);animation:chatwDot 1s infinite ease-in-out}
+.chatw-typing span:nth-child(2){animation-delay:.15s}
+.chatw-typing span:nth-child(3){animation-delay:.3s}
+@keyframes chatwDot{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-4px);opacity:1}}
+.chatw-input{display:flex;gap:.5rem;padding:.7rem;border-top:1px solid var(--line);background:#fff}
+.chatw-input input{flex:1;font:inherit;font-size:.9rem;border:1px solid var(--line);border-radius:10px;padding:.6rem .8rem}
+.chatw-input input:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-050)}
+.chatw-input button{flex:0 0 auto;width:42px;border:0;border-radius:10px;cursor:pointer;display:grid;place-items:center;color:#fff;background:var(--teal)}
+.chatw-input button:disabled{opacity:.5}
+.chatw-input button:hover:not(:disabled){background:var(--teal-dark)}
+.chatw-disclaimer{margin:0;padding:.4rem .8rem .6rem;font-size:.66rem;color:var(--muted);text-align:center;background:#fff}
+@media (max-width:520px){
+  .chatw-fab{right:16px;bottom:16px;width:54px;height:54px}
+  .chatw-panel{right:12px;left:12px;bottom:80px;width:auto;height:min(72vh,540px)}
+}

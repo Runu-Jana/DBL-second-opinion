@@ -49,7 +49,7 @@ function WorldMap() {
 
 const CONTACTS = [
   { icon: Ico.mail, t: 'Email Us', d: 'support@dblinternational.com' },
-  { icon: Ico.chat, t: 'Live Chat', d: 'Available 24/7' },
+  { icon: Ico.chat, t: 'Live Chat', d: 'Chat with our AI assistant', action: 'chat' },
   { icon: Ico.brief, t: 'Business Inquiries', d: 'partnerships@dblinternational.com' },
   { icon: Ico.pin, t: 'Global Locations', d: 'We serve patients in 20+ countries.' },
 ];
@@ -120,7 +120,10 @@ export default function ContactUs() {
                 <div className="dash-card-head"><h2>Get in Touch</h2></div>
                 <div className="ct-contacts">
                   {CONTACTS.map((c) => (
-                    <div className="ct-contact" key={c.t}>
+                    <div className={'ct-contact' + (c.action ? ' ct-clickable' : '')} key={c.t}
+                      role={c.action ? 'button' : undefined} tabIndex={c.action ? 0 : undefined}
+                      onClick={c.action === 'chat' ? () => window.dispatchEvent(new Event('open-dbl-chat')) : undefined}
+                      onKeyDown={c.action === 'chat' ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); window.dispatchEvent(new Event('open-dbl-chat')); } } : undefined}>
                       <span className="ct-contact-ico">{c.icon}</span>
                       <div><h3>{c.t}</h3><p>{c.d}</p></div>
                     </div>

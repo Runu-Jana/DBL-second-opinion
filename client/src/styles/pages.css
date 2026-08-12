@@ -730,6 +730,8 @@ table.admin-table{width:100%;border-collapse:collapse;min-width:720px}
 
 .ct-contacts{display:flex;flex-direction:column;gap:1.1rem}
 .ct-contact{display:flex;gap:.8rem;align-items:flex-start}
+.ct-clickable{cursor:pointer;border-radius:12px;padding:.4rem;margin:-.4rem;transition:background .15s ease}
+.ct-clickable:hover{background:var(--teal-050)}
 .ct-contact-ico{flex:0 0 auto;display:grid;place-items:center;width:40px;height:40px;border-radius:11px;background:var(--teal-050);color:var(--teal-dark)}
 .ct-contact-ico svg{width:20px;height:20px}
 .ct-contact h3{margin:0 0 .15rem;font-size:.88rem;font-weight:800;color:var(--ink)}
