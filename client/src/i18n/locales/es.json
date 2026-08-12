@@ -280,5 +280,18 @@
     "ok": "Gracias — hemos recibido su solicitud. Nuestro equipo médico se pondrá en contacto en 2–3 días hábiles.",
     "bannerText": "Juntos, hagamos que la atención oncológica experta sea accesible para todos, en todas partes.",
     "bannerBtn": "Saber Más"
+  },
+  "chat": {
+    "greeting": "¡Hola! 👋 Soy el asistente virtual de DBL. Pregúntame sobre segundas opiniones, cómo subir tus informes, nuestros servicios o cómo funciona el proceso.",
+    "openLabel": "Chatea con nosotros",
+    "closeLabel": "Cerrar chat",
+    "headTitle": "Asistente de DBL",
+    "headSub": "Pregúntanos lo que sea · respuestas al instante",
+    "placeholder": "Escribe tu pregunta…",
+    "sendLabel": "Enviar mensaje",
+    "typing": "El asistente está escribiendo",
+    "disclaimer": "Asistente de IA · no es consejo médico. Un especialista revisa tus informes para cualquier diagnóstico.",
+    "errNoReply": "Lo siento, no pude responder. Prueba nuestro formulario de contacto.",
+    "errConnect": "Lo siento, tengo problemas para conectarme. Usa el formulario de contacto y nuestro equipo te ayudará."
   }
 }

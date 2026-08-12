@@ -280,5 +280,18 @@
     "ok": "Thank you — your application has been received. Our medical team will be in touch within 2–3 working days.",
     "bannerText": "Together, let's make expert cancer care accessible to everyone, everywhere.",
     "bannerBtn": "Learn More"
+  },
+  "chat": {
+    "greeting": "Hi! 👋 I'm the DBL virtual assistant. Ask me about second opinions, uploading your reports, our services, or how the process works.",
+    "openLabel": "Chat with us",
+    "closeLabel": "Close chat",
+    "headTitle": "DBL Assistant",
+    "headSub": "Ask us anything · replies instantly",
+    "placeholder": "Type your question…",
+    "sendLabel": "Send message",
+    "typing": "Assistant is typing",
+    "disclaimer": "AI assistant · not medical advice. A specialist reviews your reports for any diagnosis.",
+    "errNoReply": "Sorry, I couldn't respond. Please try our contact form.",
+    "errConnect": "Sorry, I'm having trouble connecting. Please use the contact form and our team will help."
   }
 }

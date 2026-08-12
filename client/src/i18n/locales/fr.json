@@ -280,5 +280,18 @@
     "ok": "Merci — votre candidature a bien été reçue. Notre équipe médicale vous contactera sous 2 à 3 jours ouvrés.",
     "bannerText": "Ensemble, rendons les soins oncologiques experts accessibles à tous, partout.",
     "bannerBtn": "En Savoir Plus"
+  },
+  "chat": {
+    "greeting": "Bonjour ! 👋 Je suis l'assistant virtuel de DBL. Posez-moi vos questions sur les deuxièmes avis, l'envoi de vos comptes rendus, nos services ou le déroulement du processus.",
+    "openLabel": "Discutez avec nous",
+    "closeLabel": "Fermer le chat",
+    "headTitle": "Assistant DBL",
+    "headSub": "Posez-nous vos questions · réponses instantanées",
+    "placeholder": "Saisissez votre question…",
+    "sendLabel": "Envoyer le message",
+    "typing": "L'assistant est en train d'écrire",
+    "disclaimer": "Assistant IA · pas un avis médical. Un spécialiste examine vos comptes rendus pour tout diagnostic.",
+    "errNoReply": "Désolé, je n'ai pas pu répondre. Veuillez essayer notre formulaire de contact.",
+    "errConnect": "Désolé, j'ai des difficultés à me connecter. Veuillez utiliser le formulaire de contact et notre équipe vous aidera."
   }
 }
