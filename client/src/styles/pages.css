@@ -284,7 +284,10 @@ table.admin-table{width:100%;border-collapse:collapse;min-width:720px}
   .ai-grid{grid-template-columns:1fr}
 }
 @media (max-width:460px){
-  .ai-cta{flex-direction:column;align-items:flex-start;text-align:left}
+  .ai-cta{flex-direction:column;align-items:stretch;text-align:left;padding:1.4rem}
+  .ai-cta-left{align-items:flex-start}     /* icon lines up with the first line of text */
+  .ai-cta-icon{width:46px;height:46px}
+  .ai-cta .btn{width:100%;justify-content:center;margin-top:.2rem}
 }
 
 /* ============================================================
