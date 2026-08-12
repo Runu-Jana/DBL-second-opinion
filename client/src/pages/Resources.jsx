@@ -46,7 +46,7 @@ export default function Resources() {
       <Header active="resources" />
       <section className="rs">
         <div className="container">
-          <nav className="breadcrumb" aria-label="Breadcrumb"><Link to="/">{t('nav.home')}</Link> <span>›</span> {t('res.resources')} <span>›</span> {t('res.blogsStories')}</nav>
+          <nav className="breadcrumb" aria-label="Breadcrumb"><Link to="/">{t('nav.home')}</Link> <span>›</span> <Link to="/resources">{t('res.resources')}</Link> <span>›</span> {t('res.blogsStories')}</nav>
 
           <div className="rs-head">
             <h1>{t('res.h1')}</h1>
@@ -58,6 +58,7 @@ export default function Resources() {
           </div>
 
           <div className="rs-layout">
+            <div className="rs-main">
             <div className="rs-grid">
               {list.map((p, i) => (
                 <article className="rs-card" key={p.id || i}>
@@ -80,6 +81,10 @@ export default function Resources() {
                   </div>
                 </article>
               ))}
+            </div>
+            <div className="rs-pager">
+              {['‹', '1', '2', '3', '…', '10', '›'].map((n, i) => <button key={i} type="button" className={'rs-page' + (n === '1' ? ' active' : '')}>{n}</button>)}
+            </div>
             </div>
 
             <aside className="rs-side">
@@ -104,10 +109,6 @@ export default function Resources() {
                 </form>
               </div>
             </aside>
-          </div>
-
-          <div className="rs-pager">
-            {['‹', '1', '2', '3', '…', '10', '›'].map((n, i) => <button key={i} type="button" className={'rs-page' + (n === '1' ? ' active' : '')}>{n}</button>)}
           </div>
         </div>
       </section>

@@ -52,7 +52,7 @@ export default function Services() {
               </span>
               <div><strong>{t('services.ctaTitle')}</strong><span>{t('services.ctaSub')}</span></div>
             </div>
-            <a href="#contact" className="btn btn-primary">{t('services.ctaBtn')}</a>
+            <Link to="/contact" className="btn btn-primary">{t('services.ctaBtn')}</Link>
           </div>
         </div>
       </section>

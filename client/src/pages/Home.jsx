@@ -76,10 +76,10 @@ export default function Home() {
                 <span className="btn-ico">{I.cloud}</span>
                 <span className="btn-lines"><strong>{t('hero.getStarted')}</strong><em>{t('hero.uploadReport')}</em></span>
               </Link>
-              <a className="btn btn-outline btn-stacked" href="#contact">
+              <Link className="btn btn-outline btn-stacked" to="/contact">
                 <span className="btn-ico">{I.clipboard}</span>
                 <span className="btn-lines"><strong>{t('hero.book')}</strong><em>{t('hero.talk')}</em></span>
-              </a>
+              </Link>
             </div>
 
             <div className="hero-trust">
@@ -162,7 +162,7 @@ export default function Home() {
               </span>
               <div><strong>{t('services.ctaTitle')}</strong><span>{t('services.ctaSub')}</span></div>
             </div>
-            <a href="#contact" className="btn btn-primary">{t('services.ctaBtn')}</a>
+            <Link to="/contact" className="btn btn-primary">{t('services.ctaBtn')}</Link>
           </div>
         </div>
       </section>
