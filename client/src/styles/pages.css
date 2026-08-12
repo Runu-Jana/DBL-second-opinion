@@ -788,7 +788,7 @@ table.admin-table{width:100%;border-collapse:collapse;min-width:720px}
 /* ============================================================
    Resources / Blogs page
    ============================================================ */
-.rs{background:linear-gradient(180deg,#f2fbfa,#fff 30%)}
+.rs{background:linear-gradient(180deg,#f2fbfa,#fff 30%);padding-bottom:clamp(40px,6vw,72px)}
 .rs .breadcrumb{padding-top:clamp(16px,2.5vw,26px);margin-bottom:1.2rem}
 .rs-head{margin-bottom:1.4rem}
 .rs-head h1{margin:0 0 .4rem;font-size:clamp(1.8rem,3.2vw,2.5rem);font-weight:800;letter-spacing:-.6px;color:var(--ink)}
