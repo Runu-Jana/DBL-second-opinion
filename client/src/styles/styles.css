@@ -89,31 +89,23 @@ button:disabled,[disabled]{cursor:not-allowed}
 .brand-sub{font-weight:800;font-size:.8rem;letter-spacing:2.5px;color:var(--ink);line-height:1;margin-top:3px}
 .brand-tag{font-size:.52rem;letter-spacing:.3px;color:var(--muted);font-weight:600;margin-top:4px;line-height:1.35;text-transform:none;white-space:nowrap}
 
-.main-nav{display:flex;gap:.62rem;margin-left:auto}
+.main-nav{display:flex;gap:.15rem;margin-left:auto}
 .main-nav a{
   font-weight:600;color:var(--ink-soft);font-size:.82rem;white-space:nowrap;
-  position:relative;padding:.4rem 0;transition:color .16s;
+  position:relative;padding:.45rem .68rem;border-radius:10px;transition:color .16s ease,background .16s ease;
 }
-.main-nav a:hover{color:var(--teal)}
-.main-nav a.active{color:var(--teal)}
-.main-nav a::after{
-  content:"";position:absolute;left:0;right:0;bottom:-4px;height:3px;
-  background:var(--teal);border-radius:3px;
-  transform:scaleX(0);transform-origin:left;transition:transform .24s ease;
-}
-.main-nav a:hover::after,.main-nav a.active::after{transform:scaleX(1)}
+.main-nav a:hover{color:var(--teal);background:var(--teal-050)}
+.main-nav a.active{color:#fff;background:var(--teal)}   /* highlight the whole active link */
 
 /* nav dropdown (For Patients) */
 .nav-dd{position:relative;display:inline-flex}
 .nav-dd-trigger{position:relative;display:inline-flex;align-items:center;gap:.25rem;border:0;background:none;cursor:pointer;
-  font:inherit;font-weight:600;font-size:.82rem;color:var(--ink-soft);padding:.4rem 0;white-space:nowrap;transition:color .16s ease}
+  font:inherit;font-weight:600;font-size:.82rem;color:var(--ink-soft);padding:.45rem .68rem;border-radius:10px;white-space:nowrap;transition:color .16s ease,background .16s ease}
 .nav-dd{flex:0 0 auto}
-.nav-dd-trigger:hover,.nav-dd.active .nav-dd-trigger{color:var(--teal)}
+.nav-dd-trigger:hover,.nav-dd:hover .nav-dd-trigger{color:var(--teal);background:var(--teal-050)}
+.nav-dd.active .nav-dd-trigger{color:#fff;background:var(--teal)}   /* highlight the whole active dropdown */
 .nav-dd-trigger svg{transition:transform .2s ease}
 .nav-dd:hover .nav-dd-trigger svg{transform:rotate(180deg)}
-.nav-dd-trigger::after{content:"";position:absolute;left:0;right:16px;bottom:-4px;height:3px;background:var(--teal);
-  border-radius:3px;transform:scaleX(0);transform-origin:left;transition:transform .24s ease}
-.nav-dd:hover .nav-dd-trigger::after,.nav-dd.active .nav-dd-trigger::after{transform:scaleX(1)}
 .nav-dd-menu{position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%) translateY(6px);min-width:190px;
   background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow-md);padding:.4rem;z-index:60;
   opacity:0;visibility:hidden;transition:opacity .16s ease,transform .16s ease}
@@ -324,9 +316,9 @@ html[dir="rtl"] .lang-item,html[dir="rtl"] .hero-trust,html[dir="rtl"] .btn-stac
 }
 
 /* ---------- Responsive ---------- */
-/* Below ~1240px the full 9-item nav no longer fits the full-width bar, so collapse it
-   into the hamburger; the CTA + language switcher stay visible beside it. */
-@media (max-width:1240px){
+/* Below ~1360px the full 9-item nav (now with pill highlights) no longer fits the
+   full-width bar, so collapse it into the hamburger; CTA + language switcher stay beside it. */
+@media (max-width:1360px){
   .main-nav{display:none}
   .nav-toggle{display:flex}
   .header-actions{margin-left:auto}   /* nav is hidden, so push language + CTA + hamburger to the right */
@@ -488,4 +480,5 @@ html[dir="rtl"] .lang-item,html[dir="rtl"] .hero-trust,html[dir="rtl"] .btn-stac
   background:#fff;padding:1rem 1.4rem 1.6rem;gap:.4rem;
   box-shadow:var(--shadow-md);border-bottom:1px solid var(--line);
 }
-.main-nav.open a{padding:.7rem 0;border-bottom:1px solid var(--line)}
+.main-nav.open a{padding:.7rem .8rem;border-bottom:1px solid var(--line)}
+.main-nav.open a.active{border-bottom-color:transparent}   /* no divider under the highlighted pill */
