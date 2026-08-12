@@ -36,7 +36,7 @@ const WHY = [
   'Confidential and secure handling of medical records',
 ];
 const VALUES = [
-  { t: 'Patient First', img: '/value-1.jpg', d: 'Every decision begins with what’s best for you — your comfort, clarity, and outcome always come first.', icon: <svg viewBox="0 0 24 24" {...s}><path d="M12 20s-7-4.4-9.2-9.1C1.3 7.7 3 4.8 6 4.8c1.9 0 3.2 1.1 4 2.3.8-1.2 2.1-2.3 4-2.3 3 0 4.7 2.9 3.2 6.1C19 15.6 12 20 12 20Z" /></svg> },
+  { t: 'Patient First', img: '/value-1.jpg', d: 'Every decision begins with what’s best for you — your comfort, clarity, and outcome always come first.', icon: <svg viewBox="0 0 24 24" {...s}><path d="M12 20.3l-1.45-1.32C5.4 14.24 2 11.17 2 7.5 2 4.42 4.42 2 7.5 2c1.74 0 3.41.81 4.5 2.09C13.09 2.81 14.76 2 16.5 2 19.58 2 22 4.42 22 7.5c0 3.67-3.4 6.74-8.55 11.48L12 20.3z" /></svg> },
   { t: 'Clinical Excellence', img: '/value-2.jpg', d: 'Our second opinions are grounded in current evidence and reviewed by leading oncology specialists.', icon: <svg viewBox="0 0 24 24" {...s}><circle cx="12" cy="8" r="5" /><path d="M9 12.5 8 21l4-2.5L16 21l-1-8.5" /></svg> },
   { t: 'Integrity', img: '/value-3.jpg', d: 'We give honest, unbiased guidance — even when it’s difficult — because your trust means everything to us.', icon: <svg viewBox="0 0 24 24" {...s}><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3Z" /><path d="m9 12 2 2 4-4" /></svg> },
   { t: 'Compassion', img: '/value-4.jpg', d: 'Behind every report is a person facing uncertainty; we respond with empathy, patience, and genuine care.', icon: <svg viewBox="0 0 24 24" {...s}><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V12M11 12V4a1.5 1.5 0 0 1 3 0v8M14 12V6a1.5 1.5 0 0 1 3 0v7c0 3.5-2.4 6-6 6-2.2 0-3.6-1-5-2.4L4.4 13.9a1.6 1.6 0 0 1 2.3-2.2L8 13.2" /></svg> },
