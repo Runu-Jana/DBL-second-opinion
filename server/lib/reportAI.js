@@ -4,7 +4,8 @@
 const storage = require('./storage');
 const { CATEGORIES } = require('./categories');
 
-const MODEL = process.env.REPORT_AI_MODEL || 'claude-sonnet-5';
+// Haiku 4.5 by default (cheapest — ~1¢/report); set REPORT_AI_MODEL=claude-sonnet-5 for more capability.
+const MODEL = process.env.REPORT_AI_MODEL || 'claude-haiku-4-5';
 const configured = () => !!process.env.ANTHROPIC_API_KEY;
 
 let _client = null;
