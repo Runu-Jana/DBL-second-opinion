@@ -83,7 +83,22 @@ export default function Header({ active }) {
   const { requestUpload, session, logout } = useAuth();
   const { t } = useLang();
   const [open, setOpen] = useState(false);
+  const navRef = useRef(null);
+  const toggleRef = useRef(null);
   const is = (key) => (active === key ? 'active' : undefined);
+
+  // Close the mobile menu drawer when tapping/clicking anywhere outside it (or pressing Escape).
+  useEffect(() => {
+    if (!open) return;
+    const onOutside = (e) => {
+      if (navRef.current?.contains(e.target) || toggleRef.current?.contains(e.target)) return;
+      setOpen(false);
+    };
+    const onKey = (e) => { if (e.key === 'Escape') setOpen(false); };
+    document.addEventListener('pointerdown', onOutside);
+    document.addEventListener('keydown', onKey);
+    return () => { document.removeEventListener('pointerdown', onOutside); document.removeEventListener('keydown', onKey); };
+  }, [open]);
 
   return (
     <header className="site-header">
@@ -97,7 +112,7 @@ export default function Header({ active }) {
           </span>
         </Link>
 
-        <nav className={'main-nav' + (open ? ' open' : '')} aria-label="Primary" onClick={() => setOpen(false)}>
+        <nav ref={navRef} className={'main-nav' + (open ? ' open' : '')} aria-label="Primary" onClick={() => setOpen(false)}>
           <Link to="/" className={is('home')}>{t('nav.home')}</Link>
           <Link to="/oncologists" className={is('oncologists')}>{t('nav.oncologists')}</Link>
           <Link to="/services" className={is('services')}>{t('nav.services')}</Link>
@@ -117,7 +132,7 @@ export default function Header({ active }) {
             ? <UserMenu session={session} logout={logout} />
             : <button type="button" className="btn btn-primary header-cta" onClick={requestUpload}>{t('nav.cta')}</button>}
         </div>
-        <button className="nav-toggle" aria-label="Toggle menu" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+        <button ref={toggleRef} className="nav-toggle" aria-label="Toggle menu" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
           <span></span><span></span><span></span>
         </button>
       </div>
