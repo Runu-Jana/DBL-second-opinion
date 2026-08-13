@@ -8,7 +8,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { useLang } from '../i18n.jsx';
 import { api } from '../api.js';
 import { ServiceIcon } from '../lib/icons.jsx';
-import { FALLBACK_DOCS } from './Oncologists.jsx';
+import { FALLBACK_DOCS, docPhoto } from './Oncologists.jsx';
 
 const I = {
   cloud: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 16V4m0 0-4 4m4-4 4 4" /><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" /></svg>,
@@ -51,9 +51,6 @@ const TESTIMONIALS = [
   { name: 'Meena Reddy', city: 'Hyderabad, Telangana', condition: 'Lymphoma', rating: 5, photo: '/avatar-3.jpg',
     quote: "Compassionate, thorough and fast. It felt like the experts genuinely cared about my father's recovery." },
 ];
-
-/* PLACEHOLDER doctor photos for the carousel — used only when a doctor has no real photoUrl. */
-const EXPERT_PHOTOS = ['/avatar-1.jpg', '/avatar-2.jpg', '/avatar-3.jpg', '/avatar-4.jpg', '/avatar-5.jpg', '/doctor.jpg'];
 
 const starRow = (r = 5) => '★★★★★'.slice(0, Math.round(r)) + '☆☆☆☆☆'.slice(0, 5 - Math.round(r));
 
@@ -264,10 +261,10 @@ export default function Home() {
             <p className="section-sub">{t('experts.sub')}</p>
           </div>
           <Carousel label="experts">
-            {carouselExperts.map((d, i) => (
+            {carouselExperts.map((d) => (
               <article className="ecard" key={d.id}>
                 <div className="ecard-photo">
-                  <img src={d.photoUrl || EXPERT_PHOTOS[i % EXPERT_PHOTOS.length]} alt={d.name} loading="lazy" />
+                  <img src={docPhoto(d)} alt={d.name} loading="lazy" />
                   {d.featured && <span className="ecard-badge">{t('detail.featured')}</span>}
                 </div>
                 <div className="ecard-body">

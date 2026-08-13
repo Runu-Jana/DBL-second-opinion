@@ -5,9 +5,8 @@ import Footer from '../components/Footer.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { api } from '../api.js';
 import { useLang } from '../i18n.jsx';
-import { FALLBACK_DOCS } from './Oncologists.jsx';
+import { FALLBACK_DOCS, docPhoto } from './Oncologists.jsx';
 
-const initials = (name) => name.replace(/^Dr\.?\s*/i, '').split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
 const stars = (r) => '★★★★★'.slice(0, Math.round(r)) + '☆☆☆☆☆'.slice(0, 5 - Math.round(r));
 
 export default function DoctorDetail() {
@@ -40,7 +39,7 @@ export default function DoctorDetail() {
             <div className="doc-profile">
               <div className="doc-profile-head">
                 <div className="doc-avatar lg">
-                  {d.photoUrl ? <img src={d.photoUrl} alt={d.name} /> : <span>{initials(d.name)}</span>}
+                  <img src={docPhoto(d)} alt={d.name} loading="lazy" />
                 </div>
                 <div className="doc-profile-meta">
                   {d.featured && <span className="doc-badge static">{t('detail.featuredSpecialist')}</span>}

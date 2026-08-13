@@ -14,7 +14,11 @@ export const FALLBACK_DOCS = [
   { id: 6, name: 'Dr. Fatima Qureshi', specialty: 'Gynaecologic Oncology', qualifications: 'MBBS, MS (OBG), Fellowship (Gynae-Oncology)', experience: 13, hospital: 'Sunrise Oncology Centre', city: 'Hyderabad', bio: 'Specialises in ovarian, cervical and uterine cancers.', rating: 4.8 },
 ];
 
-const initials = (name) => name.replace(/^Dr\.?\s*/i, '').split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+// Placeholder doctor photos, used until a real photoUrl is uploaded via admin.
+export const EXPERT_PHOTOS = ['/avatar-1.jpg', '/avatar-2.jpg', '/avatar-3.jpg', '/avatar-4.jpg', '/avatar-5.jpg', '/doctor.jpg'];
+// Resolve a doctor's photo the SAME way everywhere (home carousel + this page): real
+// photo if set, else a stable placeholder keyed by id so a doctor always looks identical.
+export const docPhoto = (d) => d.photoUrl || EXPERT_PHOTOS[(Number(d.id) || 0) % EXPERT_PHOTOS.length];
 const stars = (r) => '★★★★★'.slice(0, Math.round(r)) + '☆☆☆☆☆'.slice(0, 5 - Math.round(r));
 const PER = 9;
 
@@ -24,7 +28,7 @@ function DocCard({ d, t }) {
     <article className="doc-card">
       {d.featured && <span className="doc-badge">{t('detail.featured')}</span>}
       <Link className="doc-avatar" to={`/oncologists/${d.id}`} aria-label={d.name}>
-        {d.photoUrl ? <img src={d.photoUrl} alt={d.name} /> : <span>{initials(d.name)}</span>}
+        <img src={docPhoto(d)} alt={d.name} loading="lazy" />
       </Link>
       <h3 className="doc-name"><Link to={`/oncologists/${d.id}`}>{d.name}</Link></h3>
       <p className="doc-specialty">{d.specialty}</p>
