@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Header from '../components/Header.jsx';
 import Footer from '../components/Footer.jsx';
 import LeadPopup from '../components/LeadPopup.jsx';
+import Carousel from '../components/Carousel.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useLang } from '../i18n.jsx';
 import { api } from '../api.js';
@@ -82,39 +83,6 @@ export default function Home() {
 
   // Carousel: featured doctors first, then the rest.
   const carouselExperts = [...experts].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
-  const expTrackRef = useRef(null);
-
-  const scrollExperts = (dir) => {
-    const t = expTrackRef.current;
-    if (!t) return;
-    const card = t.querySelector('.ecard');
-    const step = card ? card.getBoundingClientRect().width + 20 : 300;
-    const maxLeft = t.scrollWidth - t.clientWidth;
-    if (dir > 0 && t.scrollLeft >= maxLeft - 4) t.scrollTo({ left: 0, behavior: 'smooth' });
-    else if (dir < 0 && t.scrollLeft <= 4) t.scrollTo({ left: maxLeft, behavior: 'smooth' });
-    else t.scrollBy({ left: dir * step, behavior: 'smooth' });
-  };
-
-  // Gentle autoplay; pauses on interaction and respects reduced-motion.
-  useEffect(() => {
-    const t = expTrackRef.current;
-    if (!t || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    let paused = false;
-    const pause = () => { paused = true; };
-    const resume = () => { paused = false; };
-    t.addEventListener('pointerenter', pause);
-    t.addEventListener('pointerleave', resume);
-    t.addEventListener('pointerdown', pause);
-    t.addEventListener('focusin', pause);
-    const id = setInterval(() => { if (!paused) scrollExperts(1); }, 4500);
-    return () => {
-      clearInterval(id);
-      t.removeEventListener('pointerenter', pause);
-      t.removeEventListener('pointerleave', resume);
-      t.removeEventListener('pointerdown', pause);
-      t.removeEventListener('focusin', pause);
-    };
-  }, [experts]);
 
   // Reveal the "How It Works" steps as they scroll into view (desktop + mobile).
   // Arm the hidden state only when we can observe — otherwise the steps stay visible.
@@ -247,7 +215,7 @@ export default function Home() {
       <section className="services" id="services">
         <div className="container">
           <div className="section-head"><h2>{t('services.title')}</h2><span className="section-underline" /></div>
-          <div className="services-grid">
+          <Carousel className="svc-carousel" label="services">
             {services.map((s) => (
               <article className="service-card" key={s.id}>
                 {s.featured && <span className="doc-badge">Popular</span>}
@@ -257,7 +225,7 @@ export default function Home() {
                 <a className="service-link" href={`/services/${s.id}`}>{t('services.viewDetails')} &rarr;</a>
               </article>
             ))}
-          </div>
+          </Carousel>
           <div className="services-cta">
             <div className="cta-left">
               <span className="cta-icon" aria-hidden="true">
@@ -295,34 +263,26 @@ export default function Home() {
             <span className="section-underline" />
             <p className="section-sub">{t('experts.sub')}</p>
           </div>
-          <div className="ecarousel">
-            <button type="button" className="ecar-arrow ecar-prev" onClick={() => scrollExperts(-1)} aria-label="Previous experts">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
-            </button>
-            <div className="ecar-track" ref={expTrackRef}>
-              {carouselExperts.map((d, i) => (
-                <article className="ecard" key={d.id}>
-                  <div className="ecard-photo">
-                    <img src={d.photoUrl || EXPERT_PHOTOS[i % EXPERT_PHOTOS.length]} alt={d.name} loading="lazy" />
-                    {d.featured && <span className="ecard-badge">{t('detail.featured')}</span>}
+          <Carousel label="experts">
+            {carouselExperts.map((d, i) => (
+              <article className="ecard" key={d.id}>
+                <div className="ecard-photo">
+                  <img src={d.photoUrl || EXPERT_PHOTOS[i % EXPERT_PHOTOS.length]} alt={d.name} loading="lazy" />
+                  {d.featured && <span className="ecard-badge">{t('detail.featured')}</span>}
+                </div>
+                <div className="ecard-body">
+                  <h3 className="ecard-name"><Link to={`/oncologists/${d.id}`}>{d.name}</Link></h3>
+                  <p className="ecard-spec">{d.specialty}</p>
+                  <p className="ecard-place">{[d.hospital, d.city].filter(Boolean).join(' · ')}</p>
+                  <div className="ecard-meta">
+                    <span>{d.experience}+ {t('detail.yrsExp')}</span>
+                    {d.rating && <span className="ecard-stars" title={`${d.rating} / 5`}>{starRow(d.rating)}</span>}
                   </div>
-                  <div className="ecard-body">
-                    <h3 className="ecard-name"><Link to={`/oncologists/${d.id}`}>{d.name}</Link></h3>
-                    <p className="ecard-spec">{d.specialty}</p>
-                    <p className="ecard-place">{[d.hospital, d.city].filter(Boolean).join(' · ')}</p>
-                    <div className="ecard-meta">
-                      <span>{d.experience}+ {t('detail.yrsExp')}</span>
-                      {d.rating && <span className="ecard-stars" title={`${d.rating} / 5`}>{starRow(d.rating)}</span>}
-                    </div>
-                    <Link className="ecard-cta" to={`/oncologists/${d.id}`}>{t('detail.viewProfile')} &rarr;</Link>
-                  </div>
-                </article>
-              ))}
-            </div>
-            <button type="button" className="ecar-arrow ecar-next" onClick={() => scrollExperts(1)} aria-label="Next experts">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
-            </button>
-          </div>
+                  <Link className="ecard-cta" to={`/oncologists/${d.id}`}>{t('detail.viewProfile')} &rarr;</Link>
+                </div>
+              </article>
+            ))}
+          </Carousel>
           <div className="fexp-all">
             <Link className="btn btn-outline" to="/oncologists">{t('experts.viewAll')} &rarr;</Link>
           </div>
@@ -338,11 +298,12 @@ export default function Home() {
             <span className="section-underline" />
             <p className="section-sub">{t('reviews.sub')}</p>
           </div>
-          <div className="reviews-grid">
+          <Carousel className="reviews-carousel" label="stories" interval={6000}>
             {TESTIMONIALS.map((r) => (
               <figure className="review-card" key={r.name}>
+                <span className="review-quotemark" aria-hidden="true">&ldquo;</span>
                 <div className="review-stars" aria-label={`${r.rating} out of 5`}>{starRow(r.rating)}</div>
-                <blockquote className="review-quote">“{r.quote}”</blockquote>
+                <blockquote className="review-quote">{r.quote}</blockquote>
                 <figcaption className="review-person">
                   <img className="review-photo" src={r.photo} alt="" loading="lazy" />
                   <span className="review-id">
@@ -352,7 +313,7 @@ export default function Home() {
                 </figcaption>
               </figure>
             ))}
-          </div>
+          </Carousel>
         </div>
       </section>
 

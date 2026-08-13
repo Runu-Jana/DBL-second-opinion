@@ -271,10 +271,11 @@ html[dir="rtl"] .lang-item,html[dir="rtl"] .hero-trust,html[dir="rtl"] .btn-stac
 
 .home-experts{padding:clamp(46px,6vw,80px) 0;background:var(--bg)}
 /* Expert carousel — native scroll-snap track (swipe on touch), arrows on larger screens */
-.ecarousel{position:relative;display:flex;align-items:center;gap:.5rem}
-.ecar-track{flex:1;display:flex;gap:1.3rem;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;
+.ecarousel{position:relative}
+.ecar-track{display:flex;gap:1.3rem;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;
   padding:.4rem .3rem 1.1rem;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .ecar-track::-webkit-scrollbar{display:none}
+.ecar-track > *{scroll-snap-align:start}
 .ecard{scroll-snap-align:start;flex:0 0 clamp(196px,calc(25% - .98rem),230px);
   position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;
   background:#fff;border:1px solid var(--line);border-radius:16px;padding:1.5rem 1.1rem 1.35rem;
@@ -295,10 +296,28 @@ html[dir="rtl"] .lang-item,html[dir="rtl"] .hero-trust,html[dir="rtl"] .btn-stac
 .ecard-stars{color:#f5a623;letter-spacing:1px}
 .ecard-cta{margin-top:auto;color:var(--teal-dark);font-weight:700;font-size:.83rem;text-decoration:none}
 .ecard-cta:hover{color:var(--teal)}
-.ecar-arrow{flex:0 0 auto;width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:#fff;
-  display:grid;place-items:center;cursor:pointer;color:var(--teal-dark);box-shadow:var(--shadow-sm);transition:.15s;z-index:2}
-.ecar-arrow:hover{background:var(--teal-050);border-color:var(--teal-100);transform:scale(1.06)}
+.ecar-arrow{position:absolute;top:calc(50% - .55rem);transform:translateY(-50%);z-index:4;
+  width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:#fff;
+  display:grid;place-items:center;cursor:pointer;color:var(--teal-dark);box-shadow:var(--shadow-md);transition:background .15s,border-color .15s}
+.ecar-arrow:hover{background:var(--teal-050);border-color:var(--teal-100)}
+.ecar-prev{left:-6px}
+.ecar-next{right:-6px}
 .fexp-all{text-align:center;margin-top:2.1rem}
+
+/* Services carousel — wider, shorter cards (~4 per view on desktop) */
+.svc-carousel{margin-bottom:.4rem}
+.svc-carousel .service-card{flex:0 0 clamp(250px,calc(25% - .9rem),290px);padding:1.25rem 1.5rem}
+.svc-carousel .service-icon{margin-bottom:.55rem}
+.svc-carousel .service-card h3{margin-bottom:.3rem}
+.svc-carousel .service-card p{margin-bottom:.55rem}
+
+/* Testimonials carousel — a wide, quote-led slide (deliberately different from the expert cards) */
+.reviews-carousel .review-card{flex:0 0 clamp(280px,70%,560px);position:relative;align-items:center;text-align:center;
+  gap:.75rem;padding:2.5rem 2rem 2rem}
+.reviews-carousel .review-quotemark{position:absolute;top:.1rem;left:1.4rem;font-family:Georgia,'Times New Roman',serif;
+  font-size:3.6rem;line-height:1;color:var(--teal-100)}
+.reviews-carousel .review-quote{font-style:normal;font-size:1.12rem;line-height:1.75;color:var(--ink-soft);max-width:52ch}
+.reviews-carousel .review-person{justify-content:center;margin-top:.5rem}
 
 .reviews{padding:clamp(46px,6vw,80px) 0;background:#fff}
 .reviews-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.4rem}
@@ -310,17 +329,22 @@ html[dir="rtl"] .lang-item,html[dir="rtl"] .hero-trust,html[dir="rtl"] .btn-stac
 .review-photo{width:46px;height:46px;border-radius:50%;object-fit:cover;flex:0 0 auto}
 .review-id strong{display:block;color:var(--ink);font-size:.95rem}
 .review-meta{display:block;color:var(--muted);font-size:.82rem;margin-top:2px}
-@media (max-width:820px){.ecard{flex-basis:calc(33.333% - .87rem)}}   /* ~3 cards on tablet */
-@media (max-width:900px){.reviews-grid{grid-template-columns:1fr}}
+@media (max-width:820px){
+  .ecard{flex-basis:calc(33.333% - .87rem)}                     /* ~3 experts on tablet */
+  .svc-carousel .service-card{flex-basis:calc(50% - .7rem)}     /* ~2 wide services on tablet */
+}
 @media (max-width:560px){
-  /* Phones: a compact card with a peek of the next (signals swipe); hide arrows. */
+  /* Phones: a compact card with a peek of the next (signals swipe); smaller edge arrows. */
   .home-experts{padding:34px 0}
   .home-experts .section-head{margin-bottom:1.5rem}
-  .ecarousel{gap:0}
-  .ecar-arrow{display:none}
   .ecar-track{gap:.85rem;padding-bottom:.9rem}
+  .ecar-arrow{width:34px;height:34px}
+  .ecar-prev{left:-2px}
+  .ecar-next{right:-2px}
   .ecard{flex-basis:62%;padding:1.2rem .9rem 1.1rem}
   .ecard-photo{width:74px;height:74px}
+  .svc-carousel .service-card{flex-basis:76%}
+  .reviews-carousel .review-card{flex-basis:86%;padding:2rem 1.4rem 1.6rem}
   .fexp-all{margin-top:1.4rem}
 }
 
