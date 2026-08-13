@@ -86,7 +86,12 @@ export default function AuthModal() {
           <form className="auth-form" onSubmit={onLogin} noValidate>
             <label>Email address<input type="email" name="email" autoComplete="email" placeholder="you@example.com" required /></label>
             <PasswordField label="Password" name="password" autoComplete="current-password" placeholder="Your password" />
-            {err && <p className="form-error">{err}</p>}
+            {err && (
+              <div className="form-error-block">
+                <p className="form-error">{err}</p>
+                <p className="form-hint">New to DBL International? <button type="button" className="link-btn" onClick={() => { setTab('signup'); setErr(''); }}>Create an account</button></p>
+              </div>
+            )}
             <button type="submit" className="btn btn-primary btn-block" disabled={busy}>{busy ? 'Signing in…' : 'Login & Continue'}</button>
           </form>
         ) : (

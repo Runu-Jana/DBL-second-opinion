@@ -73,7 +73,7 @@ router.post('/patient-signup', async (req, res) => {
       patient = await prisma.patient.create({ data: { name, email, password: hash, uhid, status: 'New Patient' } });
     }
     logActivity(null, { kind: 'activity', actor: patient.name, action: `New patient account: ${patient.name}`, category: 'Patient' });
-    const token = jwt.sign({ id: patient.id, uhid: patient.uhid, name: patient.name, email: patient.email, role: 'patient' }, JWT_SECRET, { expiresIn: '30d' });
+    const token = jwt.sign({ id: patient.id, uhid: patient.uhid, name: patient.name, email: patient.email, role: 'patient' }, JWT_SECRET, { expiresIn: '365d' });
     res.status(201).json({ token, patient: publicPatient(patient) });
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not create your account.' }); }
 });
@@ -89,7 +89,7 @@ router.post('/patient-login', async (req, res) => {
     if (!patient) return res.status(401).json({ error: 'Email or password is incorrect.' });
     const ok = await bcrypt.compare(password, patient.password);
     if (!ok) return res.status(401).json({ error: 'Email or password is incorrect.' });
-    const token = jwt.sign({ id: patient.id, uhid: patient.uhid, name: patient.name, email: patient.email, role: 'patient' }, JWT_SECRET, { expiresIn: '30d' });
+    const token = jwt.sign({ id: patient.id, uhid: patient.uhid, name: patient.name, email: patient.email, role: 'patient' }, JWT_SECRET, { expiresIn: '365d' });
     res.json({ token, patient: publicPatient(patient) });
   } catch (e) { console.error(e); res.status(500).json({ error: 'Login failed.' }); }
 });
