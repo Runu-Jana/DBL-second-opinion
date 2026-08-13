@@ -1,13 +1,90 @@
 // Contact Us — public submit (from the website form) + admin read/manage.
 const express = require('express');
+const bcrypt = require('bcryptjs');
 const prisma = require('../db');
 const { requireAdmin } = require('./auth');
 const { logActivity } = require('../lib/audit');
 const { sendContactNotification } = require('../lib/email');
+const { sendOtp, normalizePhone, whatsappConfigured } = require('../lib/whatsapp');
 
 const router = express.Router();
 const STATUSES = ['New', 'Read', 'Replied', 'Archived'];
 const clean = (v) => (v && String(v).trim() ? String(v).trim() : '');
+const IS_PROD = process.env.NODE_ENV === 'production';
+
+// --- Phone OTP (WhatsApp) for the home-page registration pop-up ---
+// Ephemeral, in-memory challenge store (short-lived codes; fine for a single instance).
+const OTP_TTL_MS = 5 * 60 * 1000;      // code valid for 5 minutes
+const OTP_MAX_ATTEMPTS = 5;            // wrong-code guesses before the code is burned
+const OTP_RESEND_MS = 30 * 1000;      // cooldown between sends to one number
+const otpStore = new Map();           // normalizedPhone -> { hash, name, expiresAt, attempts, lastSentAt }
+const genOtp = () => String(Math.floor(100000 + Math.random() * 900000));   // 6-digit
+const genUhid = () => 'DBL' + (100000 + Math.floor(Math.random() * 900000));
+
+// POST /api/contact/otp/send  { name, phone } -> sends a WhatsApp verification code
+router.post('/otp/send', async (req, res) => {
+  try {
+    const b = req.body || {};
+    const name = clean(b.name);
+    const phone = normalizePhone(b.phone);
+    if (!name) return res.status(400).json({ error: 'Please enter your name.' });
+    if (!phone || phone.length < 10) return res.status(400).json({ error: 'Please enter a valid phone number.' });
+
+    // In production we must have a real WhatsApp sender — never hand out codes without one.
+    if (!whatsappConfigured() && IS_PROD) {
+      return res.status(503).json({ error: 'Phone verification is temporarily unavailable. Please use our contact form and our team will reach out.' });
+    }
+
+    const existing = otpStore.get(phone);
+    if (existing && Date.now() - existing.lastSentAt < OTP_RESEND_MS) {
+      const wait = Math.ceil((OTP_RESEND_MS - (Date.now() - existing.lastSentAt)) / 1000);
+      return res.status(429).json({ error: `Please wait ${wait}s before requesting another code.` });
+    }
+
+    const code = genOtp();
+    const hash = await bcrypt.hash(code, 8);
+    otpStore.set(phone, { hash, name, expiresAt: Date.now() + OTP_TTL_MS, attempts: 0, lastSentAt: Date.now() });
+
+    let result;
+    try { result = await sendOtp(phone, code); }
+    catch (e) { console.error('whatsapp otp send failed:', e.message); return res.status(502).json({ error: 'Could not send the code right now. Please try again shortly.' }); }
+
+    // In DEV only (never production), return the code so the flow is testable without a live number.
+    res.json({ ok: true, ...(result.dev && !IS_PROD ? { devCode: code } : {}) });
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not send the code. Please try again.' }); }
+});
+
+// POST /api/contact/otp/verify  { name, phone, code } -> verifies + registers the customer as a Patient
+router.post('/otp/verify', async (req, res) => {
+  try {
+    const b = req.body || {};
+    const phone = normalizePhone(b.phone);
+    const code = clean(b.code);
+    const rec = otpStore.get(phone);
+    if (!rec) return res.status(400).json({ error: 'Please request a new code.' });
+    if (Date.now() > rec.expiresAt) { otpStore.delete(phone); return res.status(400).json({ error: 'This code has expired. Please request a new one.' }); }
+    if (rec.attempts >= OTP_MAX_ATTEMPTS) { otpStore.delete(phone); return res.status(429).json({ error: 'Too many attempts. Please request a new code.' }); }
+
+    const ok = code && (await bcrypt.compare(code, rec.hash));
+    if (!ok) { rec.attempts += 1; return res.status(401).json({ error: 'Incorrect code. Please try again.' }); }
+    otpStore.delete(phone);
+
+    // Verified — create the customer record (or claim an existing one with this phone).
+    // The unique `uhid` is their code; future reports attach via Report.patientUhid.
+    let patient = await prisma.patient.findFirst({ where: { phone } });
+    if (!patient) {
+      let uhid = genUhid();
+      for (let i = 0; i < 5 && (await prisma.patient.findUnique({ where: { uhid } })); i++) uhid = genUhid();
+      patient = await prisma.patient.create({ data: { name: rec.name, phone, uhid, status: 'New Patient', phoneVerified: true } });
+      logActivity(req, { kind: 'activity', actor: rec.name, action: 'New verified customer (WhatsApp OTP)', target: uhid, category: 'Patient' });
+      sendContactNotification({ name: rec.name, email: '', subject: 'New verified lead', message: `Verified via WhatsApp OTP.\nPhone: +${phone}\nCode: ${uhid}` }).catch((e) => console.error('lead email failed:', e.message));
+    } else if (!patient.phoneVerified) {
+      patient = await prisma.patient.update({ where: { id: patient.id }, data: { phoneVerified: true, name: patient.name || rec.name } });
+    }
+
+    res.json({ ok: true, uhid: patient.uhid, name: patient.name });
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not complete registration. Please try again.' }); }
+});
 
 // POST /api/contact  (PUBLIC — the Contact Us form) -> stores the message + notifies admins live
 router.post('/', async (req, res) => {
