@@ -81,12 +81,12 @@ export default function LeadPopup() {
             <label className="lead-field"><span>Full Name<em>*</em></span>
               <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter your full name" autoComplete="name" />
             </label>
-            <label className="lead-field"><span>WhatsApp Number<em>*</em></span>
+            <label className="lead-field"><span>Phone Number<em>*</em></span>
               <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. 98765 43210" inputMode="tel" autoComplete="tel" />
             </label>
             {err && <p className="lead-err">{err}</p>}
             <button type="submit" className="btn btn-primary lead-submit" disabled={busy}>{busy ? 'Sending…' : 'Send Verification Code'}</button>
-            <p className="lead-note">We’ll send a 6-digit code to your WhatsApp to confirm it’s really you — no spam.</p>
+            <p className="lead-note">We’ll send a 6-digit code to your WhatsApp — no spam.</p>
           </form>
         )}
 
