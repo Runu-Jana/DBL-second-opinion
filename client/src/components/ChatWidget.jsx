@@ -16,6 +16,8 @@ export default function ChatWidget() {
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const bodyRef = useRef(null);
+  const panelRef = useRef(null);
+  const fabRef = useRef(null);
 
   // keep the opening greeting in sync when the language changes (before any exchange)
   useEffect(() => {
@@ -30,6 +32,27 @@ export default function ChatWidget() {
   }, []);
 
   useEffect(() => { if (bodyRef.current) bodyRef.current.scrollTop = bodyRef.current.scrollHeight; }, [messages, open, busy]);
+
+  // On mobile, freeze the page behind the chat panel while it's open.
+  useEffect(() => {
+    if (!open || !window.matchMedia('(max-width:640px)').matches) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, [open]);
+
+  // Minimise the chat when clicking/tapping outside it (or pressing Escape).
+  useEffect(() => {
+    if (!open) return;
+    const onOutside = (e) => {
+      if (panelRef.current?.contains(e.target) || fabRef.current?.contains(e.target)) return;
+      setOpen(false);
+    };
+    const onKey = (e) => { if (e.key === 'Escape') setOpen(false); };
+    document.addEventListener('pointerdown', onOutside);
+    document.addEventListener('keydown', onKey);
+    return () => { document.removeEventListener('pointerdown', onOutside); document.removeEventListener('keydown', onKey); };
+  }, [open]);
 
   if (HIDE_ON.some((p) => pathname.startsWith(p))) return null;
 
@@ -53,12 +76,12 @@ export default function ChatWidget() {
 
   return (
     <>
-      <button className={'chatw-fab' + (open ? ' open' : '')} onClick={() => setOpen((o) => !o)} aria-label={open ? t('chat.closeLabel') : t('chat.openLabel')}>
+      <button ref={fabRef} className={'chatw-fab' + (open ? ' open' : '')} onClick={() => setOpen((o) => !o)} aria-label={open ? t('chat.closeLabel') : t('chat.openLabel')}>
         {open ? <CloseIco /> : <ChatIco />}
       </button>
 
       {open && (
-        <div className="chatw-panel" role="dialog" aria-label={t('chat.headTitle')}>
+        <div ref={panelRef} className="chatw-panel" role="dialog" aria-label={t('chat.headTitle')}>
           <div className="chatw-head">
             <span className="chatw-head-av" aria-hidden="true">AI</span>
             <div className="chatw-head-meta"><strong>{t('chat.headTitle')}</strong><span>{t('chat.headSub')}</span></div>
