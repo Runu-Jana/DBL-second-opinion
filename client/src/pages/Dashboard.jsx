@@ -87,7 +87,7 @@ export default function Dashboard() {
           <section className="dash-card">
             <div className="dash-card-head">
               <h2>Recent Cases</h2>
-              <Link to="/dashboard/cases" className="dash-link">View All</Link>
+              {(reports?.length || 0) > recent.length && <Link to="/dashboard/cases" className="dash-link">View All</Link>}
             </div>
             <div className="dash-table-wrap">
               {recent.length ? (
