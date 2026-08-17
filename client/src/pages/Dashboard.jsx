@@ -32,7 +32,7 @@ function progressFor(r) {
 }
 
 export default function Dashboard() {
-  const { session } = useAuth();
+  const { session, justSignedUp } = useAuth();
   const name = session?.name || 'there';
   const [stats, setStats] = useState(null);
   const [reports, setReports] = useState(null);
@@ -49,8 +49,8 @@ export default function Dashboard() {
   return (
     <DashboardLayout active="dashboard">
       <div className="dash-welcome">
-        <h1>Welcome Back, {name} <span role="img" aria-label="wave">👋</span></h1>
-        <p>Here's an overview of your health journey.</p>
+        <h1>{justSignedUp ? 'Welcome to DBL International' : 'Welcome Back'}, {name} <span role="img" aria-label="wave">👋</span></h1>
+        <p>{justSignedUp ? 'Your account is ready — upload your first report to begin your second-opinion journey.' : "Here's an overview of your health journey."}</p>
       </div>
 
       <div className="dash-grid">

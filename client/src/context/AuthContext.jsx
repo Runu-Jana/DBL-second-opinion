@@ -11,6 +11,7 @@ export function validEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null); // the logged-in patient record, or null
   const [loading, setLoading] = useState(true);
+  const [justSignedUp, setJustSignedUp] = useState(false); // true right after a new account is created
   const [authOpen, setAuthOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
 
@@ -37,11 +38,13 @@ export function AuthProvider({ children }) {
   const signup = useCallback(async ({ name, email, password }) => {
     const r = await api('/auth/patient-signup', { method: 'POST', auth: false, body: JSON.stringify({ name, email, password }) });
     finishLogin(r.token, r.patient);
+    setJustSignedUp(true);   // greet first-time patients differently
   }, [finishLogin]);
 
   const login = useCallback(async ({ email, password }) => {
     const r = await api('/auth/patient-login', { method: 'POST', auth: false, body: JSON.stringify({ email, password }) });
     finishLogin(r.token, r.patient);
+    setJustSignedUp(false);
   }, [finishLogin]);
 
   // Request a password-reset email. Returns the response (may include devResetUrl in dev).
@@ -59,6 +62,7 @@ export function AuthProvider({ children }) {
     clearPatientToken();
     setSession(null);
     setUploadOpen(false);
+    setJustSignedUp(false);
   }, []);
 
   // Re-fetch the patient record (e.g. after a profile edit or a fresh upload).
@@ -70,7 +74,7 @@ export function AuthProvider({ children }) {
   const value = {
     session, loading, authOpen, setAuthOpen, uploadOpen, setUploadOpen,
     requestUpload, login, signup, logout, refreshSession, setSession,
-    forgotPassword, resetPassword,
+    forgotPassword, resetPassword, justSignedUp,
   };
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
 }
