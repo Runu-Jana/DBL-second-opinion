@@ -95,7 +95,7 @@ export default function AuthModal() {
         </div>
 
         {tab === 'forgot' ? (
-          <form className="auth-form" onSubmit={onForgot} noValidate>
+          <form key="forgot" className="auth-form" onSubmit={onForgot} noValidate>
             {sent ? (
               <>
                 <p className="auth-forgot-lead">If an account exists for that email, we’ve sent a link to reset your password. Check your inbox (and spam folder).</p>
@@ -113,7 +113,7 @@ export default function AuthModal() {
             )}
           </form>
         ) : tab === 'login' ? (
-          <form className="auth-form" onSubmit={onLogin} noValidate>
+          <form key="login" className="auth-form" onSubmit={onLogin} noValidate>
             <label>Email address<input type="email" name="email" autoComplete="email" placeholder="you@example.com" required /></label>
             <PasswordField label="Password" name="password" autoComplete="current-password" placeholder="Your password" />
             <p className="auth-forgot-row"><button type="button" className="link-btn" onClick={(e) => goForgot(e.currentTarget.closest('form')?.email?.value?.trim())}>Forgot password?</button></p>
@@ -126,7 +126,7 @@ export default function AuthModal() {
             <button type="submit" className="btn btn-primary btn-block" disabled={busy}>{busy ? 'Signing in…' : 'Login & Continue'}</button>
           </form>
         ) : (
-          <form className="auth-form" onSubmit={onSignup} noValidate>
+          <form key="signup" className="auth-form" onSubmit={onSignup} noValidate>
             <label>Full name<input type="text" name="name" autoComplete="name" placeholder="Your name" required /></label>
             <label>Email address<input type="email" name="email" autoComplete="email" placeholder="you@example.com" required /></label>
             <PasswordField label="Create password" name="password" autoComplete="new-password" placeholder="At least 6 characters" />
