@@ -80,7 +80,7 @@ function NavDropdown({ label, active, items }) {
 }
 
 export default function Header({ active }) {
-  const { requestUpload, session, logout } = useAuth();
+  const { requestUpload, session, logout, setAuthOpen } = useAuth();
   const { t } = useLang();
   const [open, setOpen] = useState(false);
   const navRef = useRef(null);
@@ -130,7 +130,10 @@ export default function Header({ active }) {
           <LanguageSwitcher />
           {session
             ? <UserMenu session={session} logout={logout} />
-            : <button type="button" className="btn btn-primary header-cta" onClick={requestUpload}>{t('nav.cta')}</button>}
+            : <>
+                <button type="button" className="header-login" onClick={() => setAuthOpen(true)}>{t('nav.login')}</button>
+                <button type="button" className="btn btn-primary header-cta" onClick={requestUpload}>{t('nav.cta')}</button>
+              </>}
         </div>
         <button ref={toggleRef} className="nav-toggle" aria-label="Toggle menu" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
           <span></span><span></span><span></span>

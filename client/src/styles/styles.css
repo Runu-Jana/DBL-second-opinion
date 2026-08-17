@@ -117,6 +117,10 @@ button:disabled,[disabled]{cursor:not-allowed}
 .nav-dd-menu a:hover{background:var(--teal-050);color:var(--teal-dark)}
 .header-actions{display:flex;align-items:center;gap:.45rem;margin-left:.35rem}
 .header-cta{margin-left:0;padding:.62rem .95rem;font-size:.85rem;white-space:nowrap}
+/* Text "Login" link for returning visitors — stays visible even where the CTA is hidden (mobile). */
+.header-login{background:none;border:0;font:inherit;font-weight:700;font-size:.85rem;color:var(--teal-dark);
+  cursor:pointer;white-space:nowrap;padding:.4rem .55rem;border-radius:8px;transition:color .15s,background .15s}
+.header-login:hover{color:var(--teal);background:var(--teal-050)}
 
 /* ---------- Language switcher ---------- */
 .lang-switch{position:relative}
