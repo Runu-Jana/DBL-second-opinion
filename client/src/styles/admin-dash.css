@@ -429,6 +429,7 @@
   cursor:pointer;text-align:left;transition:border-color .16s ease,box-shadow .16s ease}
 .adm-date-btn:hover{border-color:#cfe0dc}
 .adm-date.open .adm-date-btn{border-color:var(--teal);box-shadow:0 0 0 4px rgba(14,159,142,.14)}
+.adm-cal-navs{display:inline-flex;align-items:center;gap:1px}
 .adm-date-btn .ph{color:var(--muted)}
 .adm-date-btn svg{color:var(--teal);flex:0 0 auto}
 .adm-cal{position:absolute;top:calc(100% + 6px);left:0;z-index:50;width:270px;background:#fff;

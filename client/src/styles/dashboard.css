@@ -250,6 +250,8 @@
 @media (max-width:620px){.pf-grid{grid-template-columns:1fr}}
 .pf-field{display:flex;flex-direction:column;gap:.35rem}
 .pf-field span{font-size:.76rem;font-weight:700;color:var(--ink-soft)}
+.pf-field .pf-req{color:#e11d48;font-style:normal;margin-left:1px}
+.pf-field .pf-opt{font-size:.72rem;font-weight:400;color:var(--muted);margin-left:4px}
 .pf-field input,.pf-field select,.pf-field textarea{width:100%;font:inherit;font-size:.9rem;color:var(--ink);
   background:#fff;border:1.5px solid var(--line);border-radius:11px;padding:.7rem .85rem;transition:border-color .18s ease,box-shadow .18s ease}
 .pf-field input:focus,.pf-field select:focus,.pf-field textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 4px rgba(14,159,142,.15)}

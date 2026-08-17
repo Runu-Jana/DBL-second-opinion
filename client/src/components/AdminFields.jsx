@@ -85,6 +85,7 @@ export function DateField({ value, onChange, placeholder = 'Pick a date' }) {
   const isSel = (d) => valid && parsed.getFullYear() === y && parsed.getMonth() === m && parsed.getDate() === d;
   const isToday = (d) => today.getFullYear() === y && today.getMonth() === m && today.getDate() === d;
   const step = (delta) => setView(new Date(y, m + delta, 1));
+  const stepYear = (delta) => setView(new Date(y + delta, m, 1));
   const pick = (d) => { onChange(fmtDate(new Date(y, m, d))); setOpen(false); };
 
   return (
@@ -96,9 +97,15 @@ export function DateField({ value, onChange, placeholder = 'Pick a date' }) {
       {open && (
         <div className="adm-cal" role="dialog" aria-label="Choose date">
           <div className="adm-cal-head">
-            <button type="button" className="adm-cal-nav" onClick={() => step(-1)} aria-label="Previous month"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg></button>
+            <span className="adm-cal-navs">
+              <button type="button" className="adm-cal-nav" onClick={() => stepYear(-1)} aria-label="Previous year"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="m11 17-5-5 5-5M18 17l-5-5 5-5" /></svg></button>
+              <button type="button" className="adm-cal-nav" onClick={() => step(-1)} aria-label="Previous month"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg></button>
+            </span>
             <strong>{MONTHS[m]} {y}</strong>
-            <button type="button" className="adm-cal-nav" onClick={() => step(1)} aria-label="Next month"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 6 6 6-6 6" /></svg></button>
+            <span className="adm-cal-navs">
+              <button type="button" className="adm-cal-nav" onClick={() => step(1)} aria-label="Next month"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 6 6 6-6 6" /></svg></button>
+              <button type="button" className="adm-cal-nav" onClick={() => stepYear(1)} aria-label="Next year"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="m13 17 5-5-5-5M6 17l5-5-5-5" /></svg></button>
+            </span>
           </div>
           <div className="adm-cal-grid adm-cal-dow">{WEEKDAYS.map((w) => <span key={w}>{w}</span>)}</div>
           <div className="adm-cal-grid">
