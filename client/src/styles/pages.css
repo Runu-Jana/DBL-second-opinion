@@ -725,6 +725,13 @@ table.admin-table{width:100%;border-collapse:collapse;min-width:720px}
 .ct-field input,.ct-field select,.ct-field textarea{width:100%;font:inherit;font-size:.9rem;color:var(--ink);background:#fff;
   border:1.5px solid var(--line);border-radius:11px;padding:.72rem .85rem;transition:border-color .18s ease,box-shadow .18s ease}
 .ct-field textarea{resize:vertical}
+/* Custom-styled Subject dropdown (native arrow removed, themed chevron added) */
+.ct-field select{-webkit-appearance:none;-moz-appearance:none;appearance:none;cursor:pointer;padding-right:2.5rem;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%230b7d70' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right .9rem center;background-size:16px}
+.ct-field select:invalid{color:var(--muted)}                 /* muted while the placeholder is selected */
+.ct-field select option{color:var(--ink)}
+.ct-field select option[value=""]{color:var(--muted)}
 .ct-field input:focus,.ct-field select:focus,.ct-field textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 4px rgba(14,159,142,.15)}
 .ct-send{align-self:flex-start;padding:.8rem 1.6rem}
 
