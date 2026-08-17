@@ -552,6 +552,15 @@ html[dir="rtl"] .lang-item,html[dir="rtl"] .hero-trust,html[dir="rtl"] .btn-stac
 .form-hint{margin:0;font-size:.82rem;color:var(--ink-soft);font-weight:500}
 .link-btn{background:none;border:0;padding:0;color:var(--teal-dark);font:inherit;font-weight:700;text-decoration:underline;cursor:pointer}
 .link-btn:hover{color:var(--teal)}
+.auth-forgot-row{margin:-.35rem 0 0;text-align:right;font-size:.82rem}
+.auth-forgot-lead{margin:0 0 .3rem;font-size:.88rem;color:var(--ink-soft);line-height:1.55}
+.auth-center{text-align:center}
+/* Standalone reset-password page */
+.reset-page{min-height:60vh;display:grid;place-items:center;padding:clamp(2rem,6vw,4rem) 1rem;background:var(--bg)}
+.reset-card{width:min(420px,100%);background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-md);padding:1.9rem 1.6rem}
+.reset-card h1{margin:0 0 1rem;font-size:1.35rem;color:var(--ink)}
+.reset-show{flex-direction:row!important;align-items:center;gap:.5rem!important;font-size:.85rem;color:var(--ink-soft)}
+.reset-show input{width:auto}
 .btn-block{width:100%;justify-content:center;margin-top:.3rem}
 
 .modal-privacy{

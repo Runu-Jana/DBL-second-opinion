@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const prisma = require('../db');
 const { logActivity } = require('../lib/audit');
+const { sendPasswordReset } = require('../lib/email');
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
@@ -92,6 +93,45 @@ router.post('/patient-login', async (req, res) => {
     const token = jwt.sign({ id: patient.id, uhid: patient.uhid, name: patient.name, email: patient.email, role: 'patient' }, JWT_SECRET, { expiresIn: '365d' });
     res.json({ token, patient: publicPatient(patient) });
   } catch (e) { console.error(e); res.status(500).json({ error: 'Login failed.' }); }
+});
+
+// POST /api/auth/patient-forgot  { email } -> email a reset link. Always responds generically
+// (never reveals whether an account exists) to avoid email enumeration.
+router.post('/patient-forgot', async (req, res) => {
+  try {
+    const email = String(req.body?.email || '').trim().toLowerCase();
+    if (!email) return res.status(400).json({ error: 'Please enter your email address.' });
+    const patient = await prisma.patient.findFirst({ where: { email: { equals: email, mode: 'insensitive' }, password: { not: null } } });
+    let devResetUrl;
+    if (patient) {
+      const token = jwt.sign({ id: patient.id, email: patient.email, purpose: 'pwreset' }, JWT_SECRET, { expiresIn: '30m' });
+      const origin = req.headers.origin || process.env.PUBLIC_URL || '';
+      const url = `${origin}/reset-password?token=${encodeURIComponent(token)}`;
+      try {
+        const r = await sendPasswordReset({ to: patient.email, name: patient.name, url });
+        if (r.skipped && process.env.NODE_ENV !== 'production') { console.log('[pwreset:DEV] reset link:', url); devResetUrl = url; }
+      } catch (e) { console.error('password reset email failed:', e.message); }
+    }
+    res.json({ ok: true, ...(devResetUrl ? { devResetUrl } : {}) });
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not process the request. Please try again.' }); }
+});
+
+// POST /api/auth/patient-reset  { token, password } -> set a new password and log in
+router.post('/patient-reset', async (req, res) => {
+  try {
+    const token = String(req.body?.token || '');
+    const password = String(req.body?.password || '');
+    if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters.' });
+    let payload;
+    try { payload = jwt.verify(token, JWT_SECRET); } catch { return res.status(400).json({ error: 'This reset link is invalid or has expired. Please request a new one.' }); }
+    if (payload.purpose !== 'pwreset') return res.status(400).json({ error: 'Invalid reset link.' });
+    const patient = await prisma.patient.findUnique({ where: { id: payload.id } });
+    if (!patient) return res.status(400).json({ error: 'Account not found.' });
+    const hash = await bcrypt.hash(password, 10);
+    await prisma.patient.update({ where: { id: patient.id }, data: { password: hash } });
+    const login = jwt.sign({ id: patient.id, uhid: patient.uhid, name: patient.name, email: patient.email, role: 'patient' }, JWT_SECRET, { expiresIn: '365d' });
+    res.json({ ok: true, token: login, patient: publicPatient(patient) });
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not reset your password. Please try again.' }); }
 });
 
 // Middleware — protects patient-portal routes

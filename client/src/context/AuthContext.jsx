@@ -44,6 +44,17 @@ export function AuthProvider({ children }) {
     finishLogin(r.token, r.patient);
   }, [finishLogin]);
 
+  // Request a password-reset email. Returns the response (may include devResetUrl in dev).
+  const forgotPassword = useCallback(async ({ email }) => {
+    return api('/auth/patient-forgot', { method: 'POST', auth: false, body: JSON.stringify({ email }) });
+  }, []);
+
+  // Set a new password from a reset-link token, then log the patient in.
+  const resetPassword = useCallback(async ({ token, password }) => {
+    const r = await api('/auth/patient-reset', { method: 'POST', auth: false, body: JSON.stringify({ token, password }) });
+    finishLogin(r.token, r.patient);
+  }, [finishLogin]);
+
   const logout = useCallback(() => {
     clearPatientToken();
     setSession(null);
@@ -59,6 +70,7 @@ export function AuthProvider({ children }) {
   const value = {
     session, loading, authOpen, setAuthOpen, uploadOpen, setUploadOpen,
     requestUpload, login, signup, logout, refreshSession, setSession,
+    forgotPassword, resetPassword,
   };
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
 }

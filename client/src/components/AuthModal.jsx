@@ -26,13 +26,16 @@ function PasswordField({ label, name, autoComplete, placeholder }) {
 }
 
 export default function AuthModal() {
-  const { authOpen, setAuthOpen, login, signup } = useAuth();
+  const { authOpen, setAuthOpen, login, signup, forgotPassword } = useAuth();
   const navigate = useNavigate();
-  const [tab, setTab] = useState('login');
+  const [tab, setTab] = useState('login');   // login | signup | forgot
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(false);   // forgot: reset email dispatched
+  const [devUrl, setDevUrl] = useState('');
+  const [prefillEmail, setPrefillEmail] = useState('');
 
-  useEffect(() => { if (authOpen) { setTab('login'); setErr(''); } }, [authOpen]);
+  useEffect(() => { if (authOpen) { setTab('login'); setErr(''); setSent(false); setDevUrl(''); setPrefillEmail(''); } }, [authOpen]);
   useEffect(() => {
     if (!authOpen) return;
     const onKey = (e) => { if (e.key === 'Escape') setAuthOpen(false); };
@@ -63,6 +66,15 @@ export default function AuthModal() {
     setErr(''); setBusy(true);
     try { await signup({ name, email, password }); navigate('/dashboard'); } catch (ex) { setErr(ex.message); } finally { setBusy(false); }
   };
+  const goForgot = (email = '') => { setPrefillEmail(email || ''); setTab('forgot'); setErr(''); setSent(false); setDevUrl(''); };
+  const onForgot = async (e) => {
+    e.preventDefault();
+    const email = e.target.email.value.trim();
+    if (!validEmail(email)) return setErr('Please enter a valid email address.');
+    setErr(''); setBusy(true);
+    try { const r = await forgotPassword({ email }); setSent(true); setDevUrl(r?.devResetUrl || ''); }
+    catch (ex) { setErr(ex.message); } finally { setBusy(false); }
+  };
 
   return (
     <div className="modal-overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) setAuthOpen(false); }}>
@@ -82,10 +94,29 @@ export default function AuthModal() {
           <button className={'auth-tab' + (tab === 'signup' ? ' active' : '')} onClick={() => { setTab('signup'); setErr(''); }}>Create Account</button>
         </div>
 
-        {tab === 'login' ? (
+        {tab === 'forgot' ? (
+          <form className="auth-form" onSubmit={onForgot} noValidate>
+            {sent ? (
+              <>
+                <p className="auth-forgot-lead">If an account exists for that email, we’ve sent a link to reset your password. Check your inbox (and spam folder).</p>
+                {devUrl && <p className="form-hint">Dev mode: <a href={devUrl}>open the reset link</a></p>}
+                <button type="button" className="btn btn-primary btn-block" onClick={() => { setTab('login'); setErr(''); }}>Back to login</button>
+              </>
+            ) : (
+              <>
+                <p className="auth-forgot-lead">Enter your account email and we’ll send you a link to reset your password.</p>
+                <label>Email address<input type="email" name="email" defaultValue={prefillEmail} autoComplete="email" placeholder="you@example.com" required autoFocus /></label>
+                {err && <p className="form-error">{err}</p>}
+                <button type="submit" className="btn btn-primary btn-block" disabled={busy}>{busy ? 'Sending…' : 'Send reset link'}</button>
+                <p className="form-hint auth-center"><button type="button" className="link-btn" onClick={() => { setTab('login'); setErr(''); }}>← Back to login</button></p>
+              </>
+            )}
+          </form>
+        ) : tab === 'login' ? (
           <form className="auth-form" onSubmit={onLogin} noValidate>
             <label>Email address<input type="email" name="email" autoComplete="email" placeholder="you@example.com" required /></label>
             <PasswordField label="Password" name="password" autoComplete="current-password" placeholder="Your password" />
+            <p className="auth-forgot-row"><button type="button" className="link-btn" onClick={(e) => goForgot(e.currentTarget.closest('form')?.email?.value?.trim())}>Forgot password?</button></p>
             {err && (
               <div className="form-error-block">
                 <p className="form-error">{err}</p>
@@ -100,7 +131,17 @@ export default function AuthModal() {
             <label>Email address<input type="email" name="email" autoComplete="email" placeholder="you@example.com" required /></label>
             <PasswordField label="Create password" name="password" autoComplete="new-password" placeholder="At least 6 characters" />
             <PasswordField label="Confirm password" name="confirm" autoComplete="new-password" placeholder="Re-enter password" />
-            {err && <p className="form-error">{err}</p>}
+            {err && (
+              <div className="form-error-block">
+                <p className="form-error">{err}</p>
+                {/already exists/i.test(err) && (
+                  <p className="form-hint">
+                    <button type="button" className="link-btn" onClick={() => { setTab('login'); setErr(''); }}>Log in</button>{' '}or{' '}
+                    <button type="button" className="link-btn" onClick={(e) => goForgot(e.currentTarget.closest('form')?.email?.value?.trim())}>reset your password</button>
+                  </p>
+                )}
+              </div>
+            )}
             <button type="submit" className="btn btn-primary btn-block" disabled={busy}>{busy ? 'Creating…' : 'Create Account & Continue'}</button>
           </form>
         )}

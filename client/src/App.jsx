@@ -32,6 +32,7 @@ import Admin from './pages/Admin.jsx';
 import DoctorPortal from './pages/DoctorPortal.jsx';
 import PrivacyPolicy from './pages/PrivacyPolicy.jsx';
 import TermsConditions from './pages/TermsConditions.jsx';
+import ResetPassword from './pages/ResetPassword.jsx';
 import ChatWidget from './components/ChatWidget.jsx';
 
 export default function App() {
@@ -69,6 +70,7 @@ export default function App() {
         <Route path="/doctor" element={<DoctorPortal />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsConditions />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="*" element={<Home />} />
       </Routes>
       <AuthModal />
