@@ -4,6 +4,7 @@ import { SERVICE_ICON_KEYS } from '../lib/icons.jsx';
 import AdminLayout, { ADMIN_NAV } from '../components/AdminLayout.jsx';
 import AdminDashboard from './AdminDashboard.jsx';
 import { Select, DateField, RefreshButton } from '../components/AdminFields.jsx';
+import PasswordField from '../components/PasswordField.jsx';
 import PatientsAdmin from './admin/PatientsAdmin.jsx';
 import StaffAdmin from './admin/StaffAdmin.jsx';
 import AppointmentsAdmin from './admin/AppointmentsAdmin.jsx';
@@ -371,7 +372,7 @@ export default function Admin() {
             <h1>Admin Login</h1>
             <p>Manage the DBL International oncologist &amp; service catalogue.</p>
             <label>Email<input type="email" name="email" autoComplete="username" placeholder="admin@dblindia.com" required /></label>
-            <label>Password<input type="password" name="password" autoComplete="current-password" placeholder="Your password" required /></label>
+            <PasswordField label="Password" name="password" autoComplete="current-password" placeholder="Your password" />
             {loginErr && <p className="admin-msg err show">{loginErr}</p>}
             <button type="submit" className="btn btn-primary btn-block">Log in</button>
           </form>
