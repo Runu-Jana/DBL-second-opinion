@@ -7,7 +7,13 @@ const { logActivity } = require('../lib/audit');
 const { sendPasswordReset } = require('../lib/email');
 
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
+// Never fall back to a weak default in production — a known secret means anyone can forge
+// admin/patient tokens. Refuse to boot instead; warn loudly in dev.
+const JWT_SECRET = process.env.JWT_SECRET || (() => {
+  if (process.env.NODE_ENV === 'production') throw new Error('FATAL: JWT_SECRET must be set in production.');
+  console.warn('[auth] JWT_SECRET is not set — using an INSECURE dev default. Set JWT_SECRET before deploying.');
+  return 'dev-secret';
+})();
 
 // Patient record without the password hash — safe to return to the client.
 const publicPatient = (p) => ({

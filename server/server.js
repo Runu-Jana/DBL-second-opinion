@@ -3,6 +3,8 @@ require('dotenv').config();
 const path = require('path');
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 
 const oncologistsRouter = require('./routes/oncologists');
 const servicesRouter = require('./routes/services');
@@ -28,8 +30,30 @@ const PORT = process.env.PORT || 5177;
 const ROOT = path.join(__dirname, '..');
 const CLIENT_DIST = path.join(ROOT, 'client', 'dist');
 
-app.use(cors());
-app.use(express.json());
+// Behind Render's proxy — required so rate limiting sees the real client IP.
+app.set('trust proxy', 1);
+
+// Security headers. CSP is left off so it won't block the bundled SPA or cross-origin
+// (R2) images; the rest — HSTS, X-Frame-Options, nosniff, referrer-policy — are applied.
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
+
+// CORS — restrict to an allowlist in production. Set CORS_ORIGINS="https://yourdomain.com"
+// (comma-separated for several). Unset = reflect origin (fine for local dev).
+const ALLOWED_ORIGINS = (process.env.CORS_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean);
+app.use(cors({ origin: ALLOWED_ORIGINS.length ? ALLOWED_ORIGINS : true }));
+
+app.use(express.json({ limit: '1mb' }));
+
+// Throttle sensitive endpoints per IP against brute force / abuse (and API-cost blowouts).
+const limiter = (windowMs, max) => rateLimit({ windowMs, max, standardHeaders: true, legacyHeaders: false,
+  message: { error: 'Too many requests. Please try again in a little while.' } });
+app.use('/api/auth', limiter(15 * 60 * 1000, 40));         // login / signup / forgot / reset
+app.use('/api/contact/otp', limiter(10 * 60 * 1000, 12));  // WhatsApp OTP (cost + spam)
+app.use('/api/chat', limiter(60 * 1000, 20));              // AI chat (Anthropic cost)
 
 // ---- API ----
 app.use('/api/oncologists', oncologistsRouter);
