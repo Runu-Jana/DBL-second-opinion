@@ -6,11 +6,11 @@ services:
     name: dbl-international
     runtime: node
     plan: free
-    # Build: generate Prisma client, build the React frontend into client/dist, then
-    # sync the DB schema + seed (idempotent). Done in buildCommand because Render's
-    # preDeployCommand only runs on paid plans — on free it is skipped, which would
-    # leave the database empty and every DB query (incl. admin login) failing.
-    buildCommand: npm install && npm run build && npm run release
+    # Build with render:build, which forces --include=dev so the build tools
+    # (Prisma CLI, Vite — both devDependencies) install even when NODE_ENV=production;
+    # otherwise the frontend never builds (no client/dist -> 404) and prisma generate fails.
+    # It also runs the migration + seed in-build (Render's preDeployCommand is paid-only).
+    buildCommand: npm run render:build
     startCommand: npm start
     healthCheckPath: /api/health
     envVars:
