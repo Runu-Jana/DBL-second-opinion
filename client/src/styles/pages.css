@@ -389,8 +389,8 @@ table.admin-table{width:100%;border-collapse:collapse;min-width:720px}
 .upl-privacy{display:grid;grid-template-columns:1fr 1fr;gap:1rem;background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:1.3rem 1.6rem}
 .upl-privacy-item{display:flex;align-items:center;gap:.9rem}
 .upl-privacy-icon{display:inline-grid;place-items:center;width:46px;height:46px;border-radius:12px;background:#fff;color:var(--teal);border:1px solid var(--teal-050);flex:0 0 auto}
-.upl-privacy-item strong{display:block;font-size:.98rem;font-weight:800;color:var(--ink)}
-.upl-privacy-item span{display:block;font-size:.82rem;color:var(--muted);margin-top:2px}
+.upl-privacy-item div strong{display:block;font-size:.98rem;font-weight:800;color:var(--ink)}
+.upl-privacy-item div span{display:block;font-size:.82rem;color:var(--muted);margin-top:2px}
 
 .upl-help{background:linear-gradient(135deg,var(--teal-dark),var(--teal-deep));color:#eafffb;padding:clamp(30px,4vw,50px) 0}
 .upl-help-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem}

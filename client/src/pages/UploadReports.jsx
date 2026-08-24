@@ -100,12 +100,12 @@ export default function UploadReports() {
           <div>
             <strong>{t('upl.helpT')}</strong>
             <span>{t('upl.helpD')}</span>
-            <a href="/#contact" className="btn btn-light">{t('upl.helpBtn')}</a>
+            <Link to="/contact" className="btn btn-light">{t('upl.helpBtn')}</Link>
           </div>
           <div>
             <strong>{t('upl.trustT')}</strong>
             <span>{t('upl.trustD')}</span>
-            <Link to="/how-it-works" className="btn btn-light">{t('upl.trustBtn')}</Link>
+            <Link to="/about" className="btn btn-light">{t('upl.trustBtn')}</Link>
           </div>
         </div>
       </section>
