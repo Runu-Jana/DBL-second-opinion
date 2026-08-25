@@ -67,6 +67,45 @@ router.get('/appointments', requirePatient, async (req, res) => {
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not load your appointments.' }); }
 });
 
+// POST /api/portal/appointments — patient requests an appointment (lands as "Pending" for the
+// clinic to confirm). Patient identity comes from the token, never the client.
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+router.post('/appointments', requirePatient, async (req, res) => {
+  try {
+    const b = req.body || {};
+    const str = (v) => (v !== undefined && v !== null && String(v).trim() !== '' ? String(v).trim() : null);
+
+    // Date: accept an ISO yyyy-mm-dd, reject empty/invalid/past, store as a friendly display string.
+    const iso = str(b.date);
+    if (!iso) return res.status(400).json({ error: 'Please choose a date.' });
+    const d = new Date(iso + 'T00:00:00');
+    if (Number.isNaN(d.getTime())) return res.status(400).json({ error: 'That date is not valid.' });
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    if (d < today) return res.status(400).json({ error: 'Please choose a date in the future.' });
+    const date = `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+
+    const time = str(b.time);
+    if (!time) return res.status(400).json({ error: 'Please choose a time.' });
+
+    const mode = ['In-person', 'Video'].includes(b.mode) ? b.mode : 'Video';
+    const type = str(b.type) || 'Second Opinion Consultation';
+    const doctor = str(b.doctor); // optional — null means "assign a specialist"
+    const reason = str(b.reason);
+
+    const created = await prisma.appointment.create({
+      data: {
+        patientName: req.patient.name,
+        patientUhid: req.patient.uhid || null,
+        doctor, type, date, time, mode,
+        status: 'Pending',
+        notes: reason ? `Patient request: ${reason}` : 'Requested via patient portal',
+      },
+    });
+    logActivity(null, { kind: 'activity', actor: req.patient.name, action: `Requested a ${mode.toLowerCase()} appointment on ${date}${doctor ? ` with ${doctor}` : ''}`, target: `Patient · ${req.patient.name}`, category: 'Appointment' });
+    res.status(201).json(created);
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not book your appointment. Please try again.' }); }
+});
+
 // GET /api/portal/consultations — the patient's second-opinion cases
 router.get('/consultations', requirePatient, async (req, res) => {
   try {
