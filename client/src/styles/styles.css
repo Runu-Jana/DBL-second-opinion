@@ -679,7 +679,7 @@ html[dir="rtl"] .lang-item,html[dir="rtl"] .hero-trust,html[dir="rtl"] .btn-stac
 /* ---------- Floating AI chat widget ---------- */
 .chatw-fab{position:fixed;right:20px;bottom:20px;z-index:900;width:58px;height:58px;border:0;border-radius:50%;cursor:pointer;
   display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,var(--teal),var(--teal-deep));
-  box-shadow:0 10px 26px rgba(11,89,82,.4);transition:transform .2s ease,box-shadow .2s ease}
+  box-shadow:0 10px 26px rgba(11,89,82,.4);transition:transform .25s ease,box-shadow .2s ease,opacity .25s ease}
 .chatw-fab:hover{transform:translateY(-2px) scale(1.04);box-shadow:0 14px 30px rgba(11,89,82,.5)}
 .chatw-fab.open{background:var(--teal-deep)}
 .chatw-panel{position:fixed;right:20px;bottom:88px;z-index:950;width:min(380px,calc(100vw - 32px));height:min(560px,72vh);

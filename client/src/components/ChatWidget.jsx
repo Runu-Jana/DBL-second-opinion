@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useLang } from '../i18n.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 
 const HIDE_ON = ['/admin', '/doctor', '/dashboard'];
 
@@ -11,6 +12,7 @@ const SendIco = () => <svg viewBox="0 0 24 24" width="19" height="19" fill="none
 export default function ChatWidget() {
   const { pathname } = useLocation();
   const { t } = useLang();
+  const { authOpen } = useAuth();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([{ role: 'assistant', content: t('chat.greeting') }]);
   const [text, setText] = useState('');
@@ -32,6 +34,9 @@ export default function ChatWidget() {
   }, []);
 
   useEffect(() => { if (bodyRef.current) bodyRef.current.scrollTop = bodyRef.current.scrollHeight; }, [messages, open, busy]);
+
+  // When the login/sign-up modal opens, close the chat panel so the FAB can fade away cleanly.
+  useEffect(() => { if (authOpen) setOpen(false); }, [authOpen]);
 
   // On mobile, freeze the page behind the chat panel while it's open.
   useEffect(() => {
@@ -76,7 +81,7 @@ export default function ChatWidget() {
 
   return (
     <>
-      <button ref={fabRef} className={'chatw-fab' + (open ? ' open' : '')} onClick={() => setOpen((o) => !o)} aria-label={open ? t('chat.closeLabel') : t('chat.openLabel')}>
+      <button ref={fabRef} className={'chatw-fab' + (open ? ' open' : '')} style={{ opacity: authOpen ? 0 : 1, pointerEvents: authOpen ? 'none' : 'auto' }} onClick={() => setOpen((o) => !o)} aria-hidden={authOpen} tabIndex={authOpen ? -1 : 0} aria-label={open ? t('chat.closeLabel') : t('chat.openLabel')}>
         {open ? <CloseIco /> : <ChatIco />}
       </button>
 
