@@ -682,6 +682,10 @@ html[dir="rtl"] .lang-item,html[dir="rtl"] .hero-trust,html[dir="rtl"] .btn-stac
   box-shadow:0 10px 26px rgba(11,89,82,.4);transition:transform .25s ease,box-shadow .2s ease,opacity .25s ease}
 .chatw-fab:hover{transform:translateY(-2px) scale(1.04);box-shadow:0 14px 30px rgba(11,89,82,.5)}
 .chatw-fab.open{background:var(--teal-deep)}
+/* Suspense fallback while a lazy route chunk loads */
+.route-loading{min-height:60vh;display:grid;place-items:center}
+.route-spinner{width:34px;height:34px;border-radius:50%;border:3px solid rgba(14,159,142,.2);border-top-color:var(--teal,#0e9f8e);animation:route-spin .7s linear infinite}
+@keyframes route-spin{to{transform:rotate(360deg)}}
 .chatw-panel{position:fixed;right:20px;bottom:88px;z-index:950;width:min(380px,calc(100vw - 32px));height:min(560px,72vh);
   display:flex;flex-direction:column;background:#fff;border-radius:18px;overflow:hidden;
   box-shadow:0 24px 60px rgba(0,0,0,.28);animation:chatwPop .25s cubic-bezier(.2,.8,.3,1)}
