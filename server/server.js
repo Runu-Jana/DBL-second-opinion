@@ -96,6 +96,46 @@ app.get('/uploads/:key', async (req, res) => {
   }
 });
 
+// ---- SEO: robots.txt + a live sitemap (host-aware, so it works on any domain) ----
+const baseUrl = (req) => `${req.protocol}://${req.get('host')}`;
+
+app.get('/robots.txt', (req, res) => {
+  res.type('text/plain').send(
+    [
+      'User-agent: *',
+      'Allow: /',
+      'Disallow: /admin',
+      'Disallow: /doctor',
+      'Disallow: /dashboard',
+      'Disallow: /api/',
+      'Disallow: /report',
+      '',
+      `Sitemap: ${baseUrl(req)}/sitemap.xml`,
+      '',
+    ].join('\n'),
+  );
+});
+
+// Public, indexable pages. Login-gated areas (admin/doctor/dashboard) are intentionally omitted.
+const STATIC_PAGES = ['/', '/oncologists', '/services', '/ai-features', '/how-it-works', '/upload-reports', '/join-network', '/pricing', '/contact', '/resources', '/about', '/privacy', '/terms'];
+
+app.get('/sitemap.xml', async (req, res) => {
+  const base = baseUrl(req);
+  const urls = STATIC_PAGES.map((p) => ({ loc: base + p, priority: p === '/' ? '1.0' : '0.7' }));
+  try {
+    const prisma = require('./db');
+    const [docs, services] = await Promise.all([
+      prisma.oncologist.findMany({ where: { active: true }, select: { id: true, updatedAt: true } }),
+      prisma.service.findMany({ where: { active: true }, select: { id: true, updatedAt: true } }),
+    ]);
+    for (const d of docs) urls.push({ loc: `${base}/oncologists/${d.id}`, lastmod: d.updatedAt, priority: '0.6' });
+    for (const s of services) urls.push({ loc: `${base}/services/${s.id}`, lastmod: s.updatedAt, priority: '0.6' });
+  } catch (e) { console.error('sitemap db error:', e.message); /* still return the static pages */ }
+
+  const body = urls.map((u) => `  <url><loc>${u.loc}</loc>${u.lastmod ? `<lastmod>${new Date(u.lastmod).toISOString().slice(0, 10)}</lastmod>` : ''}<changefreq>weekly</changefreq><priority>${u.priority}</priority></url>`).join('\n');
+  res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</urlset>\n`);
+});
+
 // ---- Built React app (client/dist) ----
 app.use(express.static(CLIENT_DIST));
 

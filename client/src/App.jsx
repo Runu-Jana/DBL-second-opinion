@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext.jsx';
 import ScrollToTop from './components/ScrollToTop.jsx';
+import { RouteSeo } from './components/Seo.jsx';
 import AuthModal from './components/AuthModal.jsx';
 import UploadModal from './components/UploadModal.jsx';
 import ChatWidget from './components/ChatWidget.jsx';
@@ -47,6 +48,7 @@ export default function App() {
   return (
     <AuthProvider>
       <ScrollToTop />
+      <RouteSeo />
       <Suspense fallback={<RouteFallback />}>
       <Routes>
         <Route path="/" element={<Home />} />

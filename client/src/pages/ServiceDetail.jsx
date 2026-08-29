@@ -5,6 +5,7 @@ import Footer from '../components/Footer.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { api } from '../api.js';
 import { useLang } from '../i18n.jsx';
+import Seo from '../components/Seo.jsx';
 import { ServiceIcon } from '../lib/icons.jsx';
 import { FALLBACK_SERVICES } from './Home.jsx';
 
@@ -23,10 +24,9 @@ export default function ServiceDetail() {
         if (f) setS(f); else setError(true);
       });
   }, [id]);
-  useEffect(() => { if (s) document.title = `${s.title} — DBL International`; }, [s]);
-
   return (
     <>
+      {s && <Seo title={s.title} description={s.description || `${s.title} — expert oncology services from DBL International.`} />}
       <Header active="services" />
       <main className="doc-detail">
         <div className="container">

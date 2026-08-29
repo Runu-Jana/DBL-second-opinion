@@ -5,6 +5,7 @@ import Footer from '../components/Footer.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { api } from '../api.js';
 import { useLang } from '../i18n.jsx';
+import Seo from '../components/Seo.jsx';
 import { FALLBACK_DOCS, docPhoto } from './Oncologists.jsx';
 
 const stars = (r) => '★★★★★'.slice(0, Math.round(r)) + '☆☆☆☆☆'.slice(0, 5 - Math.round(r));
@@ -25,10 +26,9 @@ export default function DoctorDetail() {
       });
   }, [id]);
 
-  useEffect(() => { if (d) document.title = `${d.name} — DBL International`; }, [d]);
-
   return (
     <>
+      {d && <Seo title={`${d.name} — ${d.specialty}`} description={d.bio || `${d.name}, ${d.specialty} at DBL International — ${d.experience}+ years providing expert cancer second opinions.`} image={docPhoto(d)} />}
       <Header active="oncologists" />
       <main className="doc-detail">
         <div className="container">
