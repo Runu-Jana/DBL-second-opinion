@@ -13,7 +13,12 @@ function getClient() {
   if (!_client) {
     const Pkg = require('@anthropic-ai/sdk');
     const Anthropic = Pkg.default || Pkg;
-    _client = new Anthropic();
+    // Identity-linked / "all workspaces" keys require the workspace id on every request.
+    // Set ANTHROPIC_WORKSPACE_ID to send it; harmless (unset) for workspace-scoped keys.
+    const opts = process.env.ANTHROPIC_WORKSPACE_ID
+      ? { defaultHeaders: { 'anthropic-workspace-id': process.env.ANTHROPIC_WORKSPACE_ID } }
+      : {};
+    _client = new Anthropic(opts);
   }
   return _client;
 }
