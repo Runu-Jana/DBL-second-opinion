@@ -186,7 +186,7 @@ const MODULE_CONFIGS = {
     ],
     fields: [
       { key: 'name', label: 'Full name *', type: 'text', required: true },
-      { key: 'email', label: 'Email *', type: 'text', required: true, placeholder: 'name@dblinternational.com' },
+      { key: 'email', label: 'Email *', type: 'text', required: true, placeholder: 'name@dblindia.com' },
       { key: 'role', label: 'Role', type: 'select', options: ROLES },
       { key: 'status', label: 'Status', type: 'select', options: USER_STATUSES },
       { key: 'lastLogin', label: 'Last login', type: 'date' },

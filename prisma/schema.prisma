@@ -354,7 +354,7 @@ model ActivityLog {
 model Setting {
   id                 Int      @id @default(1)
   clinicName         String   @default("DBL International")
-  supportEmail       String   @default("support@dblinternational.com")
+  supportEmail       String   @default("support@dblindia.com")
   supportPhone       String   @default("+91 1800 123 4567")
   timezone           String   @default("Asia/Kolkata")
   emailNotifications Boolean  @default(true)

@@ -223,7 +223,7 @@ settings.put('/', requireAdmin, async (req, res) => {
     const b = req.body || {};
     const data = {
       clinicName: str(b.clinicName) || 'DBL International',
-      supportEmail: str(b.supportEmail) || 'support@dblinternational.com',
+      supportEmail: str(b.supportEmail) || 'support@dblindia.com',
       supportPhone: str(b.supportPhone) || '',
       timezone: str(b.timezone) || 'Asia/Kolkata',
       emailNotifications: !!b.emailNotifications,
