@@ -314,8 +314,8 @@ export default function Report() {
           <List items={['Expert Pharmacists & Oncologists', 'Evidence-Based Reviews', 'Personalized Patient Care', 'Global Standards, Local Support', 'Your Partner in Cancer Care']} />
           <div className="rp-note" style={{ marginTop: '20px' }}>
             <span style={{ display: 'flex', gap: '18px', flexWrap: 'wrap' }}>
-              <span style={{ display: 'inline-flex', gap: '6px', alignItems: 'center' }}>{I.globe} www.dblindia.com</span>
-              <span style={{ display: 'inline-flex', gap: '6px', alignItems: 'center' }}>{I.mail} care@dblindia.com</span>
+              <span style={{ display: 'inline-flex', gap: '6px', alignItems: 'center' }}>{I.globe} www.dblhealthcare.com</span>
+              <span style={{ display: 'inline-flex', gap: '6px', alignItems: 'center' }}>{I.mail} care@dblhealthcare.com</span>
               <span style={{ display: 'inline-flex', gap: '6px', alignItems: 'center' }}>{I.phone} +91 XXXXX XXXXX</span>
             </span>
           </div>

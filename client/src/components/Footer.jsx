@@ -49,7 +49,7 @@ export default function Footer() {
           <h4>{t('nav.contact')}</h4>
           <ul>
             <li>+91 80595 25000</li>
-            <li>care@dblindia.com</li>
+            <li>care@dblhealthcare.com</li>
             <li>{t('footer.serving')}</li>
           </ul>
           <h4 className="ft-trust-h">{t('footer.trust')}</h4>

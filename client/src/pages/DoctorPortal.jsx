@@ -44,7 +44,7 @@ function DoctorLogin({ onLogin }) {
         <span className="doc-login-mark">{Shield}</span>
         <h1>Doctor Portal</h1>
         <p>Sign in to review reports assigned to you.</p>
-        <label>Email<input type="email" name="email" autoComplete="username" placeholder="you@dblindia.com" required /></label>
+        <label>Email<input type="email" name="email" autoComplete="username" placeholder="you@dblhealthcare.com" required /></label>
         <label>Password<input type="password" name="password" autoComplete="current-password" placeholder="Your password" required /></label>
         {err && <p className="doc-err">{err}</p>}
         <button type="submit" className="btn btn-primary btn-block">Log in</button>

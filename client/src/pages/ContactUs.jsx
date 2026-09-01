@@ -48,9 +48,9 @@ function WorldMap() {
 }
 
 const CONTACTS = [
-  { icon: Ico.mail, t: 'Email Us', d: 'support@dblindia.com' },
+  { icon: Ico.mail, t: 'Email Us', d: 'support@dblhealthcare.com' },
   { icon: Ico.chat, t: 'Live Chat', d: 'Chat with our AI assistant', action: 'chat' },
-  { icon: Ico.brief, t: 'Business Inquiries', d: 'partnerships@dblindia.com' },
+  { icon: Ico.brief, t: 'Business Inquiries', d: 'partnerships@dblhealthcare.com' },
   { icon: Ico.pin, t: 'Global Locations', d: 'We serve patients in 20+ countries.' },
 ];
 const SUPPORT = [

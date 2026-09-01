@@ -54,7 +54,7 @@ npm run client:dev            # Vite on :5173 (proxies /api and /uploads)
 ```
 
 ### Admin panel
-`/admin` — default login `admin@dblindia.com` / `admin123` (change in `.env`).
+`/admin` — default login `admin@dblhealthcare.com` / `admin123` (change in `.env`).
 
 ---
 

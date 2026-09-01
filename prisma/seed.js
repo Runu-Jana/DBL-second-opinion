@@ -187,7 +187,7 @@ const labTests = [
 ];
 
 const appUsers = [
-  { name: 'DBL Admin', email: 'admin@dblindia.com', role: 'Super Admin', status: 'Active', lastLogin: '16 May 2024' },
+  { name: 'DBL Admin', email: 'admin@dblhealthcare.com', role: 'Super Admin', status: 'Active', lastLogin: '16 May 2024' },
   { name: 'Dr. Bhoumik Kadhye', email: 'bhoumik.k@dblinternational.com', role: 'Doctor', status: 'Active', lastLogin: '16 May 2024' },
   { name: 'Ms. Pooja Sharma', email: 'pooja.s@dblinternational.com', role: 'Staff', status: 'Active', lastLogin: '15 May 2024' },
   { name: 'Dr. Neha Verma', email: 'neha.v@dblinternational.com', role: 'Doctor', status: 'Active', lastLogin: '16 May 2024' },
@@ -206,10 +206,10 @@ const activityLogs = [
   { kind: 'activity', actor: 'System', action: 'backup completed successfully', category: 'System', time: '30 min ago' },
   { kind: 'activity', actor: 'DBL Admin', action: 'updated system settings', category: 'Settings', time: '45 min ago' },
   { kind: 'activity', actor: 'Billing', action: 'received payment', target: 'Neha Verma', category: 'Billing', time: '1 hour ago' },
-  { kind: 'audit', actor: 'admin@dblindia.com', action: 'logged in', category: 'Login', time: '16 May 2024, 09:02' },
-  { kind: 'audit', actor: 'admin@dblindia.com', action: 'updated patient record', target: 'DBL125456', category: 'Patient', time: '16 May 2024, 09:15' },
+  { kind: 'audit', actor: 'admin@dblhealthcare.com', action: 'logged in', category: 'Login', time: '16 May 2024, 09:02' },
+  { kind: 'audit', actor: 'admin@dblhealthcare.com', action: 'updated patient record', target: 'DBL125456', category: 'Patient', time: '16 May 2024, 09:15' },
   { kind: 'audit', actor: 'bhoumik.k@dblinternational.com', action: 'deleted appointment', target: '#42', category: 'Appointment', time: '15 May 2024, 17:40' },
-  { kind: 'audit', actor: 'admin@dblindia.com', action: 'changed user role', target: 'reception@dblinternational.com', category: 'User', time: '15 May 2024, 11:20' },
+  { kind: 'audit', actor: 'admin@dblhealthcare.com', action: 'changed user role', target: 'reception@dblinternational.com', category: 'User', time: '15 May 2024, 11:20' },
 ];
 
 const doctorApplications = [
@@ -222,7 +222,7 @@ async function main() {
   console.log('Seeding database...');
 
   // Admin
-  const email = process.env.ADMIN_EMAIL || 'admin@dblindia.com';
+  const email = process.env.ADMIN_EMAIL || 'admin@dblhealthcare.com';
   const passwordHash = await bcrypt.hash(process.env.ADMIN_PASSWORD || 'admin123', 10);
   await prisma.admin.upsert({
     where: { email },

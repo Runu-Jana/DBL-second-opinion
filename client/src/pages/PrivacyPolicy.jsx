@@ -113,7 +113,7 @@ export default function PrivacyPolicy() {
               <h2>11. Contact Us</h2>
               <p>
                 If you have questions about this Privacy Policy or how your information is handled, contact us at{' '}
-                <a href="mailto:privacy@dblindia.com">privacy@dblindia.com</a> or through our{' '}
+                <a href="mailto:privacy@dblhealthcare.com">privacy@dblhealthcare.com</a> or through our{' '}
                 <Link to="/contact">Contact page</Link>.
               </p>
             </div>

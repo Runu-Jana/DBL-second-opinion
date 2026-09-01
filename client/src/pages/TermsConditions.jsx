@@ -128,7 +128,7 @@ const SECTIONS = [
   {
     h: '19. Grievance Redressal',
     body: [
-      'In accordance with applicable law, complaints regarding content, data, or the Services may be sent to our Grievance Officer at grievance@dblindia.com. We will acknowledge complaints within the timelines prescribed by law and endeavour to resolve them promptly.',
+      'In accordance with applicable law, complaints regarding content, data, or the Services may be sent to our Grievance Officer at grievance@dblhealthcare.com. We will acknowledge complaints within the timelines prescribed by law and endeavour to resolve them promptly.',
     ],
   },
   {
@@ -184,7 +184,7 @@ export default function TermsConditions() {
               <h2>22. Contact Us</h2>
               <p>
                 Questions about these Terms? Reach us at{' '}
-                <a href="mailto:legal@dblindia.com">legal@dblindia.com</a> or through our{' '}
+                <a href="mailto:legal@dblhealthcare.com">legal@dblhealthcare.com</a> or through our{' '}
                 <Link to="/contact">Contact page</Link>. See also our{' '}
                 <Link to="/privacy">Privacy Policy</Link>.
               </p>

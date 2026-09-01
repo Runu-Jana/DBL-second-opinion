@@ -371,7 +371,7 @@ export default function Admin() {
             <Mark />
             <h1>Admin Login</h1>
             <p>Manage the DBL International oncologist &amp; service catalogue.</p>
-            <label>Email<input type="email" name="email" autoComplete="username" placeholder="admin@dblindia.com" required /></label>
+            <label>Email<input type="email" name="email" autoComplete="username" placeholder="admin@dblhealthcare.com" required /></label>
             <PasswordField label="Password" name="password" autoComplete="current-password" placeholder="Your password" />
             {loginErr && <p className="admin-msg err show">{loginErr}</p>}
             <button type="submit" className="btn btn-primary btn-block">Log in</button>

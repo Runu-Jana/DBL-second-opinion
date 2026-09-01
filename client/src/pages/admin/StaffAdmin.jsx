@@ -52,7 +52,7 @@ function StaffModal({ member, onClose, onSaved, on401 }) {
             <label>Department<Select value={f.department} onChange={(v) => setF({ ...f, department: v })} options={DEPARTMENTS} placeholder="Select department" /></label>
             <label>Status<Select value={f.status} onChange={(v) => setF({ ...f, status: v })} options={STATUSES} /></label>
             <label className="full">Qualifications<input value={f.qualifications} onChange={set('qualifications')} placeholder="MBBS, MD, DM (Oncology)" /></label>
-            <label>Email<input type="email" value={f.email} onChange={set('email')} placeholder="name@dblindia.com" /></label>
+            <label>Email<input type="email" value={f.email} onChange={set('email')} placeholder="name@dblhealthcare.com" /></label>
             <label>Phone<input value={f.phone} onChange={set('phone')} placeholder="+91 …" /></label>
             <label>Joined date<DateField value={f.joinedDate} onChange={(v) => setF({ ...f, joinedDate: v })} /></label>
             <label className="full">Photo

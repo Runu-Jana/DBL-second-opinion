@@ -108,7 +108,7 @@ export default function AdminLayout({ section, onNavigate, adminName, onLogout, 
             <strong>Support &amp; Help</strong>
             <p>24x7 Technical Support</p>
             <p className="adm-help-num">+918059525000</p>
-            <p className="adm-help-mail">support@dblindia.com</p>
+            <p className="adm-help-mail">support@dblhealthcare.com</p>
           </div>
         </div>
       </aside>
