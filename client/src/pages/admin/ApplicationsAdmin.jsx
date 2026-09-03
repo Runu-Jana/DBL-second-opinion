@@ -23,9 +23,15 @@ export default function ApplicationsAdmin({ flash, on401 }) {
   useEffect(() => { const t = setTimeout(load, 250); return () => clearTimeout(t); }, [q, status]); // eslint-disable-line
 
   const approve = (a) => {
-    if (!window.confirm(`Approve ${a.name}? This creates a doctor login and a public oncologist listing.`)) return;
+    if (!window.confirm(`Approve ${a.name}? This creates their doctor account, emails them a link to set their own password, and adds a public oncologist listing.`)) return;
     api(`/doctor-applications/${a.id}/approve`, { method: 'POST', on401 })
-      .then((r) => { flash(r.login ? `Approved. Login created: ${r.login.email} / ${r.login.password}` : 'Approved. Doctor account already existed.'); load(); })
+      .then((r) => {
+        flash(!r.staffCreated ? 'Approved. Doctor account already existed.'
+          : r.invited ? `Approved. A set-password link was emailed to ${r.loginEmail}.`
+            : `Approved, but the set-password email could not be sent${r.loginEmail ? ` to ${r.loginEmail}` : ''}. Use “Send login” in Staff to retry.`,
+        r.staffCreated && !r.invited ? 'err' : undefined);
+        load();
+      })
       .catch((e) => flash(e.message, 'err'));
   };
   const reject = (a) => {

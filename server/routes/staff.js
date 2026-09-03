@@ -1,8 +1,8 @@
 // Doctor & Staff CRUD — admin only (internal staff directory)
 const express = require('express');
 const prisma = require('../db');
-const { requireAdmin } = require('./auth');
-const { logCrud } = require('../lib/audit');
+const { requireAdmin, inviteStaff, linkOrigin } = require('./auth');
+const { logCrud, logActivity } = require('../lib/audit');
 
 const router = express.Router();
 
@@ -59,8 +59,28 @@ router.post('/', requireAdmin, async (req, res) => {
     if (!data.name || !data.role) return res.status(400).json({ error: 'Name and role are required.' });
     const created = await prisma.staff.create({ data });
     logCrud(req, 'Created', 'Staff', created.name, { activity: true });
-    res.status(201).json(created);
+    // No password is ever set here — if they have an email, send them a one-time link to
+    // choose their own Doctor Portal password. Best-effort; admin can resend from the panel.
+    let invited = false;
+    if (created.email) {
+      try { const r = await inviteStaff(created, linkOrigin(req)); invited = !r.skipped; }
+      catch (e) { console.error('staff invite email failed:', e.message); }
+    }
+    res.status(201).json({ ...created, invited });
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not create staff member.' }); }
+});
+
+// POST /api/staff/:id/invite (admin) — (re)send the "set your password" link for portal access
+router.post('/:id/invite', requireAdmin, async (req, res) => {
+  try {
+    const staff = await prisma.staff.findUnique({ where: { id: +req.params.id } });
+    if (!staff) return res.status(404).json({ error: 'Not found.' });
+    if (!staff.email) return res.status(400).json({ error: 'Add an email address for this staff member first.' });
+    const r = await inviteStaff(staff, linkOrigin(req));
+    if (r.skipped) return res.status(503).json({ error: 'Email is not configured on the server, so the link could not be sent.' });
+    logActivity(req, { kind: 'audit', action: 'Sent portal set-password link', target: `Staff · ${staff.name}`, category: 'Login' });
+    res.json({ ok: true, sentTo: staff.email });
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not send the set-password email.' }); }
 });
 
 // PUT /api/staff/:id (admin)

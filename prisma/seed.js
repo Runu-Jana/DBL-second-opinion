@@ -284,13 +284,12 @@ async function main() {
     console.log('  • staff already present — skipped');
   }
 
-  // Give staff a default Doctor Portal password if they don't have one yet
-  const needPass = await prisma.staff.count({ where: { password: null } });
-  if (needPass) {
-    const hash = await bcrypt.hash('doctor123', 10);
-    await prisma.staff.updateMany({ where: { password: null }, data: { password: hash } });
-    console.log(`  ✓ ${needPass} staff given default password ("doctor123")`);
-  }
+  // NOTE: staff are deliberately left with password = null. Doctors set their own password
+  // via the one-time "set your password" link emailed on approval / staff creation (see
+  // auth.js inviteStaff). Never seed a shared default here — this runs on every deploy and
+  // would overwrite accounts that are legitimately awaiting activation.
+  const awaiting = await prisma.staff.count({ where: { password: null } });
+  if (awaiting) console.log(`  · ${awaiting} staff awaiting password setup (send them a login link from Staff Management)`);
 
   // Appointments — idempotent guard
   if (await prisma.appointment.count() === 0) {

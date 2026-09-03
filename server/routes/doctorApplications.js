@@ -1,8 +1,7 @@
 // Doctor applications — public submit (from the Join Network form) + admin review/approve.
 const express = require('express');
-const bcrypt = require('bcryptjs');
 const prisma = require('../db');
-const { requireAdmin } = require('./auth');
+const { requireAdmin, inviteStaff, linkOrigin } = require('./auth');
 const { logActivity } = require('../lib/audit');
 
 const router = express.Router();
@@ -89,15 +88,19 @@ router.post('/:id/approve', requireAdmin, async (req, res) => {
     const now = new Date();
     const joined = `${now.getDate()} ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][now.getMonth()]} ${now.getFullYear()}`;
 
-    // 1) Staff record with a login (default password) — unless one already exists for this email
+    // 1) Staff record — created with NO password. The doctor sets their own via the emailed
+    //    one-time link (email = username). Skipped if a Staff row already exists for this email.
     const existingStaff = app.email ? await prisma.staff.findFirst({ where: { email: { equals: app.email, mode: 'insensitive' } } }) : null;
     let staffCreated = false;
+    let invited = false;
     if (!existingStaff) {
-      const password = await bcrypt.hash('doctor123', 10);
-      await prisma.staff.create({
-        data: { name: app.name, role, department: app.specialization || null, qualifications: app.qualification || null, email: app.email, password, status: 'Active', joinedDate: joined },
+      const staff = await prisma.staff.create({
+        data: { name: app.name, role, department: app.specialization || null, qualifications: app.qualification || null, email: app.email, status: 'Active', joinedDate: joined },
       });
       staffCreated = true;
+      // Best-effort: approval must not fail because an email hiccuped (admin can resend).
+      try { const r = await inviteStaff(staff, linkOrigin(req)); invited = !r.skipped; }
+      catch (e) { console.error('doctor invite email failed:', e.message); }
     }
 
     // 2) Public Oncologist listing
@@ -110,8 +113,8 @@ router.post('/:id/approve', requireAdmin, async (req, res) => {
 
     const updated = await prisma.doctorApplication.update({ where: { id: app.id }, data: { status: 'Approved' } });
     logActivity(req, { kind: 'audit', action: 'Approved doctor application', target: app.name, category: 'Application' });
-    logActivity(req, { kind: 'activity', action: `${app.name} approved and onboarded${staffCreated ? ' (login created)' : ''}`, category: 'Application' });
-    res.json({ ok: true, application: updated, staffCreated, login: staffCreated ? { email: app.email, password: 'doctor123' } : null });
+    logActivity(req, { kind: 'activity', action: `${app.name} approved and onboarded${staffCreated ? ' (account created, set-password email sent)' : ''}`, category: 'Application' });
+    res.json({ ok: true, application: updated, staffCreated, invited, loginEmail: staffCreated ? app.email : null });
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not approve the application.' }); }
 });
 

@@ -36,6 +36,7 @@ const Profile = lazy(() => import('./pages/Profile.jsx'));
 const HelpCenter = lazy(() => import('./pages/HelpCenter.jsx'));
 const Admin = lazy(() => import('./pages/Admin.jsx'));
 const DoctorPortal = lazy(() => import('./pages/DoctorPortal.jsx'));
+const DoctorSetPassword = lazy(() => import('./pages/DoctorSetPassword.jsx'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy.jsx'));
 const TermsConditions = lazy(() => import('./pages/TermsConditions.jsx'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword.jsx'));
@@ -79,6 +80,7 @@ export default function App() {
         <Route path="/dashboard/help" element={<HelpCenter />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/doctor" element={<DoctorPortal />} />
+        <Route path="/doctor/set-password" element={<DoctorSetPassword />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsConditions />} />
         <Route path="/reset-password" element={<ResetPassword />} />

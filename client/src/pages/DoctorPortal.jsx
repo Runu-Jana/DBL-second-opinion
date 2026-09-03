@@ -30,12 +30,22 @@ const Shield = (
 
 function DoctorLogin({ onLogin }) {
   const [err, setErr] = useState('');
+  const [note, setNote] = useState('');
+  const [email, setEmail] = useState('');
   const submit = (e) => {
     e.preventDefault();
-    const email = e.target.email.value.trim().toLowerCase();
     const password = e.target.password.value;
-    docApi('/auth/doctor-login', { method: 'POST', body: JSON.stringify({ email, password }) })
+    docApi('/auth/doctor-login', { method: 'POST', body: JSON.stringify({ email: email.trim().toLowerCase(), password }) })
       .then((r) => { localStorage.setItem(DTOK, r.token); onLogin(r.token); })
+      .catch((ex) => setErr(ex.message));
+  };
+  // Sends a set-password link. The backend picks activation vs reset based on whether
+  // this doctor has ever set a password, and always answers generically.
+  const forgot = () => {
+    setErr(''); setNote('');
+    if (!email.trim()) return setErr('Enter your email address first, then tap “Forgot password?”.');
+    docApi('/auth/doctor-forgot', { method: 'POST', body: JSON.stringify({ email: email.trim().toLowerCase() }) })
+      .then(() => setNote('If that email is registered, we’ve sent a link to set your password. Check your inbox (and spam).'))
       .catch((ex) => setErr(ex.message));
   };
   return (
@@ -44,10 +54,12 @@ function DoctorLogin({ onLogin }) {
         <span className="doc-login-mark">{Shield}</span>
         <h1>Doctor Portal</h1>
         <p>Sign in to review reports assigned to you.</p>
-        <label>Email<input type="email" name="email" autoComplete="username" placeholder="you@dblhealthcare.com" required /></label>
+        <label>Email<input type="email" name="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" placeholder="you@dblhealthcare.com" required /></label>
         <label>Password<input type="password" name="password" autoComplete="current-password" placeholder="Your password" required /></label>
         {err && <p className="doc-err">{err}</p>}
+        {note && <p className="doc-note">{note}</p>}
         <button type="submit" className="btn btn-primary btn-block">Log in</button>
+        <button type="button" className="doc-forgot" onClick={forgot}>Forgot password? / First time here?</button>
       </form>
     </div>
   );

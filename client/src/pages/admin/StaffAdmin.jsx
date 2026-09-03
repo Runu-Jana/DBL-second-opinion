@@ -113,6 +113,14 @@ export default function StaffAdmin({ flash, on401 }) {
     api(`/staff/${m.id}`, { method: 'DELETE', on401 }).then(() => { flash('Staff member deleted.'); load(); }).catch((e) => flash(e.message, 'err'));
   };
 
+  // Emails this staff member a one-time link to choose their own Doctor Portal password.
+  const invite = (m) => {
+    if (!window.confirm(`Email ${m.email} a link to set their Doctor Portal password?`)) return;
+    api(`/staff/${m.id}/invite`, { method: 'POST', on401 })
+      .then((r) => flash(`Set-password link sent to ${r.sentTo}.`))
+      .catch((e) => flash(e.message, 'err'));
+  };
+
   return (
     <div className="adm-module">
       <div className="adm-page-head">
@@ -156,7 +164,11 @@ export default function StaffAdmin({ flash, on401 }) {
                   <td>{m.phone || '—'}</td>
                   <td><span className={'adm-badge ' + (TONE[m.status] || 'gray')}>{m.status}</span></td>
                   <td>{m.onCall ? <span className="adm-badge teal">On call</span> : '—'}</td>
-                  <td><div className="row-actions"><button className="icon-btn" onClick={() => setModal(m)}>Edit</button><button className="icon-btn danger" onClick={() => del(m)}>Delete</button></div></td>
+                  <td><div className="row-actions">
+                    <button className="icon-btn" onClick={() => setModal(m)}>Edit</button>
+                    <button className="icon-btn" title={m.email ? `Email ${m.email} a link to set their portal password` : 'Add an email address first'} disabled={!m.email} onClick={() => invite(m)}>Send login</button>
+                    <button className="icon-btn danger" onClick={() => del(m)}>Delete</button>
+                  </div></td>
                 </tr>
               ))}
             </tbody>

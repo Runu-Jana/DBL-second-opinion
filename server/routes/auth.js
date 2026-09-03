@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const prisma = require('../db');
 const { logActivity } = require('../lib/audit');
-const { sendPasswordReset } = require('../lib/email');
+const { sendPasswordReset, sendDoctorInvite } = require('../lib/email');
 
 const router = express.Router();
 // Never fall back to a weak default in production — a known secret means anyone can forge
@@ -56,6 +56,72 @@ router.post('/doctor-login', async (req, res) => {
     logActivity(null, { kind: 'audit', actor: staff.name, action: 'Signed in', target: 'Doctor portal', category: 'Login' });
     res.json({ token, doctor: { id: staff.id, name: staff.name, email: staff.email, role: staff.role, department: staff.department } });
   } catch (e) { console.error(e); res.status(500).json({ error: 'Login failed.' }); }
+});
+
+/* ---------- Doctor Portal credentials ----------------------------------------
+   A newly-created doctor has NO password. They receive a one-time link and choose
+   their own; email is their username. Tokens are stateless JWTs (same pattern as
+   the patient reset) so no extra DB columns are needed. ------------------------ */
+const linkOrigin = (req) => req.headers.origin || process.env.PUBLIC_URL || '';
+const publicDoctor = (s) => ({ id: s.id, name: s.name, email: s.email, role: s.role, department: s.department });
+
+// Emails a doctor/staff member a "set your password" link. Called on approve + admin create.
+async function inviteStaff(staff, origin) {
+  if (!staff || !staff.email) return { skipped: true, reason: 'no email on record' };
+  const token = jwt.sign({ id: staff.id, email: staff.email, purpose: 'dr-activate' }, JWT_SECRET, { expiresIn: '7d' });
+  const url = `${origin}/doctor/set-password?token=${encodeURIComponent(token)}`;
+  const r = await sendDoctorInvite({ to: staff.email, name: staff.name, url });
+  if (r.skipped && process.env.NODE_ENV !== 'production') console.log('[doctor-invite:DEV] set-password link:', url);
+  return { ...r, url };
+}
+
+// POST /api/auth/doctor-set-password  { token, password } -> sets the password and signs them in.
+// Serves both first-time activation ('dr-activate') and forgot-password ('dr-pwreset').
+router.post('/doctor-set-password', async (req, res) => {
+  try {
+    const token = String(req.body?.token || '');
+    const password = String(req.body?.password || '');
+    if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters.' });
+    let payload;
+    try { payload = jwt.verify(token, JWT_SECRET); }
+    catch { return res.status(400).json({ error: 'This link is invalid or has expired. Please request a new one.' }); }
+    if (!['dr-activate', 'dr-pwreset'].includes(payload.purpose)) return res.status(400).json({ error: 'Invalid link.' });
+    const staff = await prisma.staff.findUnique({ where: { id: payload.id } });
+    if (!staff) return res.status(400).json({ error: 'Account not found.' });
+
+    const hash = await bcrypt.hash(password, 10);
+    await prisma.staff.update({ where: { id: staff.id }, data: { password: hash } });
+    const login = jwt.sign({ id: staff.id, name: staff.name, email: staff.email, role: 'doctor' }, JWT_SECRET, { expiresIn: '8h' });
+    logActivity(null, {
+      kind: 'audit', actor: staff.name, target: 'Doctor portal', category: 'Login',
+      action: payload.purpose === 'dr-activate' ? 'Activated account and set password' : 'Reset portal password',
+    });
+    res.json({ ok: true, token: login, doctor: publicDoctor(staff) });
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not set your password. Please try again.' }); }
+});
+
+// POST /api/auth/doctor-forgot  { email } -> emails a link. Always answers generically (no
+// account enumeration). Sends an activation link if they never set a password, else a reset link.
+router.post('/doctor-forgot', async (req, res) => {
+  try {
+    const email = String(req.body?.email || '').trim().toLowerCase();
+    if (!email) return res.status(400).json({ error: 'Please enter your email address.' });
+    const staff = await prisma.staff.findFirst({ where: { email: { equals: email, mode: 'insensitive' } } });
+    let devResetUrl;
+    if (staff && staff.email) {
+      const activating = !staff.password;
+      const purpose = activating ? 'dr-activate' : 'dr-pwreset';
+      const token = jwt.sign({ id: staff.id, email: staff.email, purpose }, JWT_SECRET, { expiresIn: activating ? '7d' : '30m' });
+      const url = `${linkOrigin(req)}/doctor/set-password?token=${encodeURIComponent(token)}`;
+      try {
+        const r = activating
+          ? await sendDoctorInvite({ to: staff.email, name: staff.name, url })
+          : await sendPasswordReset({ to: staff.email, name: staff.name, url });
+        if (r.skipped && process.env.NODE_ENV !== 'production') { console.log('[doctor-pwreset:DEV] link:', url); devResetUrl = url; }
+      } catch (e) { console.error('doctor reset email failed:', e.message); }
+    }
+    res.json({ ok: true, ...(devResetUrl ? { devResetUrl } : {}) });
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not process the request. Please try again.' }); }
 });
 
 // POST /api/auth/patient-signup  { name, email, password } -> creates OR claims a Patient + token.
@@ -195,3 +261,5 @@ module.exports.requireAdmin = requireAdmin;
 module.exports.requireDoctor = requireDoctor;
 module.exports.requirePatient = requirePatient;
 module.exports.publicPatient = publicPatient;
+module.exports.inviteStaff = inviteStaff;   // used by doctor-application approve + admin staff create
+module.exports.linkOrigin = linkOrigin;
