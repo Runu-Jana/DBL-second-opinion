@@ -59,10 +59,12 @@ router.post('/', requireAdmin, async (req, res) => {
     if (!data.name || !data.role) return res.status(400).json({ error: 'Name and role are required.' });
     const created = await prisma.staff.create({ data });
     logCrud(req, 'Created', 'Staff', created.name, { activity: true });
-    // No password is ever set here — if they have an email, send them a one-time link to
-    // choose their own Doctor Portal password. Best-effort; admin can resend from the panel.
+    // No password is ever set here. Portal access is opt-in per person (`portalAccess` from
+    // the admin form) so non-clinical staff aren't emailed a doctor-portal login they'll never
+    // use. When opted in, they get a one-time link to choose their own password. Best-effort —
+    // the admin can always resend via POST /:id/invite.
     let invited = false;
-    if (created.email) {
+    if (created.email && req.body.portalAccess) {
       try { const r = await inviteStaff(created, linkOrigin(req)); invited = !r.skipped; }
       catch (e) { console.error('staff invite email failed:', e.message); }
     }

@@ -26,10 +26,15 @@ export default function ApplicationsAdmin({ flash, on401 }) {
     if (!window.confirm(`Approve ${a.name}? This creates their doctor account, emails them a link to set their own password, and adds a public oncologist listing.`)) return;
     api(`/doctor-applications/${a.id}/approve`, { method: 'POST', on401 })
       .then((r) => {
-        flash(!r.staffCreated ? 'Approved. Doctor account already existed.'
-          : r.invited ? `Approved. A set-password link was emailed to ${r.loginEmail}.`
-            : `Approved, but the set-password email could not be sent${r.loginEmail ? ` to ${r.loginEmail}` : ''}. Use “Send login” in Staff to retry.`,
-        r.staffCreated && !r.invited ? 'err' : undefined);
+        if (!r.staffCreated) { flash('Approved. Doctor account already existed.'); load(); return; }
+        const cats = r.categories || [];
+        const mail = r.invited
+          ? `A set-password link was emailed to ${r.loginEmail}.`
+          : 'The set-password email could not be sent — use “Send login” in Staff Management to retry.';
+        const routing = cats.length
+          ? `Report categories set: ${cats.join(', ')} (refine in Staff Management).`
+          : 'No report categories matched this specialisation — tag them in Staff Management or this doctor will not receive any reports.';
+        flash(`Approved. ${mail} ${routing}`, (!r.invited || !cats.length) ? 'err' : undefined);
         load();
       })
       .catch((e) => flash(e.message, 'err'));

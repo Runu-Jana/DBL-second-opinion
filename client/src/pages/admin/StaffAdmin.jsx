@@ -6,11 +6,16 @@ import { CATEGORIES, splitCategories } from '../../lib/categories.js';
 const ROLES = ['Oncologist', 'Surgeon', 'Radiologist', 'Clinical Pharmacist', 'Nurse', 'Care Coordinator', 'Nutritionist', 'Lab Technician', 'Administrator', 'Receptionist'];
 const DEPARTMENTS = ['Medical Oncology', 'Surgical Oncology', 'Radiation Oncology', 'Pharmacy', 'Nursing', 'Radiology', 'Pathology', 'Patient Support', 'Administration'];
 const STATUSES = ['Active', 'On Leave', 'Inactive'];
+// Roles that review patient reports — triage routes by `specialties`, so an active one
+// with no categories tagged silently receives nothing. Flagged in the table.
+const REVIEW_ROLES = ['Oncologist', 'Surgeon', 'Radiologist'];
 const TONE = { Active: 'green', 'On Leave': 'amber', Inactive: 'gray' };
 const initials = (n = '') => n.replace(/^(Dr|Mr|Ms|Mrs)\.?\s*/i, '').split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
 
 function StaffModal({ member, onClose, onSaved, on401 }) {
-  const empty = { name: '', role: '', department: '', specialties: '', qualifications: '', email: '', phone: '', status: 'Active', onCall: false, photoUrl: '', joinedDate: '', bio: '' };
+  // portalAccess isn't a DB column — it only decides whether a "set your password" email
+  // goes out when this person is created. Defaults on, since most additions are doctors.
+  const empty = { name: '', role: '', department: '', specialties: '', qualifications: '', email: '', phone: '', status: 'Active', onCall: false, photoUrl: '', joinedDate: '', bio: '', portalAccess: true };
   const [f, setF] = useState(empty);
   const [err, setErr] = useState('');
   const [hint, setHint] = useState('PNG/JPG photo, or paste a URL below.');
@@ -80,6 +85,12 @@ function StaffModal({ member, onClose, onSaved, on401 }) {
             <label className="full">Short bio<textarea value={f.bio} onChange={set('bio')} placeholder="A sentence or two…" /></label>
             <div className="full checks">
               <label><input type="checkbox" checked={f.onCall} onChange={set('onCall')} /> On call today</label>
+              {!member && (
+                <label title={f.email ? '' : 'Add an email address to send the invite'}>
+                  <input type="checkbox" checked={f.portalAccess} onChange={set('portalAccess')} disabled={!f.email} />
+                  {' '}Give Doctor Portal access — emails them a link to set their own password
+                </label>
+              )}
             </div>
           </div>
           {err && <p className="admin-msg err show">{err}</p>}
@@ -158,7 +169,15 @@ export default function StaffAdmin({ flash, on401 }) {
                   </td>
                   <td>
                     {m.department || '—'}
-                    {m.specialties && <div className="adm-cell-cats">{splitCategories(m.specialties).map((c) => <span key={c} className="adm-cat-tag">{c}</span>)}</div>}
+                    {splitCategories(m.specialties).length > 0
+                      ? <div className="adm-cell-cats">{splitCategories(m.specialties).map((c) => <span key={c} className="adm-cat-tag">{c}</span>)}</div>
+                      : REVIEW_ROLES.includes(m.role) && m.status === 'Active' && (
+                        <div className="adm-cell-cats">
+                          <span className="adm-badge amber" title="Triage routes reports by category. Edit this doctor and tick the report categories they handle, or they will never be assigned a report.">
+                            ⚠ No categories — receives no reports
+                          </span>
+                        </div>
+                      )}
                   </td>
                   <td>{m.email || '—'}</td>
                   <td>{m.phone || '—'}</td>

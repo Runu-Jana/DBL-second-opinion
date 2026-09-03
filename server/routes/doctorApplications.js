@@ -19,6 +19,18 @@ const ROLE_BY_SPEC = {
 };
 const firstInt = (s) => { const m = String(s || '').match(/\d+/); return m ? parseInt(m[0], 10) : 5; };
 
+// Sensible starting report categories per specialization. Triage routes reports by these,
+// so without them an approved doctor silently receives nothing. The admin can refine the
+// selection any time via the chip picker in Staff Management. Non-reviewing specialisations
+// (pathology, pharmacology) deliberately get none.
+const CATEGORIES_BY_SPEC = {
+  'Medical Oncology': ['Lung Cancer', 'Breast Cancer', 'Colorectal Cancer', 'Prostate Cancer', 'GI / Liver / Pancreatic Cancer', 'Other'],
+  'Surgical Oncology': ['Breast Cancer', 'Colorectal Cancer', 'GI / Liver / Pancreatic Cancer', 'Gynecologic Cancer', 'Skin / Melanoma', 'Bone & Sarcoma'],
+  'Radiation Oncology': ['Head & Neck Cancer', 'Brain & CNS Cancer', 'Lung Cancer', 'Prostate Cancer'],
+  'Hematology-Oncology': ['Blood Cancer (Leukemia/Lymphoma)', 'Other'],
+  'Nuclear Medicine': ['Brain & CNS Cancer', 'Bone & Sarcoma'],
+};
+
 function parse(b = {}) {
   return {
     name: String(b.name || '').trim(),
@@ -93,9 +105,14 @@ router.post('/:id/approve', requireAdmin, async (req, res) => {
     const existingStaff = app.email ? await prisma.staff.findFirst({ where: { email: { equals: app.email, mode: 'insensitive' } } }) : null;
     let staffCreated = false;
     let invited = false;
+    const categories = CATEGORIES_BY_SPEC[app.specialization] || [];
     if (!existingStaff) {
       const staff = await prisma.staff.create({
-        data: { name: app.name, role, department: app.specialization || null, qualifications: app.qualification || null, email: app.email, status: 'Active', joinedDate: joined },
+        data: {
+          name: app.name, role, department: app.specialization || null, qualifications: app.qualification || null,
+          email: app.email, status: 'Active', joinedDate: joined,
+          specialties: categories.length ? categories.join(', ') : null,
+        },
       });
       staffCreated = true;
       // Best-effort: approval must not fail because an email hiccuped (admin can resend).
@@ -114,7 +131,7 @@ router.post('/:id/approve', requireAdmin, async (req, res) => {
     const updated = await prisma.doctorApplication.update({ where: { id: app.id }, data: { status: 'Approved' } });
     logActivity(req, { kind: 'audit', action: 'Approved doctor application', target: app.name, category: 'Application' });
     logActivity(req, { kind: 'activity', action: `${app.name} approved and onboarded${staffCreated ? ' (account created, set-password email sent)' : ''}`, category: 'Application' });
-    res.json({ ok: true, application: updated, staffCreated, invited, loginEmail: staffCreated ? app.email : null });
+    res.json({ ok: true, application: updated, staffCreated, invited, loginEmail: staffCreated ? app.email : null, categories: staffCreated ? categories : null });
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not approve the application.' }); }
 });
 
