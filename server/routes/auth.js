@@ -2,6 +2,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const prisma = require('../db');
 const { logActivity } = require('../lib/audit');
 const { sendPasswordReset, sendDoctorInvite } = require('../lib/email');
@@ -65,10 +66,17 @@ router.post('/doctor-login', async (req, res) => {
 const linkOrigin = (req) => req.headers.origin || process.env.PUBLIC_URL || '';
 const publicDoctor = (s) => ({ id: s.id, name: s.name, email: s.email, role: s.role, department: s.department });
 
+// Fingerprint of the account's CURRENT password state. It's embedded in every
+// set-password link and re-checked when the link is used, which makes each link
+// single-use: the moment a password is set the fingerprint changes, so the old
+// link (and any copy of that email) stops working. No extra DB columns needed.
+const pwFingerprint = (staff) =>
+  crypto.createHash('sha256').update(`${staff.id}:${staff.password || 'unset'}`).digest('hex').slice(0, 16);
+
 // Emails a doctor/staff member a "set your password" link. Called on approve + admin create.
 async function inviteStaff(staff, origin) {
   if (!staff || !staff.email) return { skipped: true, reason: 'no email on record' };
-  const token = jwt.sign({ id: staff.id, email: staff.email, purpose: 'dr-activate' }, JWT_SECRET, { expiresIn: '7d' });
+  const token = jwt.sign({ id: staff.id, email: staff.email, purpose: 'dr-activate', pw: pwFingerprint(staff) }, JWT_SECRET, { expiresIn: '7d' });
   const url = `${origin}/doctor/set-password?token=${encodeURIComponent(token)}`;
   const r = await sendDoctorInvite({ to: staff.email, name: staff.name, url });
   if (r.skipped && process.env.NODE_ENV !== 'production') console.log('[doctor-invite:DEV] set-password link:', url);
@@ -88,6 +96,10 @@ router.post('/doctor-set-password', async (req, res) => {
     if (!['dr-activate', 'dr-pwreset'].includes(payload.purpose)) return res.status(400).json({ error: 'Invalid link.' });
     const staff = await prisma.staff.findUnique({ where: { id: payload.id } });
     if (!staff) return res.status(400).json({ error: 'Account not found.' });
+    // Single-use: the link is void once it has been used (or the password changed since).
+    if (payload.pw !== pwFingerprint(staff)) {
+      return res.status(400).json({ error: 'This link has already been used. Please use “Forgot password?” to get a new one.' });
+    }
 
     const hash = await bcrypt.hash(password, 10);
     await prisma.staff.update({ where: { id: staff.id }, data: { password: hash } });
@@ -111,7 +123,7 @@ router.post('/doctor-forgot', async (req, res) => {
     if (staff && staff.email) {
       const activating = !staff.password;
       const purpose = activating ? 'dr-activate' : 'dr-pwreset';
-      const token = jwt.sign({ id: staff.id, email: staff.email, purpose }, JWT_SECRET, { expiresIn: activating ? '7d' : '30m' });
+      const token = jwt.sign({ id: staff.id, email: staff.email, purpose, pw: pwFingerprint(staff) }, JWT_SECRET, { expiresIn: activating ? '7d' : '30m' });
       const url = `${linkOrigin(req)}/doctor/set-password?token=${encodeURIComponent(token)}`;
       try {
         const r = activating
