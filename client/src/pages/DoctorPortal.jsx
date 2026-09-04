@@ -59,7 +59,7 @@ function DoctorLogin({ onLogin }) {
         {err && <p className="doc-err">{err}</p>}
         {note && <p className="doc-note">{note}</p>}
         <button type="submit" className="btn btn-primary btn-block">Log in</button>
-        <button type="button" className="doc-forgot" onClick={forgot}>Forgot password? / First time here?</button>
+        <button type="button" className="doc-forgot" onClick={forgot}>Forgot password?</button>
       </form>
     </div>
   );

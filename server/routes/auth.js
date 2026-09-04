@@ -54,7 +54,7 @@ router.post('/doctor-login', async (req, res) => {
     // Distinguish "never activated" from "wrong password". This is an internal staff portal,
     // and collapsing both into one message made a setup problem impossible to tell from a typo.
     if (!staff.password) {
-      return res.status(403).json({ error: 'This account has not set a password yet. Use the "Forgot password? / First time here?" link below to create one.' });
+      return res.status(403).json({ error: 'This account has not set a password yet. Use the "Forgot password?" link below to create one.' });
     }
     const ok = await bcrypt.compare(password, staff.password);
     if (!ok) return res.status(401).json({ error: 'Invalid email or password.' });
