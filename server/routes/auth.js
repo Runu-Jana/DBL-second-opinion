@@ -49,8 +49,13 @@ router.post('/doctor-login', async (req, res) => {
   try {
     const { email, password } = req.body || {};
     if (!email || !password) return res.status(400).json({ error: 'Email and password are required.' });
-    const staff = await prisma.staff.findFirst({ where: { email: { equals: String(email).toLowerCase(), mode: 'insensitive' } } });
-    if (!staff || !staff.password) return res.status(401).json({ error: 'Invalid email or password.' });
+    const staff = await prisma.staff.findFirst({ where: { email: { equals: String(email).trim().toLowerCase(), mode: 'insensitive' } } });
+    if (!staff) return res.status(401).json({ error: 'Invalid email or password.' });
+    // Distinguish "never activated" from "wrong password". This is an internal staff portal,
+    // and collapsing both into one message made a setup problem impossible to tell from a typo.
+    if (!staff.password) {
+      return res.status(403).json({ error: 'This account has not set a password yet. Use the "Forgot password? / First time here?" link below to create one.' });
+    }
     const ok = await bcrypt.compare(password, staff.password);
     if (!ok) return res.status(401).json({ error: 'Invalid email or password.' });
     const token = jwt.sign({ id: staff.id, name: staff.name, email: staff.email, role: 'doctor' }, JWT_SECRET, { expiresIn: '8h' });
