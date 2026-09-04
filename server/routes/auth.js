@@ -83,7 +83,7 @@ async function inviteStaff(staff, origin) {
   if (!staff || !staff.email) return { skipped: true, reason: 'no email on record' };
   const token = jwt.sign({ id: staff.id, email: staff.email, purpose: 'dr-activate', pw: pwFingerprint(staff) }, JWT_SECRET, { expiresIn: '7d' });
   const url = `${origin}/doctor/set-password?token=${encodeURIComponent(token)}`;
-  const r = await sendDoctorInvite({ to: staff.email, name: staff.name, url });
+  const r = await sendDoctorInvite({ to: staff.email, name: staff.name, url, loginUrl: `${origin}/doctor` });
   if (r.skipped && process.env.NODE_ENV !== 'production') console.log('[doctor-invite:DEV] set-password link:', url);
   return { ...r, url };
 }
@@ -132,7 +132,7 @@ router.post('/doctor-forgot', async (req, res) => {
       const url = `${linkOrigin(req)}/doctor/set-password?token=${encodeURIComponent(token)}`;
       try {
         const r = activating
-          ? await sendDoctorInvite({ to: staff.email, name: staff.name, url })
+          ? await sendDoctorInvite({ to: staff.email, name: staff.name, url, loginUrl: `${linkOrigin(req)}/doctor` })
           : await sendPasswordReset({ to: staff.email, name: staff.name, url });
         if (r.skipped && process.env.NODE_ENV !== 'production') { console.log('[doctor-pwreset:DEV] link:', url); devResetUrl = url; }
       } catch (e) { console.error('doctor reset email failed:', e.message); }

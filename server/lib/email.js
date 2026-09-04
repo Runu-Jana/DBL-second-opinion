@@ -66,7 +66,7 @@ async function sendPasswordReset({ to, name, url }) {
 
 // Invite a newly-created doctor/staff member to set their own Doctor Portal password.
 // Best-effort; returns { skipped:true } when email isn't configured.
-async function sendDoctorInvite({ to, name, url }) {
+async function sendDoctorInvite({ to, name, url, loginUrl }) {
   if (!emailConfigured()) return { skipped: true };
   const from = process.env.CONTACT_FROM || 'DBL International <onboarding@resend.dev>';
   const html = `
@@ -77,6 +77,11 @@ async function sendDoctorInvite({ to, name, url }) {
          <strong>${esc(to)}</strong> and the password you pick.</p>
       <p style="margin:18px 0"><a href="${esc(url)}" style="background:#0b7d70;color:#fff;text-decoration:none;padding:11px 20px;border-radius:8px;font-weight:700;display:inline-block">Set my password</a></p>
       <p style="color:#42506a;font-size:13px">This link expires in 7 days. If it does, ask the DBL team to send you a new one.</p>
+      <p style="background:#f2faf8;border:1px solid #d7ede9;border-radius:8px;padding:12px;font-size:13px;color:#0f1b2d">
+        <strong>Where to sign in:</strong> always use the Doctor Portal at
+        <a href="${esc(loginUrl || '')}">${esc(loginUrl || '')}</a><br>
+        The &ldquo;Login&rdquo; button on the main website is for <em>patients</em> and will not accept your details.
+      </p>
       <p style="color:#94a3b8;font-size:12px;margin-top:18px">Or paste this link into your browser:<br>${esc(url)}</p>
     </div>`;
   const resp = await fetch('https://api.resend.com/emails', {
