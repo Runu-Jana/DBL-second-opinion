@@ -14,10 +14,13 @@ const Oncologists = lazy(() => import('./pages/Oncologists.jsx'));
 const DoctorDetail = lazy(() => import('./pages/DoctorDetail.jsx'));
 const Services = lazy(() => import('./pages/Services.jsx'));
 const ServiceDetail = lazy(() => import('./pages/ServiceDetail.jsx'));
-const AIFeatures = lazy(() => import('./pages/AIFeatures.jsx'));
+// Hidden for now (page files kept on disk): AI Features and Join Our Network.
+// To restore: uncomment the import + its <Route>, re-add the Header/Footer links, and put
+// the paths back into STATIC_PAGES (server/server.js) and SEO_MAP (components/Seo.jsx).
+// const AIFeatures = lazy(() => import('./pages/AIFeatures.jsx'));
 const HowItWorks = lazy(() => import('./pages/HowItWorks.jsx'));
 const UploadReports = lazy(() => import('./pages/UploadReports.jsx'));
-const JoinNetwork = lazy(() => import('./pages/JoinNetwork.jsx'));
+// const JoinNetwork = lazy(() => import('./pages/JoinNetwork.jsx'));
 const Pricing = lazy(() => import('./pages/Pricing.jsx'));
 const ContactUs = lazy(() => import('./pages/ContactUs.jsx'));
 const Resources = lazy(() => import('./pages/Resources.jsx'));
@@ -57,11 +60,11 @@ export default function App() {
         <Route path="/oncologists/:id" element={<DoctorDetail />} />
         <Route path="/services" element={<Services />} />
         <Route path="/services/:id" element={<ServiceDetail />} />
-        <Route path="/ai-features" element={<AIFeatures />} />
+        {/* <Route path="/ai-features" element={<AIFeatures />} /> */}
         <Route path="/how-it-works" element={<HowItWorks />} />
         <Route path="/upload-reports" element={<UploadReports />} />
         <Route path="/for-patients" element={<UploadReports />} />
-        <Route path="/join-network" element={<JoinNetwork />} />
+        {/* <Route path="/join-network" element={<JoinNetwork />} /> */}
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/contact" element={<ContactUs />} />
         <Route path="/resources" element={<Resources />} />

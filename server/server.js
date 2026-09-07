@@ -117,7 +117,7 @@ app.get('/robots.txt', (req, res) => {
 });
 
 // Public, indexable pages. Login-gated areas (admin/doctor/dashboard) are intentionally omitted.
-const STATIC_PAGES = ['/', '/oncologists', '/services', '/ai-features', '/how-it-works', '/upload-reports', '/join-network', '/pricing', '/contact', '/resources', '/about', '/privacy', '/terms'];
+const STATIC_PAGES = ['/', '/oncologists', '/services', '/how-it-works', '/upload-reports', '/pricing', '/contact', '/resources', '/about', '/privacy', '/terms'];
 
 app.get('/sitemap.xml', async (req, res) => {
   const base = baseUrl(req);

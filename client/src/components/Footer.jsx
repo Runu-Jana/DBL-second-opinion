@@ -16,7 +16,7 @@ const socials = [
 ];
 
 const COLS = [
-  { h: 'footer.quickLinks', links: [['nav.about', '/#about'], ['footer.ourServices', '/services'], ['nav.patients', '/how-it-works'], ['nav.doctors', '/join-network'], ['nav.ai', '/ai-features']] },
+  { h: 'footer.quickLinks', links: [['nav.about', '/#about'], ['footer.ourServices', '/services'], ['nav.patients', '/how-it-works']] },
   { h: 'nav.resources', links: [['footer.cancerGuide', '/resources'], ['footer.patientStories', '/resources'], ['footer.news', '/resources'], ['footer.blogs', '/resources'], ['footer.videos', '/resources']] },
   { h: 'footer.support', links: [['footer.help', '/dashboard/help'], ['footer.faqs', '/dashboard/help'], ['nav.contact', '/contact'], ['footer.terms', '/terms'], ['footer.privacy', '/privacy'], ['footer.doctorLogin', '/doctor']] },
 ];

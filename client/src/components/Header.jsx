@@ -116,10 +116,8 @@ export default function Header({ active }) {
           <Link to="/" className={is('home')}>{t('nav.home')}</Link>
           <Link to="/oncologists" className={is('oncologists')}>{t('nav.oncologists')}</Link>
           <Link to="/services" className={is('services')}>{t('nav.services')}</Link>
-          <Link to="/ai-features" className={is('ai')}>{t('nav.ai')}</Link>
           <NavDropdown label={t('nav.patients')} active={active === 'patients' || active === 'how'}
             items={[{ to: '/how-it-works', label: t('nav.how') }, { to: '/for-patients', label: t('nav.upload') }]} />
-          <Link to="/join-network" className={is('doctors')}>{t('nav.doctors')}</Link>
           <Link to="/resources" className={is('resources')}>{t('nav.resources')}</Link>
           {session && <Link to="/dashboard" className={is('dashboard')}>{t('nav.dashboard')}</Link>}
           <Link to="/about" className={is('about')}>{t('nav.about')}</Link>
