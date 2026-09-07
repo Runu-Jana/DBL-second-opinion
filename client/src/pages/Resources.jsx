@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../components/Header.jsx';
 import Footer from '../components/Footer.jsx';
@@ -60,6 +60,17 @@ export default function Resources() {
   const totalPages = Math.max(1, Math.ceil(list.length / PER_PAGE));
   const current = Math.min(page, totalPages);
   const visible = list.slice((current - 1) * PER_PAGE, current * PER_PAGE);
+  const gridRef = useRef(null);
+
+  // Changing page keeps the reader where they were in the document, which lands them halfway
+  // down the new page. Scroll back to the first card, clearing the sticky header.
+  const goToPage = (n) => {
+    setPage(n);
+    if (!gridRef.current) return;
+    const header = document.querySelector('.site-header')?.offsetHeight || 0;
+    const top = window.scrollY + gridRef.current.getBoundingClientRect().top - header - 16;
+    window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+  };
 
   const counts = {};
   posts.forEach((p) => { counts[p.category] = (counts[p.category] || 0) + 1; });
@@ -82,7 +93,7 @@ export default function Resources() {
 
           <div className="rs-layout">
             <div className="rs-main">
-            <div className="rs-grid">
+            <div className="rs-grid" ref={gridRef}>
               {visible.map((p, i) => (
                 <article className="rs-card" key={p.id || i}>
                   {p.isVideo && p.videoUrl ? (
@@ -106,11 +117,11 @@ export default function Resources() {
             </div>
             {totalPages > 1 && (
               <nav className="rs-pager" aria-label="Pagination">
-                <button type="button" className="rs-page" onClick={() => setPage(current - 1)} disabled={current === 1} aria-label="Previous page">‹</button>
+                <button type="button" className="rs-page" onClick={() => goToPage(current - 1)} disabled={current === 1} aria-label="Previous page">‹</button>
                 {pageNumbers(current, totalPages).map((n, i) => (n === null
                   ? <span className="rs-gap" key={`gap${i}`}>…</span>
-                  : <button type="button" key={n} className={'rs-page' + (n === current ? ' active' : '')} aria-current={n === current ? 'page' : undefined} onClick={() => setPage(n)}>{n}</button>))}
-                <button type="button" className="rs-page" onClick={() => setPage(current + 1)} disabled={current === totalPages} aria-label="Next page">›</button>
+                  : <button type="button" key={n} className={'rs-page' + (n === current ? ' active' : '')} aria-current={n === current ? 'page' : undefined} onClick={() => goToPage(n)}>{n}</button>))}
+                <button type="button" className="rs-page" onClick={() => goToPage(current + 1)} disabled={current === totalPages} aria-label="Next page">›</button>
               </nav>
             )}
             </div>
