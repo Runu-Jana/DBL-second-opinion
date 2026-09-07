@@ -16,6 +16,21 @@ const Ico = {
 
 const CATS = ['All', 'Cancer Guide', 'Patient Stories', 'Expert Insights', 'News & Updates', 'Videos & Podcasts'];
 const CAT_KEY = { All: 'res.all', 'Cancer Guide': 'res.cancerGuide', 'Patient Stories': 'res.patientStories', 'Expert Insights': 'res.expertInsights', 'News & Updates': 'res.news', 'Videos & Podcasts': 'res.videos' };
+// Cards per page. The pager below is derived from the real post count, so it grows as more
+// articles are published (and disappears entirely when everything fits on one page).
+const PER_PAGE = 6;
+
+// Page numbers to show: all of them when there are few, otherwise a window around the current
+// page with the first/last always reachable and ellipses (null) for the gaps.
+function pageNumbers(current, total) {
+  if (total <= 7) return Array.from({ length: total }, (_, n) => n + 1);
+  const around = [current - 1, current, current + 1].filter((n) => n > 1 && n < total);
+  const nums = [1, ...around, total];
+  const out = [];
+  nums.forEach((n, k) => { if (k && n - nums[k - 1] > 1) out.push(null); out.push(n); });
+  return out;
+}
+
 const FALLBACK = [
   { category: 'Cancer Guide', title: 'Understanding Your Cancer Diagnosis', excerpt: 'A comprehensive guide to help you understand your diagnosis and what comes next.', date: '10 May, 2025', readTime: '5 min read', imageUrl: '/blog-1.jpg' },
   { category: 'Expert Insights', title: 'The Role of Second Opinion in Cancer Care', excerpt: 'Why a second opinion can make a big difference in your treatment journey.', date: '08 May, 2025', readTime: '6 min read', imageUrl: '/blog-2.jpg' },
@@ -32,12 +47,20 @@ export default function Resources() {
   const catLabel = (c) => (CAT_KEY[c] ? t(CAT_KEY[c]) : c);
   const [cat, setCat] = useState('All');
   const [posts, setPosts] = useState(FALLBACK);
+  const [page, setPage] = useState(1);
+
+  // A new filter (or a freshly loaded set of posts) starts again at page one.
+  useEffect(() => { setPage(1); }, [cat, posts]);
 
   useEffect(() => {
     api('/blog', { auth: false }).then((d) => { if (Array.isArray(d)) setPosts(d); }).catch(() => {});
   }, []);
 
   const list = cat === 'All' ? posts : posts.filter((p) => p.category === cat);
+  const totalPages = Math.max(1, Math.ceil(list.length / PER_PAGE));
+  const current = Math.min(page, totalPages);
+  const visible = list.slice((current - 1) * PER_PAGE, current * PER_PAGE);
+
   const counts = {};
   posts.forEach((p) => { counts[p.category] = (counts[p.category] || 0) + 1; });
 
@@ -60,7 +83,7 @@ export default function Resources() {
           <div className="rs-layout">
             <div className="rs-main">
             <div className="rs-grid">
-              {list.map((p, i) => (
+              {visible.map((p, i) => (
                 <article className="rs-card" key={p.id || i}>
                   {p.isVideo && p.videoUrl ? (
                     <a className="rs-thumb rs-thumb-link" href={p.videoUrl} target="_blank" rel="noreferrer" aria-label={`Watch: ${p.title}`}>
@@ -81,9 +104,15 @@ export default function Resources() {
                 </article>
               ))}
             </div>
-            <div className="rs-pager">
-              {['‹', '1', '2', '3', '…', '10', '›'].map((n, i) => <button key={i} type="button" className={'rs-page' + (n === '1' ? ' active' : '')}>{n}</button>)}
-            </div>
+            {totalPages > 1 && (
+              <nav className="rs-pager" aria-label="Pagination">
+                <button type="button" className="rs-page" onClick={() => setPage(current - 1)} disabled={current === 1} aria-label="Previous page">‹</button>
+                {pageNumbers(current, totalPages).map((n, i) => (n === null
+                  ? <span className="rs-gap" key={`gap${i}`}>…</span>
+                  : <button type="button" key={n} className={'rs-page' + (n === current ? ' active' : '')} aria-current={n === current ? 'page' : undefined} onClick={() => setPage(n)}>{n}</button>))}
+                <button type="button" className="rs-page" onClick={() => setPage(current + 1)} disabled={current === totalPages} aria-label="Next page">›</button>
+              </nav>
+            )}
             </div>
 
             <aside className="rs-side">
