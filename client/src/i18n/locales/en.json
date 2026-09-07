@@ -309,5 +309,21 @@
     "eyebrow": "Patient Stories",
     "title": "Trusted by Patients Worldwide",
     "sub": "Real experiences from families who found clarity and confidence with us."
+  },
+  "nf": {
+    "badge": "Page not found",
+    "h1": "We couldn't find that page",
+    "sub": "The link may be out of date, or the page may have moved. Nothing has happened to your reports or your account — here are the places people usually need.",
+    "primary": "Get a second opinion",
+    "home": "Back to home",
+    "dashboard": "Go to my dashboard",
+    "popular": "Where would you like to go?",
+    "oncologistsDesc": "Browse the specialists on our panel",
+    "howDesc": "The process, step by step",
+    "uploadDesc": "Send your reports securely for review",
+    "resourcesDesc": "Guides, patient stories and expert insights",
+    "helpH": "Still not finding what you need?",
+    "helpSub": "Our team is happy to point you in the right direction.",
+    "helpCta": "Contact us"
   }
 }

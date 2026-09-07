@@ -19,7 +19,7 @@ function setLink(rel, href) {
   el.setAttribute('href', href);
 }
 
-export default function Seo({ title, description, image = DEFAULT_IMAGE }) {
+export default function Seo({ title, description, image = DEFAULT_IMAGE, noindex = false }) {
   const { pathname } = useLocation();
   useEffect(() => {
     const full = title ? `${title} — ${SITE}` : DEFAULT_TITLE;
@@ -39,7 +39,10 @@ export default function Seo({ title, description, image = DEFAULT_IMAGE }) {
     if (description) setMeta('name', 'twitter:description', description);
     setMeta('name', 'twitter:image', img);
     setLink('canonical', url);
-  }, [title, description, image, pathname]);
+    if (!noindex) return;
+    setMeta('name', 'robots', 'noindex, follow');
+    return () => document.head.querySelector('meta[name="robots"]')?.remove();
+  }, [title, description, image, pathname, noindex]);
   return null;
 }
 

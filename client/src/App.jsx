@@ -43,6 +43,7 @@ const DoctorSetPassword = lazy(() => import('./pages/DoctorSetPassword.jsx'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy.jsx'));
 const TermsConditions = lazy(() => import('./pages/TermsConditions.jsx'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword.jsx'));
+const NotFound = lazy(() => import('./pages/NotFound.jsx'));
 
 const RouteFallback = () => (
   <div className="route-loading" role="status" aria-label="Loading"><span className="route-spinner" /></div>
@@ -87,7 +88,7 @@ export default function App() {
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsConditions />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="*" element={<Home />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
       </Suspense>
       <AuthModal />
