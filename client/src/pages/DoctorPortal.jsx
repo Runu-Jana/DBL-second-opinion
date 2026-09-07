@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Select } from '../components/AdminFields.jsx';
 import { CATEGORY_TONE } from '../lib/categories.js';
+import { getDoctorToken, setDoctorToken, clearDoctorToken, endDoctorSession, SESSION_ENDED } from '../api.js';
 
-const DTOK = 'dbl_doctor_token';
 const REPORT_STATUSES = ['Pending Review', 'Reviewed', 'Uploaded', 'Archived'];
 const RTONE = { 'Pending Review': 'amber', Reviewed: 'green', Uploaded: 'blue', Archived: 'gray' };
 const PTONE = { 'New Patient': 'blue', 'Under Treatment': 'teal', 'Follow-up': 'amber', Completed: 'green', Discharged: 'gray' };
@@ -11,11 +11,12 @@ const initials = (n = '') => n.replace(/^(Dr|Mr|Ms|Mrs)\.?\s*/i, '').split(/\s+/
 async function docApi(path, opts = {}) {
   const headers = { ...(opts.headers || {}) };
   if (!(opts.body instanceof FormData)) headers['Content-Type'] = 'application/json';
-  const token = localStorage.getItem(DTOK);
+  const token = getDoctorToken();
   if (token) headers.Authorization = 'Bearer ' + token;
   const res = await fetch('/api' + path, { ...opts, headers });
   let body = {};
   try { body = await res.json(); } catch { /* empty */ }
+  if (res.status === 401 && token) endDoctorSession();
   if (!res.ok) throw new Error(body.error || 'Request failed.');
   return body;
 }
@@ -36,7 +37,7 @@ function DoctorLogin({ onLogin }) {
     e.preventDefault();
     const password = e.target.password.value;
     docApi('/auth/doctor-login', { method: 'POST', body: JSON.stringify({ email: email.trim().toLowerCase(), password }) })
-      .then((r) => { localStorage.setItem(DTOK, r.token); onLogin(r.token); })
+      .then((r) => { setDoctorToken(r.token); onLogin(r.token); })
       .catch((ex) => setErr(ex.message));
   };
   // Sends a set-password link. The backend picks activation vs reset based on whether
@@ -158,9 +159,15 @@ function DoctorDashboard({ onLogout }) {
 }
 
 export default function DoctorPortal() {
-  const [token, setToken] = useState(() => localStorage.getItem(DTOK));
+  const [token, setToken] = useState(getDoctorToken);
   useEffect(() => { document.title = 'Doctor Portal — DBL International'; }, []);
-  const logout = () => { localStorage.removeItem(DTOK); setToken(null); };
+  // An expired or revoked session (spotted by docApi) sends us straight back to the login form.
+  useEffect(() => {
+    const end = (e) => { if (e.detail?.portal === 'doctor') setToken(null); };
+    window.addEventListener(SESSION_ENDED, end);
+    return () => window.removeEventListener(SESSION_ENDED, end);
+  }, []);
+  const logout = () => { clearDoctorToken(); setToken(null); };
   if (!token) return <DoctorLogin onLogin={setToken} />;
   return <DoctorDashboard onLogout={logout} />;
 }

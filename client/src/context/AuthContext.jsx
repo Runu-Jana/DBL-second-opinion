@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { api, patientApi, getPatientToken, setPatientToken, clearPatientToken } from '../api.js';
+import { api, patientApi, getPatientToken, setPatientToken, clearPatientToken, SESSION_ENDED } from '../api.js';
 
 /* Patient portal auth — now backed by the real Express/Prisma backend.
    Signup/login hit /api/auth/patient-*, the JWT lives in localStorage['dbl_patient_token'],
@@ -22,6 +22,14 @@ export function AuthProvider({ children }) {
       .then((r) => setSession(r.patient))
       .catch(() => clearPatientToken())
       .finally(() => setLoading(false));
+  }, []);
+
+  // If the backend rejects the stored token mid-session, drop the patient back to logged-out
+  // rather than leaving a signed-in shell that can no longer load anything.
+  useEffect(() => {
+    const end = (e) => { if (e.detail?.portal === 'patient') setSession(null); };
+    window.addEventListener(SESSION_ENDED, end);
+    return () => window.removeEventListener(SESSION_ENDED, end);
   }, []);
 
   const requestUpload = useCallback(() => {

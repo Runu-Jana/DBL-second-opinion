@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { setDoctorToken } from '../api.js';
 import Header from '../components/Header.jsx';
 import Footer from '../components/Footer.jsx';
 
-const DTOK = 'dbl_doctor_token';
 
 // Landing page for the doctor's one-time link (/doctor/set-password?token=...).
 // Serves both first-time activation and forgot-password — the backend tells them apart
@@ -30,7 +30,7 @@ export default function DoctorSetPassword() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || 'Could not set your password.');
-      localStorage.setItem(DTOK, data.token);   // signed in — the portal reads this on mount
+      setDoctorToken(data.token);   // signed in — the portal reads this on mount
       navigate('/doctor');
     } catch (ex) { setErr(ex.message); }
     finally { setBusy(false); }

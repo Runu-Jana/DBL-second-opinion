@@ -16,6 +16,12 @@ const JWT_SECRET = process.env.JWT_SECRET || (() => {
   return 'dev-secret';
 })();
 
+// How long a signed-in session lasts. Everyone — admin/counsellor, doctor and patient —
+// gets the same 15 days, so nobody is asked to log in again during normal day-to-day use.
+// The client stores the token per-device, so a different phone or browser still needs the
+// password; after 15 days the token expires on its own and the login screen comes back.
+const SESSION_TTL = '15d';
+
 // Patient record without the password hash — safe to return to the client.
 const publicPatient = (p) => ({
   id: p.id, name: p.name, email: p.email, uhid: p.uhid, phone: p.phone, city: p.city,
@@ -35,7 +41,7 @@ router.post('/login', async (req, res) => {
     const ok = await bcrypt.compare(password, admin.password);
     if (!ok) return res.status(401).json({ error: 'Invalid email or password.' });
 
-    const token = jwt.sign({ id: admin.id, email: admin.email, name: admin.name }, JWT_SECRET, { expiresIn: '8h' });
+    const token = jwt.sign({ id: admin.id, email: admin.email, name: admin.name }, JWT_SECRET, { expiresIn: SESSION_TTL });
     logActivity(null, { kind: 'audit', actor: admin.name || admin.email, action: 'Signed in', target: 'Admin panel', category: 'Login' });
     res.json({ token, admin: { id: admin.id, name: admin.name, email: admin.email } });
   } catch (e) {
@@ -58,7 +64,7 @@ router.post('/doctor-login', async (req, res) => {
     }
     const ok = await bcrypt.compare(password, staff.password);
     if (!ok) return res.status(401).json({ error: 'Invalid email or password.' });
-    const token = jwt.sign({ id: staff.id, name: staff.name, email: staff.email, role: 'doctor' }, JWT_SECRET, { expiresIn: '8h' });
+    const token = jwt.sign({ id: staff.id, name: staff.name, email: staff.email, role: 'doctor' }, JWT_SECRET, { expiresIn: SESSION_TTL });
     logActivity(null, { kind: 'audit', actor: staff.name, action: 'Signed in', target: 'Doctor portal', category: 'Login' });
     res.json({ token, doctor: { id: staff.id, name: staff.name, email: staff.email, role: staff.role, department: staff.department } });
   } catch (e) { console.error(e); res.status(500).json({ error: 'Login failed.' }); }
@@ -108,7 +114,7 @@ router.post('/doctor-set-password', async (req, res) => {
 
     const hash = await bcrypt.hash(password, 10);
     await prisma.staff.update({ where: { id: staff.id }, data: { password: hash } });
-    const login = jwt.sign({ id: staff.id, name: staff.name, email: staff.email, role: 'doctor' }, JWT_SECRET, { expiresIn: '8h' });
+    const login = jwt.sign({ id: staff.id, name: staff.name, email: staff.email, role: 'doctor' }, JWT_SECRET, { expiresIn: SESSION_TTL });
     logActivity(null, {
       kind: 'audit', actor: staff.name, target: 'Doctor portal', category: 'Login',
       action: payload.purpose === 'dr-activate' ? 'Activated account and set password' : 'Reset portal password',
@@ -163,7 +169,7 @@ router.post('/patient-signup', async (req, res) => {
       patient = await prisma.patient.create({ data: { name, email, password: hash, uhid, status: 'New Patient' } });
     }
     logActivity(null, { kind: 'activity', actor: patient.name, action: `New patient account: ${patient.name}`, category: 'Patient' });
-    const token = jwt.sign({ id: patient.id, uhid: patient.uhid, name: patient.name, email: patient.email, role: 'patient' }, JWT_SECRET, { expiresIn: '365d' });
+    const token = jwt.sign({ id: patient.id, uhid: patient.uhid, name: patient.name, email: patient.email, role: 'patient' }, JWT_SECRET, { expiresIn: SESSION_TTL });
     res.status(201).json({ token, patient: publicPatient(patient) });
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not create your account.' }); }
 });
@@ -179,7 +185,7 @@ router.post('/patient-login', async (req, res) => {
     if (!patient) return res.status(401).json({ error: 'Email or password is incorrect.' });
     const ok = await bcrypt.compare(password, patient.password);
     if (!ok) return res.status(401).json({ error: 'Email or password is incorrect.' });
-    const token = jwt.sign({ id: patient.id, uhid: patient.uhid, name: patient.name, email: patient.email, role: 'patient' }, JWT_SECRET, { expiresIn: '365d' });
+    const token = jwt.sign({ id: patient.id, uhid: patient.uhid, name: patient.name, email: patient.email, role: 'patient' }, JWT_SECRET, { expiresIn: SESSION_TTL });
     res.json({ token, patient: publicPatient(patient) });
   } catch (e) { console.error(e); res.status(500).json({ error: 'Login failed.' }); }
 });
@@ -218,7 +224,7 @@ router.post('/patient-reset', async (req, res) => {
     if (!patient) return res.status(400).json({ error: 'Account not found.' });
     const hash = await bcrypt.hash(password, 10);
     await prisma.patient.update({ where: { id: patient.id }, data: { password: hash } });
-    const login = jwt.sign({ id: patient.id, uhid: patient.uhid, name: patient.name, email: patient.email, role: 'patient' }, JWT_SECRET, { expiresIn: '365d' });
+    const login = jwt.sign({ id: patient.id, uhid: patient.uhid, name: patient.name, email: patient.email, role: 'patient' }, JWT_SECRET, { expiresIn: SESSION_TTL });
     res.json({ ok: true, token: login, patient: publicPatient(patient) });
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not reset your password. Please try again.' }); }
 });
