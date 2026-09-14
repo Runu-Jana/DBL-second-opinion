@@ -93,4 +93,26 @@ async function sendDoctorInvite({ to, name, url, loginUrl }) {
   return { ok: true };
 }
 
-module.exports = { sendContactNotification, sendPasswordReset, sendDoctorInvite, emailConfigured };
+// One-time verification code for the lead pop-up. Deliberately plain: no marketing, no other
+// links, and the code repeated in the subject so it is readable from a phone's notification.
+async function sendOtpEmail({ to, name, code }) {
+  if (!emailConfigured()) return { skipped: true };
+  if (!looksEmail(to)) throw new Error('Invalid email address.');
+  const from = process.env.CONTACT_FROM || 'DBL International <onboarding@resend.dev>';
+  const html = `
+    <div style="font-family:Arial,Helvetica,sans-serif;max-width:480px;color:#0f1b2d">
+      <h2 style="color:#0b5952;margin:0 0 12px">Your verification code</h2>
+      <p>Hi ${esc(name) || 'there'}, use this code to confirm your request for a second opinion.</p>
+      <p style="font-size:31px;font-weight:700;letter-spacing:7px;color:#0b7d70;background:#f2faf8;border:1px solid #d7ede9;border-radius:10px;padding:14px 0;text-align:center;margin:18px 0">${esc(code)}</p>
+      <p style="color:#42506a;font-size:13px">The code expires in 5 minutes. If you did not ask for it you can ignore this email — nobody can use it without your inbox.</p>
+    </div>`;
+  const resp = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from, to, subject: `${code} is your DBL International verification code`, html }),
+  });
+  if (!resp.ok) { const body = await resp.text().catch(() => ''); throw new Error(`Resend ${resp.status}: ${body.slice(0, 300)}`); }
+  return { ok: true };
+}
+
+module.exports = { sendContactNotification, sendPasswordReset, sendDoctorInvite, sendOtpEmail, emailConfigured };

@@ -2,18 +2,23 @@ import { useEffect, useState } from 'react';
 import { api } from '../api.js';
 
 /* Scroll-triggered "second opinion" registration pop-up. Appears once per session after the
-   visitor scrolls ~40% down. Captures name + phone, verifies the phone via WhatsApp OTP, and
-   only then registers the customer (creates a Patient with a unique code). */
+   visitor scrolls ~40% down. Captures name + phone + email, verifies one of them with a code,
+   and only then registers the customer (creates a Patient with a unique code).
+
+   Which contact detail gets the code is a server setting, so /contact/otp/channel is asked on
+   open: the server can be switched from email to WhatsApp or SMS without redeploying this. */
 export default function LeadPopup() {
   const [show, setShow] = useState(false);
   const [step, setStep] = useState('form'); // form -> otp -> done
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [uhid, setUhid] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const [devCode, setDevCode] = useState('');
+  const [channel, setChannel] = useState('email');   // which channel the server will send over
 
   useEffect(() => {
     if (sessionStorage.getItem('dbl_lead_shown')) return;
@@ -31,6 +36,11 @@ export default function LeadPopup() {
 
   useEffect(() => {
     if (!show) return;
+    api('/contact/otp/channel', { auth: false }).then((r) => r?.channel && setChannel(r.channel)).catch(() => {});
+  }, [show]);
+
+  useEffect(() => {
+    if (!show) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = prev; };
@@ -38,12 +48,15 @@ export default function LeadPopup() {
 
   const close = () => setShow(false);
 
+  const needsEmail = channel === 'email';
+
   const sendCode = async (e) => {
     e?.preventDefault();
     if (!name.trim() || !phone.trim()) { setErr('Please enter your name and phone number.'); return; }
+    if (needsEmail && !email.trim()) { setErr('Please enter your email address — that is where the code goes.'); return; }
     setErr(''); setBusy(true);
     try {
-      const r = await api('/contact/otp/send', { method: 'POST', auth: false, body: JSON.stringify({ name: name.trim(), phone: phone.trim() }) });
+      const r = await api('/contact/otp/send', { method: 'POST', auth: false, body: JSON.stringify({ name: name.trim(), phone: phone.trim(), email: email.trim() }) });
       setDevCode(r.devCode || '');
       setCode(r.devCode || '');
       setStep('otp');
@@ -84,15 +97,20 @@ export default function LeadPopup() {
             <label className="lead-field"><span>Phone Number<em>*</em></span>
               <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. 98765 43210" inputMode="tel" autoComplete="tel" />
             </label>
+            {needsEmail && (
+              <label className="lead-field"><span>Email Address<em>*</em></span>
+                <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" inputMode="email" autoComplete="email" />
+              </label>
+            )}
             {err && <p className="lead-err">{err}</p>}
             <button type="submit" className="btn btn-primary lead-submit" disabled={busy}>{busy ? 'Sending…' : 'Send Verification Code'}</button>
-            <p className="lead-note">We’ll send a 6-digit code to your WhatsApp — no spam.</p>
+            <p className="lead-note">We’ll send a 6-digit code to your {needsEmail ? 'email' : 'WhatsApp'} — no spam.</p>
           </form>
         )}
 
         {step === 'otp' && (
           <form className="lead-form" onSubmit={verify}>
-            <p className="lead-otp-lead">Enter the 6-digit code we sent to your WhatsApp on <strong>{phone}</strong>. <button type="button" className="link-btn" onClick={() => { setStep('form'); setErr(''); setCode(''); }}>Change number</button></p>
+            <p className="lead-otp-lead">Enter the 6-digit code we sent to <strong>{needsEmail ? email : phone}</strong>. <button type="button" className="link-btn" onClick={() => { setStep('form'); setErr(''); setCode(''); }}>Change {needsEmail ? 'address' : 'number'}</button></p>
             <label className="lead-field"><span>Verification Code<em>*</em></span>
               <input className="lead-otp-input" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="••••••" inputMode="numeric" autoComplete="one-time-code" maxLength={6} autoFocus />
             </label>
@@ -107,7 +125,7 @@ export default function LeadPopup() {
           <div className="lead-done">
             <div className="lead-check" aria-hidden="true">✓</div>
             <h4>You’re registered, {name.trim().split(' ')[0] || 'there'}!</h4>
-            <p>Your number is verified. Our care team will reach out on WhatsApp shortly to help with your second opinion.</p>
+            <p>Your {needsEmail ? 'email is' : 'number is'} verified. Our care team will be in touch shortly to help with your second opinion.</p>
             {uhid && <p className="lead-code">Your reference code: <strong>{uhid}</strong><br /><span>Keep this — we’ll use it to track your reports and records.</span></p>}
             <button type="button" className="btn btn-primary" onClick={close}>Done</button>
           </div>

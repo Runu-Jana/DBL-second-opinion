@@ -177,8 +177,9 @@ model Patient {
   age        Int?
   gender     String?                            // Male / Female / Other
   phone      String?
-  phoneVerified Boolean @default(false)          // true once the number passed WhatsApp OTP verification
+  phoneVerified Boolean @default(false)          // true once the number passed an SMS/WhatsApp OTP
   email      String?
+  emailVerified Boolean @default(false)          // true once the address passed an email OTP
   password   String?                            // bcrypt hash — enables the patient portal login (claimed on signup)
   city       String?
   cancerType String?                            // e.g. "Colon Cancer"
