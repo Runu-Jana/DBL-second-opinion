@@ -5,8 +5,7 @@
     "buildCommand": "npm install --include=dev && npm run build"
   },
   "deploy": {
-    "preDeployCommand": "npm run release",
-    "startCommand": "npm start",
+    "startCommand": "npm run release && npm start",
     "healthcheckPath": "/api/health",
     "healthcheckTimeout": 120,
     "restartPolicyType": "ON_FAILURE",
