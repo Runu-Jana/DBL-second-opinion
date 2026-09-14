@@ -145,7 +145,9 @@ app.get('*', (req, res, next) => {
   res.sendFile(path.join(CLIENT_DIST, 'index.html'));
 });
 
-app.listen(PORT, () => {
+// Bind every interface, not just loopback: container platforms (Railway, Fly, Docker) route
+// traffic in from outside the container and can't reach a server bound only to localhost.
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`DBL International running at http://localhost:${PORT}`);
   console.log(`  • Site:        http://localhost:${PORT}/`);
   console.log(`  • Oncologists: http://localhost:${PORT}/oncologists`);
