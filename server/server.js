@@ -85,6 +85,9 @@ app.use('/api/settings', M.settings);
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 
+// Deep check — says whether the database is reachable AND whether the schema was pushed.
+app.get('/api/health/db', require('./lib/dbhealth'));
+
 // ---- Uploaded files (doctor photos, patient reports) — streamed from R2 or local disk ----
 app.get('/uploads/:key', async (req, res) => {
   try {
