@@ -155,18 +155,19 @@ export default function StaffAdmin({ flash, on401 }) {
       <section className="admin-panel">
         <div className="admin-table-wrap">
           <table className="admin-table">
-            <thead><tr><th>Staff Member</th><th>Department</th><th>Email</th><th>Phone</th><th>Status</th><th>On Call</th><th></th></tr></thead>
+            <thead><tr><th>Staff Member</th><th>Role</th><th>Department</th><th>Email</th><th>Phone</th><th>Status</th><th>On Call</th><th></th></tr></thead>
             <tbody>
-              {loading && <tr><td colSpan="7" className="admin-empty">Loading…</td></tr>}
-              {!loading && list.length === 0 && <tr><td colSpan="7" className="admin-empty">No staff found.</td></tr>}
+              {loading && <tr><td colSpan="8" className="admin-empty">Loading…</td></tr>}
+              {!loading && list.length === 0 && <tr><td colSpan="8" className="admin-empty">No staff found.</td></tr>}
               {!loading && list.map((m) => (
                 <tr key={m.id}>
                   <td>
                     <div className="adm-cell-user">
                       <span className="adm-mini-avatar sm" style={m.photoUrl ? { backgroundImage: `url("${m.photoUrl}")`, backgroundSize: 'cover' } : undefined}>{m.photoUrl ? '' : initials(m.name)}</span>
-                      <span className="adm-cell-user-meta"><strong>{m.name}</strong><span>{m.role}</span></span>
+                      <span className="adm-cell-user-meta"><strong>{m.name}</strong>{m.qualifications ? <span>{m.qualifications}</span> : null}</span>
                     </div>
                   </td>
+                  <td>{m.role || '—'}</td>
                   <td>
                     {m.department || '—'}
                     {splitCategories(m.specialties).length > 0
