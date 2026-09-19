@@ -190,19 +190,24 @@ function DoctorDashboard({ onLogout }) {
             <textarea className="cns-report no-print" rows={16} value={opinion} onChange={(e) => setOpinion(e.target.value)}
               placeholder="Your opinion for this patient…" />
             <pre className="cns-ai print-only">{opinion}</pre>
-            <div className="cns-row no-print">
-              <button type="button" className="icon-btn" disabled={busy === 'draft' || !handover.ai} onClick={draftWithAI}>
+            <div className="doc-actbar no-print">
+              <button type="button" className="doc-btn doc-btn-ghost" disabled={busy === 'draft' || !handover.ai} onClick={draftWithAI}>
                 {busy === 'draft' ? 'Drafting…' : 'Draft with AI'}
               </button>
-              <button type="button" className="btn btn-outline" disabled={busy === 'save'} onClick={saveOpinion}>
+              <span className="spacer" />
+              <button type="button" className="doc-btn doc-btn-outline" disabled={busy === 'save'} onClick={saveOpinion}>
                 {busy === 'save' ? 'Saving…' : 'Save draft'}
               </button>
-              <button type="button" className="btn btn-primary" disabled={busy === 'send' || !handover.doctorOpinion} onClick={deliver}>
+              <button type="button" className="doc-btn doc-btn-primary" disabled={busy === 'send' || !handover.doctorOpinion} onClick={deliver}>
                 {busy === 'send' ? 'Sending…' : handover.status === 'Delivered' ? 'Re-send to patient' : 'Send to patient'}
               </button>
+              {(!handover.ai || !handover.doctorOpinion) && (
+                <p className="doc-actbar-note">
+                  {[!handover.doctorOpinion && 'Save your opinion before it can be sent.',
+                    !handover.ai && 'AI drafting is switched off on this server.'].filter(Boolean).join(' ')}
+                </p>
+              )}
             </div>
-            {!handover.ai && <p className="cns-muted no-print">AI drafting is off on this server.</p>}
-            {!handover.doctorOpinion && <p className="cns-muted no-print">Save your opinion before it can be sent.</p>}
             {handover.deliveredAt && <p className="cns-muted">Sent to the patient on {new Date(handover.deliveredAt).toLocaleString('en-IN')}.</p>}
           </section>
         )}

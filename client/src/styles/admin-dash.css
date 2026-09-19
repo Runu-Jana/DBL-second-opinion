@@ -618,3 +618,31 @@
 .adm-badge.cyan{background:#e0f7fa;color:#0e7490}
 .adm-badge.lime{background:#eefbe0;color:#4d7c0f}
 .adm-badge.slate{background:#eef1f6;color:#334155}
+
+/* ---------- case action bar ----------
+   These three actions sat in one row wearing three different button systems: .icon-btn is a
+   table-row action (0.8rem, 8px radius), .btn is a hero call-to-action (1rem, 12px radius, a
+   26px glow). One size and radius for all of them, with the weight carrying the hierarchy:
+   ghost to generate a draft, outline to save, solid to do the irreversible thing. */
+.doc-actbar{display:flex;flex-wrap:wrap;align-items:center;gap:.55rem;
+  margin-top:1rem;padding-top:.95rem;border-top:1px solid var(--line)}
+.doc-actbar .spacer{margin-left:auto}
+.doc-actbar-note{flex-basis:100%;margin:.55rem 0 0;color:var(--muted);font-size:.8rem}
+
+.doc-btn{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;
+  height:40px;padding:0 1.05rem;border-radius:10px;border:1.5px solid transparent;
+  font:inherit;font-size:.87rem;font-weight:700;line-height:1;cursor:pointer;white-space:nowrap;
+  transition:background .15s ease,border-color .15s ease,color .15s ease,box-shadow .15s ease}
+.doc-btn:disabled{opacity:.45;cursor:not-allowed}
+
+.doc-btn-ghost{background:var(--teal-050);color:var(--teal-dark)}
+.doc-btn-ghost:hover:not(:disabled){background:var(--teal-100)}
+.doc-btn-outline{background:#fff;color:var(--ink-soft);border-color:var(--line)}
+.doc-btn-outline:hover:not(:disabled){border-color:var(--teal);color:var(--teal-dark)}
+.doc-btn-primary{background:var(--teal-dark);color:#fff}
+.doc-btn-primary:hover:not(:disabled){background:var(--teal-deep);box-shadow:0 4px 12px rgba(14,159,142,.28)}
+
+@media (max-width:620px){
+  .doc-actbar .spacer{display:none}
+  .doc-btn{flex:1 1 100%}
+}

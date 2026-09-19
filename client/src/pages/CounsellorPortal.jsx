@@ -247,7 +247,7 @@ function Folder({ api, id, onBack, flash, msg, me, onLogout }) {
         <section className="dash-card">
           <div className="dash-card-head">
             <h2>Case report</h2>
-            <button type="button" className="icon-btn" disabled={busy === 'draft'} onClick={buildDraft}>
+            <button type="button" className="doc-btn doc-btn-ghost" disabled={busy === 'draft'} onClick={buildDraft}>
               {busy === 'draft' ? 'Building…' : 'Build AI draft'}
             </button>
           </div>
@@ -264,7 +264,7 @@ function Folder({ api, id, onBack, flash, msg, me, onLogout }) {
             <label>Priority
               <Select value={priority} onChange={setPriority} options={['Normal', 'High', 'Urgent']} />
             </label>
-            <button type="button" className="btn btn-primary" disabled={busy === 'save'} onClick={saveReport}>
+            <button type="button" className="doc-btn doc-btn-primary" disabled={busy === 'save'} onClick={saveReport}>
               {busy === 'save' ? 'Saving…' : 'Save case report'}
             </button>
           </div>
@@ -286,7 +286,7 @@ function Folder({ api, id, onBack, flash, msg, me, onLogout }) {
                 placeholder={cancerType ? `Doctors covering ${cancerType}` : 'Select a doctor'}
               />
             </label>
-            <button type="button" className="btn btn-primary" disabled={busy === 'assign' || !data.case?.counsellorReport} onClick={assign}>
+            <button type="button" className="doc-btn doc-btn-primary" disabled={busy === 'assign' || !data.case?.counsellorReport} onClick={assign}>
               {busy === 'assign' ? 'Assigning…' : 'Assign & send case'}
             </button>
           </div>
