@@ -249,4 +249,37 @@ router.put('/documents/:id/note', requireDoctor, async (req, res) => {
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not save your note.' }); }
 });
 
+// Messages between a specialist and one of THEIR patients.
+//
+// One thread per patient rather than a separate doctor-only channel: the patient should not
+// have to work out which of two inboxes to write in, and the care team needs to see what was
+// said. Each message records its author, so "Dr Jack" and "Care team" are distinguishable.
+router.get('/messages/:uhid', requireDoctor, async (req, res) => {
+  try {
+    const uhid = String(req.params.uhid || '').trim();
+    const patient = await prisma.patient.findFirst({ where: { uhid, doctor: req.doctor.name } });
+    if (!patient) return res.status(404).json({ error: 'Patient not found.' });
+    const list = await prisma.message.findMany({ where: { patientUhid: uhid }, orderBy: [{ createdAt: 'asc' }] });
+    // Opening the thread is reading it.
+    await prisma.message.updateMany({ where: { patientUhid: uhid, sender: 'patient', readByCare: false }, data: { readByCare: true } });
+    res.json({ patient: { name: patient.name, uhid: patient.uhid }, messages: list });
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not load the conversation.' }); }
+});
+
+router.post('/messages/:uhid', requireDoctor, async (req, res) => {
+  try {
+    const uhid = String(req.params.uhid || '').trim();
+    const patient = await prisma.patient.findFirst({ where: { uhid, doctor: req.doctor.name } });
+    if (!patient) return res.status(404).json({ error: 'Patient not found.' });
+    const body = String((req.body || {}).body || '').trim();
+    if (!body) return res.status(400).json({ error: 'Message cannot be empty.' });
+    if (body.length > 4000) return res.status(400).json({ error: 'Message is too long.' });
+    const msg = await prisma.message.create({
+      data: { patientUhid: uhid, patientName: patient.name, sender: 'care', author: req.doctor.name, body, readByCare: true, readByPatient: false },
+    });
+    logActivity(req, { kind: 'activity', actor: req.doctor.name, action: `Messaged ${patient.name}`, target: uhid, category: 'Message' });
+    res.status(201).json(msg);
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not send your message.' }); }
+});
+
 module.exports = router;

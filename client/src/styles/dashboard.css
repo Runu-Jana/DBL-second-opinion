@@ -313,3 +313,6 @@
 .empty{text-align:center;padding:2.5rem 1rem;color:var(--muted)}
 .empty svg{width:40px;height:40px;color:var(--teal-100);margin-bottom:.6rem}
 .empty p{margin:0;font-size:.9rem}
+
+/* Who wrote it, when the clinic side could be the specialist or the front desk. */
+.bubble.them .bubble-who{display:block;margin-bottom:.15rem;font-size:.72rem;font-weight:700;color:var(--teal-dark);opacity:.9}

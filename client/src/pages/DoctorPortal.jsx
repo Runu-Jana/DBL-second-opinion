@@ -76,6 +76,8 @@ function DoctorDashboard({ onLogout }) {
   const [busy, setBusy] = useState('');
   const [noteFor, setNoteFor] = useState(null);   // document id whose note is being edited
   const [noteText, setNoteText] = useState('');
+  const [thread, setThread] = useState(null);
+  const [draft, setDraft] = useState('');
 
   const load = () => {
     docApi('/doctor/me').then(setMe).catch(() => onLogout());
@@ -90,6 +92,11 @@ function DoctorDashboard({ onLogout }) {
     docApi(`/doctor/cases/${caseUhid}`)
       .then((h) => { setHandover(h); setOpinion(h.doctorOpinion || ''); })
       .catch((e) => { setMsg(e.message); setCase(null); });
+  }, [caseUhid]);
+
+  useEffect(() => {
+    if (!caseUhid) { setThread(null); return; }
+    docApi(`/doctor/messages/${caseUhid}`).then((d) => setThread(d.messages || [])).catch(() => setThread([]));
   }, [caseUhid]);
 
   const flash = (m) => { setMsg(m); setTimeout(() => setMsg(''), 4000); };
@@ -117,6 +124,18 @@ function DoctorDashboard({ onLogout }) {
     docApi(`/doctor/documents/${docId}/note`, { method: 'PUT', body: JSON.stringify({ note: noteText }) })
       .then(() => { flash('Note saved.'); setNoteFor(null); return reopen(); })
       .catch((e) => flash(e.message))
+      .finally(() => setBusy(''));
+  };
+
+  const sendMessage = (e) => {
+    e.preventDefault();
+    const body = draft.trim();
+    if (!body) return;
+    setBusy('msg');
+    docApi(`/doctor/messages/${caseUhid}`, { method: 'POST', body: JSON.stringify({ body }) })
+      .then(() => { setDraft(''); return docApi(`/doctor/messages/${caseUhid}`); })
+      .then((d) => setThread(d.messages || []))
+      .catch((err) => flash(err.message))
       .finally(() => setBusy(''));
   };
 
@@ -247,6 +266,33 @@ function DoctorDashboard({ onLogout }) {
                     !handover.ai && 'AI drafting is switched off on this server.'].filter(Boolean).join(' ')}
                 </p>
               )}
+            </div>
+
+            <h3 className="doc-case-h3 no-print">Messages with {handover.patient?.name || 'the patient'}</h3>
+            <div className="doc-chat no-print">
+              <div className="doc-chat-log">
+                {thread === null && <p className="cns-muted">Loading…</p>}
+                {thread && thread.length === 0 && (
+                  <p className="cns-muted">No messages yet. Anything you send here appears in the patient’s portal.</p>
+                )}
+                {(thread || []).map((m) => (
+                  <div key={m.id} className={'doc-msg ' + (m.sender === 'patient' ? 'from-patient' : 'from-care')}>
+                    <span className="doc-msg-who">
+                      {m.sender === 'patient' ? (handover.patient?.name || 'Patient') : (m.author || 'Care team')}
+                      <em>{new Date(m.createdAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</em>
+                    </span>
+                    <p>{m.body}</p>
+                  </div>
+                ))}
+              </div>
+              <form className="doc-chat-send" onSubmit={sendMessage}>
+                <textarea rows={2} value={draft} onChange={(e) => setDraft(e.target.value)}
+                  placeholder="Write to your patient…" />
+                <button type="submit" className="doc-btn doc-btn-primary" disabled={busy === 'msg' || !draft.trim()}>
+                  {busy === 'msg' ? 'Sending…' : 'Send'}
+                </button>
+              </form>
+              <p className="cns-muted">Your care team can see this conversation too.</p>
             </div>
             {handover.deliveredAt && <p className="cns-muted">Sent to the patient on {new Date(handover.deliveredAt).toLocaleString('en-IN')}.</p>}
           </section>

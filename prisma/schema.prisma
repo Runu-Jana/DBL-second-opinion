@@ -377,6 +377,7 @@ model Message {
   patientUhid   String?
   patientName   String
   sender        String   @default("patient")   // 'patient' | 'care'
+  author        String?                          // who on the care side wrote it, e.g. "Dr Jack"
   body          String
   readByCare    Boolean  @default(false)        // false = unread in the admin inbox
   readByPatient Boolean  @default(true)         // false = unread for the patient

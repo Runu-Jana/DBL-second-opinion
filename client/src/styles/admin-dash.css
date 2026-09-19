@@ -655,3 +655,19 @@
   font:inherit;font-size:.85rem;line-height:1.5;resize:vertical}
 .doc-note-edit textarea:focus{outline:none;border-color:var(--teal)}
 .doc-note-edit-actions{display:flex;justify-content:flex-end;gap:.5rem;margin-top:.5rem}
+
+/* ---------- doctor <-> patient conversation ---------- */
+.doc-chat{border:1px solid var(--line);border-radius:14px;background:#fff;padding:.9rem}
+.doc-chat-log{display:flex;flex-direction:column;gap:.6rem;max-height:340px;overflow-y:auto;padding-right:.2rem}
+.doc-msg{max-width:min(76%,560px);padding:.6rem .8rem;border-radius:14px;font-size:.87rem;line-height:1.5}
+.doc-msg p{margin:.2rem 0 0;white-space:pre-wrap;word-break:break-word}
+.doc-msg-who{display:flex;gap:.5rem;align-items:baseline;font-size:.74rem;font-weight:700}
+.doc-msg-who em{font-style:normal;font-weight:500;opacity:.72}
+/* The patient's own words sit left and plain; the clinic's sit right and tinted, so a glance
+   tells you who is speaking without reading the label. */
+.doc-msg.from-patient{align-self:flex-start;background:#f3f6fa;color:var(--ink)}
+.doc-msg.from-care{align-self:flex-end;background:var(--teal-050);color:var(--ink);border:1px solid var(--teal-100)}
+.doc-chat-send{display:flex;gap:.55rem;align-items:flex-end;margin-top:.8rem}
+.doc-chat-send textarea{flex:1;padding:.6rem .75rem;border:1.5px solid var(--line);border-radius:10px;
+  font:inherit;font-size:.87rem;line-height:1.5;resize:vertical}
+.doc-chat-send textarea:focus{outline:none;border-color:var(--teal)}

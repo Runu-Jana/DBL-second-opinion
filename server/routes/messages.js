@@ -46,7 +46,8 @@ router.post('/reply', requireAdmin, async (req, res) => {
     const patientUhid = b.patientUhid ? String(b.patientUhid).trim() : null;
     const body = String(b.body || '').trim();
     if (!patientName || !body) return res.status(400).json({ error: 'Patient and message are required.' });
-    const msg = await prisma.message.create({ data: { patientUhid, patientName, sender: 'care', body, readByCare: true, readByPatient: false } });
+    const author = (req.admin && (req.admin.name || req.admin.email)) || 'Care team';
+    const msg = await prisma.message.create({ data: { patientUhid, patientName, sender: 'care', author, body, readByCare: true, readByPatient: false } });
     logActivity(req, { kind: 'activity', action: `Replied to ${patientName}`, target: `Patient · ${patientName}`, category: 'Message' });
     res.status(201).json(msg);
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not send the reply.' }); }

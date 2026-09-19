@@ -45,7 +45,7 @@ export default function Messages() {
       </div>
 
       <div className="chat-single">
-        <div className="chat-head"><span className="chat-head-av">DBL</span> Care Team</div>
+        <div className="chat-head"><span className="chat-head-av">DBL</span> Care Team &amp; your specialist</div>
         <div className="chat-body" ref={bodyRef}>
           {loading && <p className="chat-empty">Loading…</p>}
           {!loading && msgs.length === 0 && (
@@ -53,6 +53,7 @@ export default function Messages() {
           )}
           {msgs.map((m) => (
             <div className={'bubble ' + (m.sender === 'patient' ? 'me' : 'them')} key={m.id}>
+              {m.sender !== 'patient' && m.author && <span className="bubble-who">{m.author}</span>}
               {m.body}<span className="tm">{timeOf(m.createdAt)}</span>
             </div>
           ))}
