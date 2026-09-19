@@ -46,6 +46,9 @@ const BrandMark = () => (
 );
 
 /* nav sections in display order — matches the admin reference */
+// Nav key -> the queue count that belongs on it (see /api/notifications).
+const NAV_QUEUE = { consultations: 'consultations', applications: 'applications', reports: 'reports' };
+
 export const ADMIN_NAV = [
   { key: 'dashboard', label: 'Dashboard', icon: AI.dashboard },
   { key: 'users', label: 'User Management', icon: AI.users },
@@ -53,7 +56,7 @@ export const ADMIN_NAV = [
   { key: 'staff', label: 'Doctor & Staff Management', icon: AI.staff },
   { key: 'applications', label: 'Doctor Applications', icon: AI.applications },
   { key: 'appointments', label: 'Appointments', icon: AI.appointments },
-  { key: 'consultations', label: 'Consultations', icon: AI.consult, badge: 12 },
+  { key: 'consultations', label: 'Consultations', icon: AI.consult },
   { key: 'reports', label: 'Reports Management', icon: AI.reports },
   { key: 'treatment', label: 'Treatment Plans', icon: AI.plans },
   { key: 'second-opinion', label: 'Review & Second Opinion', icon: AI.review },
@@ -75,11 +78,12 @@ export default function AdminLayout({ section, onNavigate, adminName, onLogout, 
   const seenKey = (k) => `dbl_admin_seen_${k}`;
   const seen = (k) => localStorage.getItem(seenKey(k)) || '';
   const [counts, setCounts] = useState({ activity: 0, messages: 0 });
+  const [queues, setQueues] = useState({});
 
   const refresh = useCallback(() => {
     const q = new URLSearchParams({ activitySince: seen('activity'), messagesSince: seen('messages') });
     api('/notifications?' + q.toString())
-      .then((d) => setCounts({ activity: d.activity || 0, messages: d.messages || 0 }))
+      .then((d) => { setCounts({ activity: d.activity || 0, messages: d.messages || 0 }); setQueues(d.queues || {}); })
       .catch(() => {});   // a badge is not worth surfacing an error for
   }, []);
 
@@ -124,7 +128,7 @@ export default function AdminLayout({ section, onNavigate, adminName, onLogout, 
             >
               <span className="adm-nav-ico">{it.icon}</span>
               <span className="adm-nav-label">{it.label}</span>
-              {it.badge ? <span className="adm-nav-badge">{it.badge}</span> : null}
+              {queues[NAV_QUEUE[it.key]] > 0 ? <span className="adm-nav-badge">{queues[NAV_QUEUE[it.key]] > 99 ? '99+' : queues[NAV_QUEUE[it.key]]}</span> : null}
             </button>
           ))}
         </nav>
