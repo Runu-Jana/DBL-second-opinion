@@ -2,7 +2,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const prisma = require('../db');
-const { requireAdmin } = require('./auth');
+const { requireAdmin, publicPatient, signPatient } = require('./auth');
 const { logActivity } = require('../lib/audit');
 const { sendContactNotification } = require('../lib/email');
 const { sendCode, otpChannel, otpTarget, otpConfigured, normalizePhone } = require('../lib/otp');
@@ -103,7 +103,10 @@ Code: ${uhid}` }).catch((e) => console.error('lead email failed:', e.message));
       });
     }
 
-    res.json({ ok: true, uhid: patient.uhid, name: patient.name });
+    // Hand back a session too. Without this the visitor is "registered" but still anonymous to
+    // the app, so the first thing they are asked to do — upload a report — bounces them to a
+    // login they have no password for.
+    res.json({ ok: true, uhid: patient.uhid, name: patient.name, token: signPatient(patient), patient: publicPatient(patient) });
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not complete registration. Please try again.' }); }
 });
 

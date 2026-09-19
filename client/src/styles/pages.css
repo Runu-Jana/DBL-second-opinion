@@ -965,3 +965,7 @@ table.admin-table{width:100%;border-collapse:collapse;min-width:720px}
   .nf-actions .btn{flex:1 1 100%;justify-content:center}
   .nf-help,.nf-help-links{justify-content:center;text-align:center}
 }
+
+/* lead pop-up: the quieter "later" option under the primary upload action */
+.lead-later{display:block;margin:.6rem auto 0;color:var(--muted);font-size:.85rem}
+.lead-later:hover{color:var(--teal-dark)}

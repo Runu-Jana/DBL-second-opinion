@@ -41,7 +41,7 @@ router.post('/login', async (req, res) => {
     const ok = await bcrypt.compare(password, admin.password);
     if (!ok) return res.status(401).json({ error: 'Invalid email or password.' });
 
-    const token = jwt.sign({ id: admin.id, email: admin.email, name: admin.name }, JWT_SECRET, { expiresIn: SESSION_TTL });
+    const token = jwt.sign({ id: admin.id, email: admin.email, name: admin.name, role: 'admin' }, JWT_SECRET, { expiresIn: SESSION_TTL });
     logActivity(null, { kind: 'audit', actor: admin.name || admin.email, action: 'Signed in', target: 'Admin panel', category: 'Login' });
     res.json({ token, admin: { id: admin.id, name: admin.name, email: admin.email } });
   } catch (e) {
@@ -264,12 +264,20 @@ router.get('/me', requireAdmin, async (req, res) => {
 });
 
 // Middleware — protects admin-only routes
+// Every token this app issues is signed with the same secret, so verifying the signature only
+// proves we minted it — not who for. requireDoctor and requirePatient check their role; this
+// did not, which let any patient or doctor session (and even a single-use password-reset token)
+// reach every admin endpoint. Admin tokens carry role:"admin"; tokens issued before that change
+// carry no role at all, so those are still accepted until they expire.
 function requireAdmin(req, res, next) {
   const header = req.headers.authorization || '';
   const token = header.startsWith('Bearer ') ? header.slice(7) : null;
   if (!token) return res.status(401).json({ error: 'Not authenticated.' });
   try {
-    req.admin = jwt.verify(token, JWT_SECRET);
+    const payload = jwt.verify(token, JWT_SECRET);
+    if (payload.purpose) return res.status(403).json({ error: 'Not an admin account.' });   // reset / activation link
+    if (payload.role && payload.role !== 'admin') return res.status(403).json({ error: 'Not an admin account.' });
+    req.admin = payload;
     next();
   } catch {
     res.status(401).json({ error: 'Session expired. Please log in again.' });
@@ -279,6 +287,13 @@ function requireAdmin(req, res, next) {
 router.requireAdmin = requireAdmin;
 router.requireDoctor = requireDoctor;
 router.requirePatient = requirePatient;
+// Mint a patient session. Shared with the lead pop-up: verifying a one-time code proves the
+// visitor controls that inbox, which is the same standard a magic link meets, so it earns a
+// session just as a password login does.
+function signPatient(patient) {
+  return jwt.sign({ id: patient.id, uhid: patient.uhid, name: patient.name, email: patient.email, role: 'patient' }, JWT_SECRET, { expiresIn: SESSION_TTL });
+}
+
 module.exports = router;
 module.exports.requireAdmin = requireAdmin;
 module.exports.requireDoctor = requireDoctor;
@@ -286,3 +301,5 @@ module.exports.requirePatient = requirePatient;
 module.exports.publicPatient = publicPatient;
 module.exports.inviteStaff = inviteStaff;   // used by doctor-application approve + admin staff create
 module.exports.linkOrigin = linkOrigin;
+
+module.exports.signPatient = signPatient;

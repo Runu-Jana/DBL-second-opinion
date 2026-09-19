@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
+import { useAuth } from '../context/AuthContext.jsx';
 
 /* Scroll-triggered "second opinion" registration pop-up. Appears once per session after the
    visitor scrolls ~40% down. Captures name + phone + email, verifies one of them with a code,
@@ -8,6 +9,7 @@ import { api } from '../api.js';
    Which contact detail gets the code is a server setting, so /contact/otp/channel is asked on
    open: the server can be switched from email to WhatsApp or SMS without redeploying this. */
 export default function LeadPopup() {
+  const { finishLogin, requestUpload } = useAuth();
   const [show, setShow] = useState(false);
   const [step, setStep] = useState('form'); // form -> otp -> done
   const [name, setName] = useState('');
@@ -71,6 +73,8 @@ export default function LeadPopup() {
     try {
       const r = await api('/contact/otp/verify', { method: 'POST', auth: false, body: JSON.stringify({ name: name.trim(), phone: phone.trim(), code: code.trim() }) });
       setUhid(r.uhid || '');
+      // Verifying the code signed them in; adopt the session so the rest of the site knows.
+      if (r.token && r.patient) finishLogin(r.token, r.patient);
       setStep('done');
     } catch (ex) { setErr(ex.message || 'Could not verify the code. Please try again.'); }
     finally { setBusy(false); }
@@ -127,7 +131,8 @@ export default function LeadPopup() {
             <h4>You’re registered, {name.trim().split(' ')[0] || 'there'}!</h4>
             <p>Your {needsEmail ? 'email is' : 'number is'} verified. Our care team will be in touch shortly to help with your second opinion.</p>
             {uhid && <p className="lead-code">Your reference code: <strong>{uhid}</strong><br /><span>Keep this — we’ll use it to track your reports and records.</span></p>}
-            <button type="button" className="btn btn-primary" onClick={close}>Done</button>
+            <button type="button" className="btn btn-primary" onClick={() => { close(); requestUpload(); }}>Upload my reports</button>
+            <button type="button" className="link-btn lead-later" onClick={close}>I’ll do this later</button>
           </div>
         )}
       </div>
