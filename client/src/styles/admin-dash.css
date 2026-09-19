@@ -611,3 +611,10 @@
   a[href]::after{content:""}
   @page{margin:18mm}
 }
+
+/* Extra badge tones so each staff role reads as its own colour rather than all sharing one. */
+.adm-badge.violet{background:#f3ebff;color:#6d28d9}
+.adm-badge.indigo{background:#e8ecff;color:#4338ca}
+.adm-badge.cyan{background:#e0f7fa;color:#0e7490}
+.adm-badge.lime{background:#eefbe0;color:#4d7c0f}
+.adm-badge.slate{background:#eef1f6;color:#334155}

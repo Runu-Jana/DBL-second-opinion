@@ -143,11 +143,22 @@ app.get('/sitemap.xml', async (req, res) => {
 });
 
 // ---- Built React app (client/dist) ----
-app.use(express.static(CLIENT_DIST));
+// Vite fingerprints every asset, so those can be cached for a year — a new build produces new
+// filenames. index.html must NOT be, because it is the file that points at them: cache it and a
+// returning browser keeps loading yesterday's bundle and the deploy looks like it never happened.
+app.use(express.static(CLIENT_DIST, {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('index.html')) res.setHeader('Cache-Control', 'no-cache');
+    else if (/[.-][A-Za-z0-9_-]{8,}\.(js|css|woff2?|png|jpe?g|svg|webp)$/.test(filePath)) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    }
+  },
+}));
 
 // SPA fallback: all non-API routes are handled by React Router
 app.get('*', (req, res, next) => {
   if (req.path.startsWith('/api/')) return next();
+  res.setHeader('Cache-Control', 'no-cache');   // same reason as above: never pin the entry point
   res.sendFile(path.join(CLIENT_DIST, 'index.html'));
 });
 

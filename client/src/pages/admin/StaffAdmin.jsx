@@ -8,6 +8,19 @@ const DEPARTMENTS = ['Medical Oncology', 'Surgical Oncology', 'Radiation Oncolog
 const STATUSES = ['Active', 'On Leave', 'Inactive'];
 // Roles that review patient reports — triage routes by `specialties`, so an active one
 // with no categories tagged silently receives nothing. Flagged in the table.
+const ROLE_TONE = {
+  Oncologist: 'teal',
+  Surgeon: 'blue',
+  Radiologist: 'violet',
+  Counsellor: 'green',
+  'Care Coordinator': 'cyan',
+  'Clinical Pharmacist': 'amber',
+  Nurse: 'rose',
+  Nutritionist: 'lime',
+  'Lab Technician': 'indigo',
+  Administrator: 'slate',
+  Receptionist: 'gray',
+};
 const REVIEW_ROLES = ['Oncologist', 'Surgeon', 'Radiologist'];
 const TONE = { Active: 'green', 'On Leave': 'amber', Inactive: 'gray' };
 const initials = (n = '') => n.replace(/^(Dr|Mr|Ms|Mrs)\.?\s*/i, '').split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
@@ -167,7 +180,7 @@ export default function StaffAdmin({ flash, on401 }) {
                       <span className="adm-cell-user-meta"><strong>{m.name}</strong>{m.qualifications ? <span>{m.qualifications}</span> : null}</span>
                     </div>
                   </td>
-                  <td>{m.role || '—'}</td>
+                  <td>{m.role ? <span className={'adm-badge ' + (ROLE_TONE[m.role] || 'gray')}>{m.role}</span> : '—'}</td>
                   <td>
                     {m.department || '—'}
                     {splitCategories(m.specialties).length > 0
