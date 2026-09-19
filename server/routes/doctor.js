@@ -48,6 +48,30 @@ router.put('/reports/:id', requireDoctor, async (req, res) => {
 });
 
 // GET /api/doctor/patients -> only this doctor's patients
+// GET /api/doctor/cases/:uhid -> the counsellor's handover for one of THEIR patients:
+// the assessment they wrote, plus every document the patient uploaded. A specialist should
+// not have to hunt for the reasoning behind an assignment.
+router.get('/cases/:uhid', requireDoctor, async (req, res) => {
+  try {
+    const uhid = String(req.params.uhid || '').trim();
+    const kase = await prisma.secondOpinion.findFirst({ where: { patientUhid: uhid } });
+    if (!kase || kase.expert !== req.doctor.name) return res.status(404).json({ error: 'Case not found.' });
+    const [patient, documents] = await Promise.all([
+      prisma.patient.findFirst({ where: { uhid } }),
+      prisma.report.findMany({ where: { patientUhid: uhid, doctor: req.doctor.name }, orderBy: [{ createdAt: 'desc' }] }),
+    ]);
+    res.json({
+      patient,
+      documents,
+      counsellor: kase.counsellor,
+      counsellorReport: kase.counsellorReport,
+      cancerType: kase.cancerType,
+      priority: kase.priority,
+      assignedAt: kase.assignedAt,
+    });
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not load the case.' }); }
+});
+
 router.get('/patients', requireDoctor, async (req, res) => {
   try {
     const list = await prisma.patient.findMany({ where: { doctor: req.doctor.name }, orderBy: [{ updatedAt: 'desc' }] });

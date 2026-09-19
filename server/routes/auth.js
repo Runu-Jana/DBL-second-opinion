@@ -22,6 +22,17 @@ const JWT_SECRET = process.env.JWT_SECRET || (() => {
 // password; after 15 days the token expires on its own and the login screen comes back.
 const SESSION_TTL = '15d';
 
+// A staff member's job decides which portal they land in. Everyone used to be stamped
+// role:'doctor' regardless, so a receptionist signing in got the doctor's panel — empty, since
+// every query there is scoped to reports assigned to them by name.
+const REVIEWER_ROLES = ['Oncologist', 'Surgeon', 'Radiologist'];
+const COUNSELLOR_ROLES = ['Counsellor', 'Care Coordinator'];
+function portalFor(staffRole) {
+  if (REVIEWER_ROLES.includes(staffRole)) return 'doctor';
+  if (COUNSELLOR_ROLES.includes(staffRole)) return 'counsellor';
+  return null;   // no portal for this job
+}
+
 // Patient record without the password hash — safe to return to the client.
 const publicPatient = (p) => ({
   id: p.id, name: p.name, email: p.email, uhid: p.uhid, phone: p.phone, city: p.city,
@@ -64,9 +75,13 @@ router.post('/doctor-login', async (req, res) => {
     }
     const ok = await bcrypt.compare(password, staff.password);
     if (!ok) return res.status(401).json({ error: 'Invalid email or password.' });
-    const token = jwt.sign({ id: staff.id, name: staff.name, email: staff.email, role: 'doctor' }, JWT_SECRET, { expiresIn: SESSION_TTL });
-    logActivity(null, { kind: 'audit', actor: staff.name, action: 'Signed in', target: 'Doctor portal', category: 'Login' });
-    res.json({ token, doctor: { id: staff.id, name: staff.name, email: staff.email, role: staff.role, department: staff.department } });
+    const portal = portalFor(staff.role);
+    if (!portal) {
+      return res.status(403).json({ error: `The staff portal is for clinical and counselling staff. Your account is set up as ${staff.role || 'staff'} — please contact the admin team.` });
+    }
+    const token = jwt.sign({ id: staff.id, name: staff.name, email: staff.email, role: portal, jobRole: staff.role }, JWT_SECRET, { expiresIn: SESSION_TTL });
+    logActivity(null, { kind: 'audit', actor: staff.name, action: 'Signed in', target: `${portal === 'counsellor' ? 'Counsellor' : 'Doctor'} portal`, category: 'Login' });
+    res.json({ token, portal, doctor: { id: staff.id, name: staff.name, email: staff.email, role: staff.role, department: staff.department } });
   } catch (e) { console.error(e); res.status(500).json({ error: 'Login failed.' }); }
 });
 
@@ -114,7 +129,7 @@ router.post('/doctor-set-password', async (req, res) => {
 
     const hash = await bcrypt.hash(password, 10);
     await prisma.staff.update({ where: { id: staff.id }, data: { password: hash } });
-    const login = jwt.sign({ id: staff.id, name: staff.name, email: staff.email, role: 'doctor' }, JWT_SECRET, { expiresIn: SESSION_TTL });
+    const login = jwt.sign({ id: staff.id, name: staff.name, email: staff.email, role: portalFor(staff.role) || 'doctor', jobRole: staff.role }, JWT_SECRET, { expiresIn: SESSION_TTL });
     logActivity(null, {
       kind: 'audit', actor: staff.name, target: 'Doctor portal', category: 'Login',
       action: payload.purpose === 'dr-activate' ? 'Activated account and set password' : 'Reset portal password',
@@ -230,6 +245,18 @@ router.post('/patient-reset', async (req, res) => {
 });
 
 // Middleware — protects patient-portal routes
+function requireCounsellor(req, res, next) {
+  const header = req.headers.authorization || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7) : null;
+  if (!token) return res.status(401).json({ error: 'Not authenticated.' });
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    if (payload.role !== 'counsellor') return res.status(403).json({ error: 'Not a counsellor account.' });
+    req.counsellor = payload;
+    next();
+  } catch { res.status(401).json({ error: 'Session expired. Please log in again.' }); }
+}
+
 function requirePatient(req, res, next) {
   const header = req.headers.authorization || '';
   const token = header.startsWith('Bearer ') ? header.slice(7) : null;
@@ -303,3 +330,5 @@ module.exports.inviteStaff = inviteStaff;   // used by doctor-application approv
 module.exports.linkOrigin = linkOrigin;
 
 module.exports.signPatient = signPatient;
+module.exports.requireCounsellor = requireCounsellor;
+module.exports.portalFor = portalFor;

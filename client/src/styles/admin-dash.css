@@ -551,3 +551,39 @@
 /* contact line under a patient name — a new lead has no diagnosis yet, so the phone and
    email are the useful part of the row */
 .admin-table .t-contact{display:block;margin-top:2px;color:var(--muted);font-weight:500;font-size:.78rem}
+
+/* ---------- counsellor desk (pages/CounsellorPortal.jsx) ---------- */
+.doc-stat{display:flex;flex-direction:column;gap:.15rem;padding:1.05rem 1.15rem;background:#fff;border:1px solid var(--line);border-radius:14px}
+.doc-stat strong{font-size:1.5rem;line-height:1.1;color:var(--ink)}
+.doc-stat span{font-size:.79rem;color:var(--muted)}
+.doc-stat.amber strong{color:#b45309}
+.doc-stat.green strong{color:#0b7d70}
+.doc-stats{grid-template-columns:repeat(4,1fr)}
+@media (max-width:900px){.doc-stats{grid-template-columns:repeat(2,1fr)}}
+
+.cns-toolbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.8rem;margin:1.2rem 0 .8rem}
+.cns-search{min-width:min(320px,100%);padding:.55rem .8rem;border:1.5px solid var(--line);border-radius:10px;font:inherit;font-size:.88rem}
+.cns-search:focus{outline:none;border-color:var(--teal)}
+.cns-muted{color:var(--muted);font-size:.84rem}
+.cns-warn{margin:0 0 .7rem;padding:.6rem .8rem;border-radius:10px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;font-size:.85rem}
+
+.cns-folder-head{display:flex;align-items:center;gap:.9rem;flex-wrap:wrap;margin:1rem 0 1.4rem}
+.cns-folder-head h1{margin:0;font-size:1.45rem}
+.cns-folder-head p{margin:.2rem 0 0;color:var(--muted);font-size:.85rem}
+
+.cns-docs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.7rem}
+.cns-docs li{border:1px solid var(--line);border-radius:12px;padding:.8rem .9rem;background:#fff}
+.cns-doc-head{display:flex;align-items:center;flex-wrap:wrap;gap:.55rem}
+.cns-doc-head strong{font-size:.92rem}
+.cns-doc-actions{margin-left:auto;display:flex;gap:.4rem;flex-wrap:wrap}
+.cns-doc-note{margin:.45rem 0 0}
+.cns-ai{margin:.6rem 0 0;padding:.7rem .85rem;background:var(--teal-050);border:1px solid var(--teal-100);border-radius:10px;
+  white-space:pre-wrap;word-break:break-word;font:inherit;font-size:.82rem;line-height:1.5;color:var(--ink-soft)}
+
+.cns-report{width:100%;padding:.8rem .9rem;border:1.5px solid var(--line);border-radius:12px;font:inherit;font-size:.87rem;
+  line-height:1.6;resize:vertical;white-space:pre-wrap}
+.cns-report:focus{outline:none;border-color:var(--teal)}
+.cns-row{display:flex;flex-wrap:wrap;align-items:flex-end;gap:.8rem;margin-top:.8rem}
+.cns-row label{display:flex;flex-direction:column;gap:.25rem;font-size:.8rem;font-weight:600;color:var(--ink-soft);min-width:200px}
+
+.doc-case-h3{margin:1.1rem 0 .6rem;font-size:.82rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}

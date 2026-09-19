@@ -3,7 +3,7 @@ import { api } from '../../api.js';
 import { Select, DateField, RefreshButton } from '../../components/AdminFields.jsx';
 import { CATEGORIES, splitCategories } from '../../lib/categories.js';
 
-const ROLES = ['Oncologist', 'Surgeon', 'Radiologist', 'Clinical Pharmacist', 'Nurse', 'Care Coordinator', 'Nutritionist', 'Lab Technician', 'Administrator', 'Receptionist'];
+const ROLES = ['Oncologist', 'Surgeon', 'Radiologist', 'Counsellor', 'Care Coordinator', 'Clinical Pharmacist', 'Nurse', 'Nutritionist', 'Lab Technician', 'Administrator', 'Receptionist'];
 const DEPARTMENTS = ['Medical Oncology', 'Surgical Oncology', 'Radiation Oncology', 'Pharmacy', 'Nursing', 'Radiology', 'Pathology', 'Patient Support', 'Administration'];
 const STATUSES = ['Active', 'On Leave', 'Inactive'];
 // Roles that review patient reports — triage routes by `specialties`, so an active one

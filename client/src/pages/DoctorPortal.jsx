@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Select } from '../components/AdminFields.jsx';
 import { CATEGORY_TONE } from '../lib/categories.js';
+import CounsellorPortal from './CounsellorPortal.jsx';
 import { getDoctorToken, setDoctorToken, clearDoctorToken, endDoctorSession, SESSION_ENDED } from '../api.js';
 
 const REPORT_STATUSES = ['Pending Review', 'Reviewed', 'Uploaded', 'Archived'];
@@ -71,6 +72,8 @@ function DoctorDashboard({ onLogout }) {
   const [reports, setReports] = useState([]);
   const [patients, setPatients] = useState([]);
   const [msg, setMsg] = useState('');
+  const [caseUhid, setCase] = useState(null);
+  const [handover, setHandover] = useState(null);
 
   const load = () => {
     docApi('/doctor/me').then(setMe).catch(() => onLogout());
@@ -78,6 +81,12 @@ function DoctorDashboard({ onLogout }) {
     docApi('/doctor/patients').then(setPatients).catch(() => {});
   };
   useEffect(load, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // The counsellor's assessment is why this case was routed here, so it opens with the patient.
+  useEffect(() => {
+    if (!caseUhid) { setHandover(null); return; }
+    docApi(`/doctor/cases/${caseUhid}`).then(setHandover).catch((e) => { setMsg(e.message); setCase(null); });
+  }, [caseUhid]);
 
   const changeStatus = (r, status) => {
     docApi(`/doctor/reports/${r.id}`, { method: 'PUT', body: JSON.stringify({ status }) })
@@ -109,6 +118,38 @@ function DoctorDashboard({ onLogout }) {
           <div className="adm-stat"><span className="adm-stat-label">Total Reports</span><strong className="adm-stat-value">{stats.totalReports}</strong></div>
         </div>
 
+        {handover && (
+          <section className="adm-card doc-case">
+            <div className="adm-card-head">
+              <h2>Case handover — {handover.patient?.name || caseUhid}</h2>
+              <button type="button" className="icon-btn" onClick={() => setCase(null)}>Close</button>
+            </div>
+            <p className="cns-muted">
+              {handover.counsellor ? `Prepared by ${handover.counsellor}` : 'Prepared by the counselling team'}
+              {handover.cancerType ? ` · ${handover.cancerType}` : ''}
+              {handover.priority ? ` · ${handover.priority} priority` : ''}
+            </p>
+            {handover.counsellorReport
+              ? <pre className="cns-ai">{handover.counsellorReport}</pre>
+              : <p className="cns-muted">No counsellor report was attached to this case.</p>}
+            <h3 className="doc-case-h3">Patient documents ({handover.documents?.length || 0})</h3>
+            <ul className="cns-docs">
+              {(handover.documents || []).map((d) => (
+                <li key={d.id}>
+                  <div className="cns-doc-head">
+                    <strong>{d.type || 'Document'}</strong>
+                    <span className="cns-muted">{d.date || ''}</span>
+                    <span className="cns-doc-actions">
+                      {d.fileUrl && <a className="icon-btn" href={d.fileUrl} target="_blank" rel="noreferrer">View</a>}
+                      {d.fileUrl && <a className="icon-btn" href={d.fileUrl} download>Download</a>}
+                    </span>
+                  </div>
+                  {d.aiSummary && <pre className="cns-ai">{d.aiSummary}</pre>}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
         <section className="adm-card">
           <div className="adm-card-head"><h2>Reports to Review</h2></div>
           <div className="admin-table-wrap">
@@ -136,9 +177,9 @@ function DoctorDashboard({ onLogout }) {
           <div className="adm-card-head"><h2>My Patients</h2></div>
           <div className="admin-table-wrap">
             <table className="admin-table">
-              <thead><tr><th>Patient</th><th>UHID</th><th>Cancer Type</th><th>Stage</th><th>Status</th><th>Last Visit</th></tr></thead>
+              <thead><tr><th>Patient</th><th>UHID</th><th>Cancer Type</th><th>Stage</th><th>Status</th><th>Last Visit</th><th></th></tr></thead>
               <tbody>
-                {patients.length === 0 && <tr><td colSpan="6" className="admin-empty">No patients assigned to you yet.</td></tr>}
+                {patients.length === 0 && <tr><td colSpan="7" className="admin-empty">No patients assigned to you yet.</td></tr>}
                 {patients.map((p) => (
                   <tr key={p.id}>
                     <td className="t-name">{p.name}</td>
@@ -147,6 +188,7 @@ function DoctorDashboard({ onLogout }) {
                     <td>{p.stage || '—'}</td>
                     <td><span className={'adm-badge ' + (PTONE[p.status] || 'blue')}>{p.status}</span></td>
                     <td>{p.lastVisit || '—'}</td>
+                    <td><div className="row-actions">{p.uhid && <button className="icon-btn" onClick={() => setCase(p.uhid)}>Case &amp; documents</button>}</div></td>
                   </tr>
                 ))}
               </tbody>
@@ -158,16 +200,27 @@ function DoctorDashboard({ onLogout }) {
   );
 }
 
+// Both jobs sign in here. The session says which panel they get: specialists review the
+// reports assigned to them, counsellors work the intake folders that come before that.
+function sessionOf(token) {
+  try {
+    const b64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(decodeURIComponent(escape(atob(b64.padEnd(Math.ceil(b64.length / 4) * 4, '=')))));
+  } catch { return {}; }
+}
+
 export default function DoctorPortal() {
   const [token, setToken] = useState(getDoctorToken);
-  useEffect(() => { document.title = 'Doctor Portal — DBL International'; }, []);
+  useEffect(() => { document.title = 'Staff Portal — DBL International'; }, []);
   // An expired or revoked session (spotted by docApi) sends us straight back to the login form.
   useEffect(() => {
-    const end = (e) => { if (e.detail?.portal === 'doctor') setToken(null); };
+    const end = () => setToken(null);   // either desk: a rejected staff token ends the session
     window.addEventListener(SESSION_ENDED, end);
     return () => window.removeEventListener(SESSION_ENDED, end);
   }, []);
   const logout = () => { clearDoctorToken(); setToken(null); };
   if (!token) return <DoctorLogin onLogin={setToken} />;
+  const session = sessionOf(token);
+  if (session.role === 'counsellor') return <CounsellorPortal api={docApi} me={session} onLogout={logout} />;
   return <DoctorDashboard onLogout={logout} />;
 }
