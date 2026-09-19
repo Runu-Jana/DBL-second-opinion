@@ -265,6 +265,9 @@ model SecondOpinion {
   counsellorReport String?                       // the counsellor's written assessment handed to the doctor
   aiDraft       String?                          // AI first draft, kept so the human edit can be compared
   assignedAt    DateTime?                        // when a doctor was put on the case
+  doctorOpinion String?                          // the specialist's second opinion — what the patient receives
+  doctorAiDraft String?                          // AI first draft of that opinion, kept beside the final text
+  deliveredAt   DateTime?                        // when the opinion was released to the patient
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

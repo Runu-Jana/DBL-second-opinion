@@ -114,6 +114,26 @@ router.get('/consultations', requirePatient, async (req, res) => {
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not load your cases.' }); }
 });
 
+// GET /api/portal/opinions — second opinions written for this patient.
+// Only delivered ones: a draft the specialist is still working on is not the patient's to read,
+// and the counsellor's internal assessment is never exposed here at all.
+router.get('/opinions', requirePatient, async (req, res) => {
+  try {
+    const list = await prisma.secondOpinion.findMany({
+      where: { AND: [safeWhere(req), { status: 'Delivered' }] },
+      orderBy: [{ deliveredAt: 'desc' }],
+    });
+    res.json(list.map((o) => ({
+      id: o.id,
+      cancerType: o.cancerType,
+      doctor: o.expert,
+      opinion: o.doctorOpinion,
+      deliveredAt: o.deliveredAt,
+      submittedDate: o.submittedDate,
+    })));
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not load your opinions.' }); }
+});
+
 // GET /api/portal/invoices — the patient's bills
 router.get('/invoices', requirePatient, async (req, res) => {
   try {

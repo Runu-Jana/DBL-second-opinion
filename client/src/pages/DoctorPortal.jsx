@@ -74,6 +74,8 @@ function DoctorDashboard({ onLogout }) {
   const [msg, setMsg] = useState('');
   const [caseUhid, setCase] = useState(null);
   const [handover, setHandover] = useState(null);
+  const [opinion, setOpinion] = useState('');
+  const [busy, setBusy] = useState('');
 
   const load = () => {
     docApi('/doctor/me').then(setMe).catch(() => onLogout());
@@ -85,8 +87,37 @@ function DoctorDashboard({ onLogout }) {
   // The counsellor's assessment is why this case was routed here, so it opens with the patient.
   useEffect(() => {
     if (!caseUhid) { setHandover(null); return; }
-    docApi(`/doctor/cases/${caseUhid}`).then(setHandover).catch((e) => { setMsg(e.message); setCase(null); });
+    docApi(`/doctor/cases/${caseUhid}`)
+      .then((h) => { setHandover(h); setOpinion(h.doctorOpinion || ''); })
+      .catch((e) => { setMsg(e.message); setCase(null); });
   }, [caseUhid]);
+
+  const flash = (m) => { setMsg(m); setTimeout(() => setMsg(''), 4000); };
+  const reopen = () => docApi(`/doctor/cases/${caseUhid}`).then((h) => { setHandover(h); setOpinion(h.doctorOpinion || ''); });
+
+  // Explicitly a draft, not the opinion: it lands in the editor for the doctor to rewrite.
+  const draftWithAI = () => {
+    setBusy('draft');
+    docApi(`/doctor/cases/${caseUhid}/draft`, { method: 'POST' })
+      .then((r) => { setOpinion(r.draft); flash('Draft ready — review and edit it before sending.'); })
+      .catch((e) => flash(e.message))
+      .finally(() => setBusy(''));
+  };
+  const saveOpinion = () => {
+    setBusy('save');
+    docApi(`/doctor/cases/${caseUhid}/opinion`, { method: 'PUT', body: JSON.stringify({ opinion }) })
+      .then(() => { flash('Saved. Not sent to the patient yet.'); return reopen(); })
+      .catch((e) => flash(e.message))
+      .finally(() => setBusy(''));
+  };
+  const deliver = () => {
+    if (!window.confirm('Send this opinion to the patient? They will be emailed and will be able to read it in their portal.')) return;
+    setBusy('send');
+    docApi(`/doctor/cases/${caseUhid}/deliver`, { method: 'POST' })
+      .then((r) => { flash(r.emailed ? 'Sent — the patient has been emailed.' : 'Sent. No email address on file, so nothing was emailed.'); load(); return reopen(); })
+      .catch((e) => flash(e.message))
+      .finally(() => setBusy(''));
+  };
 
   const changeStatus = (r, status) => {
     docApi(`/doctor/reports/${r.id}`, { method: 'PUT', body: JSON.stringify({ status }) })
@@ -119,19 +150,28 @@ function DoctorDashboard({ onLogout }) {
         </div>
 
         {handover && (
-          <section className="adm-card doc-case">
-            <div className="adm-card-head">
-              <h2>Case handover — {handover.patient?.name || caseUhid}</h2>
-              <button type="button" className="icon-btn" onClick={() => setCase(null)}>Close</button>
+          <section className="adm-card doc-case" id="doc-case-print">
+            <div className="adm-card-head no-print">
+              <h2>Case — {handover.patient?.name || caseUhid}</h2>
+              <span className="doc-case-actions">
+                {handover.status === 'Delivered' && <span className="adm-badge green">Sent to patient</span>}
+                <button type="button" className="icon-btn" onClick={() => window.print()}>Print</button>
+                <button type="button" className="icon-btn" onClick={() => setCase(null)}>Close</button>
+              </span>
             </div>
-            <p className="cns-muted">
-              {handover.counsellor ? `Prepared by ${handover.counsellor}` : 'Prepared by the counselling team'}
-              {handover.cancerType ? ` · ${handover.cancerType}` : ''}
-              {handover.priority ? ` · ${handover.priority} priority` : ''}
-            </p>
+
+            <div className="doc-case-meta">
+              <strong>{handover.patient?.name}</strong>
+              <span className="mono">{caseUhid}</span>
+              {handover.cancerType && <span className="adm-badge blue">{handover.cancerType}</span>}
+              {handover.priority && handover.priority !== 'Normal' && <span className="adm-badge amber">{handover.priority}</span>}
+            </div>
+
+            <h3 className="doc-case-h3">Counsellor handover{handover.counsellor ? ` — ${handover.counsellor}` : ''}</h3>
             {handover.counsellorReport
               ? <pre className="cns-ai">{handover.counsellorReport}</pre>
               : <p className="cns-muted">No counsellor report was attached to this case.</p>}
+
             <h3 className="doc-case-h3">Patient documents ({handover.documents?.length || 0})</h3>
             <ul className="cns-docs">
               {(handover.documents || []).map((d) => (
@@ -139,7 +179,7 @@ function DoctorDashboard({ onLogout }) {
                   <div className="cns-doc-head">
                     <strong>{d.type || 'Document'}</strong>
                     <span className="cns-muted">{d.date || ''}</span>
-                    <span className="cns-doc-actions">
+                    <span className="cns-doc-actions no-print">
                       {d.fileUrl && <a className="icon-btn" href={d.fileUrl} target="_blank" rel="noreferrer">View</a>}
                       {d.fileUrl && <a className="icon-btn" href={d.fileUrl} download>Download</a>}
                     </span>
@@ -148,13 +188,36 @@ function DoctorDashboard({ onLogout }) {
                 </li>
               ))}
             </ul>
+
+            <h3 className="doc-case-h3">My second opinion</h3>
+            <p className="cns-muted no-print">
+              This is what the patient receives. An AI draft is a starting point built from the handover and the
+              document readings — check every line against the reports before you send it.
+            </p>
+            <textarea className="cns-report no-print" rows={16} value={opinion} onChange={(e) => setOpinion(e.target.value)}
+              placeholder="Your opinion for this patient…" />
+            <pre className="cns-ai print-only">{opinion}</pre>
+            <div className="cns-row no-print">
+              <button type="button" className="icon-btn" disabled={busy === 'draft' || !handover.ai} onClick={draftWithAI}>
+                {busy === 'draft' ? 'Drafting…' : 'Draft with AI'}
+              </button>
+              <button type="button" className="btn btn-outline" disabled={busy === 'save'} onClick={saveOpinion}>
+                {busy === 'save' ? 'Saving…' : 'Save draft'}
+              </button>
+              <button type="button" className="btn btn-primary" disabled={busy === 'send' || !handover.doctorOpinion} onClick={deliver}>
+                {busy === 'send' ? 'Sending…' : handover.status === 'Delivered' ? 'Re-send to patient' : 'Send to patient'}
+              </button>
+            </div>
+            {!handover.ai && <p className="cns-muted no-print">AI drafting is off on this server.</p>}
+            {!handover.doctorOpinion && <p className="cns-muted no-print">Save your opinion before it can be sent.</p>}
+            {handover.deliveredAt && <p className="cns-muted">Sent to the patient on {new Date(handover.deliveredAt).toLocaleString('en-IN')}.</p>}
           </section>
         )}
         <section className="adm-card">
           <div className="adm-card-head"><h2>Reports to Review</h2></div>
           <div className="admin-table-wrap">
             <table className="admin-table">
-              <thead><tr><th>Patient</th><th>Type</th><th>Category</th><th>Date</th><th>File</th><th>Status</th><th>Update</th></tr></thead>
+              <thead><tr><th>Patient</th><th>Type</th><th>Category</th><th>Date</th><th>File</th><th>Status</th><th></th></tr></thead>
               <tbody>
                 {reports.length === 0 && <tr><td colSpan="7" className="admin-empty">No reports assigned to you yet.</td></tr>}
                 {reports.map((r) => (
@@ -165,7 +228,7 @@ function DoctorDashboard({ onLogout }) {
                     <td>{r.date || '—'}</td>
                     <td>{r.fileUrl ? <a className="adm-link" href={r.fileUrl} target="_blank" rel="noreferrer">View</a> : '—'}</td>
                     <td><span className={'adm-badge ' + (RTONE[r.status] || 'blue')}>{r.status}</span></td>
-                    <td style={{ minWidth: 170 }}><Select value={r.status} onChange={(v) => changeStatus(r, v)} options={REPORT_STATUSES} /></td>
+                    <td><div className="row-actions">{r.patientUhid && <button className="icon-btn" onClick={() => setCase(r.patientUhid)}>Open case</button>}</div></td>
                   </tr>
                 ))}
               </tbody>
