@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { api } from '../api.js';
 
 /* ---------- icons ---------- */
 const s = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.7, strokeLinecap: 'round', strokeLinejoin: 'round' };
@@ -69,6 +70,32 @@ export const ADMIN_NAV = [
 
 export default function AdminLayout({ section, onNavigate, adminName, onLogout, children }) {
   const [open, setOpen] = useState(false); // mobile sidebar
+  // When this admin last opened each panel. Kept per browser rather than on the server, so one
+  // admin clearing their badge does not clear everyone else's.
+  const seenKey = (k) => `dbl_admin_seen_${k}`;
+  const seen = (k) => localStorage.getItem(seenKey(k)) || '';
+  const [counts, setCounts] = useState({ activity: 0, messages: 0 });
+
+  const refresh = useCallback(() => {
+    const q = new URLSearchParams({ activitySince: seen('activity'), messagesSince: seen('messages') });
+    api('/notifications?' + q.toString())
+      .then((d) => setCounts({ activity: d.activity || 0, messages: d.messages || 0 }))
+      .catch(() => {});   // a badge is not worth surfacing an error for
+  }, []);
+
+  useEffect(() => {
+    refresh();
+    const t = setInterval(refresh, 60000);
+    return () => clearInterval(t);
+  }, [refresh]);
+
+  // Opening a panel is what "I have seen this" means, so the badge clears here.
+  const openPanel = (key, which) => {
+    localStorage.setItem(seenKey(which), new Date().toISOString());
+    setCounts((c) => ({ ...c, [which]: 0 }));
+    go(key);
+  };
+
   const go = (key) => { onNavigate(key); setOpen(false); };
   const toggleFullscreen = () => {
     if (document.fullscreenElement) document.exitFullscreen?.();
@@ -123,8 +150,8 @@ export default function AdminLayout({ section, onNavigate, adminName, onLogout, 
             <input type="search" placeholder="Search patient, doctor, appointment, report…" aria-label="Search" />
           </div>
           <div className="adm-top-actions">
-            <button type="button" className="adm-icon-btn has-dot" aria-label="Notifications" title="System activity" onClick={() => go('system-activity')}>{AI.bell}<span className="adm-dot">12</span></button>
-            <button type="button" className="adm-icon-btn has-dot" aria-label="Messages" title="Communication" onClick={() => go('communication')}>{AI.mail}<span className="adm-dot amber">8</span></button>
+            <button type="button" className={'adm-icon-btn' + (counts.activity ? ' has-dot' : '')} aria-label={`Notifications${counts.activity ? ` (${counts.activity} new)` : ''}`} title="System activity" onClick={() => openPanel('system-activity', 'activity')}>{AI.bell}{counts.activity > 0 && <span className="adm-dot">{counts.activity > 99 ? '99+' : counts.activity}</span>}</button>
+            <button type="button" className={'adm-icon-btn' + (counts.messages ? ' has-dot' : '')} aria-label={`Messages${counts.messages ? ` (${counts.messages} new)` : ''}`} title="Communication" onClick={() => openPanel('communication', 'messages')}>{AI.mail}{counts.messages > 0 && <span className="adm-dot amber">{counts.messages > 99 ? '99+' : counts.messages}</span>}</button>
             <button type="button" className="adm-icon-btn hide-sm" aria-label="Fullscreen" title="Toggle fullscreen" onClick={toggleFullscreen}>{AI.expand}</button>
             <button type="button" className="adm-lang hide-sm">{AI.globe}<span>English</span>{AI.caret}</button>
             <div className="adm-user">
