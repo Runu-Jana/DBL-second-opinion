@@ -54,6 +54,7 @@ const limiter = (windowMs, max) => rateLimit({ windowMs, max, standardHeaders: t
 app.use('/api/auth', limiter(15 * 60 * 1000, 40));         // login / signup / forgot / reset
 app.use('/api/contact/otp', limiter(10 * 60 * 1000, 12));  // WhatsApp OTP (cost + spam)
 app.use('/api/chat', limiter(60 * 1000, 20));              // AI chat (Anthropic cost)
+app.use('/api/upload', limiter(15 * 60 * 1000, 30));   // public report uploads (memory + storage cost)
 
 // ---- API ----
 app.use('/api/oncologists', oncologistsRouter);

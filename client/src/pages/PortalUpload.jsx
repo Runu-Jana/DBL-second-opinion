@@ -10,9 +10,17 @@ const Ico = {
   check: <svg viewBox="0 0 24 24" width="18" height="18" {...s}><path d="m5 12 4 4 10-10" /></svg>,
 };
 const RECOMMENDED = ['Pathology / Biopsy Reports', 'Imaging (CT, MRI, PET, X-Ray)', 'Lab Reports', 'Treatment / Discharge Summaries', 'Prescription & Medication Details'];
-const OK_EXT = ['pdf', 'png', 'jpg', 'jpeg'];
-const MAX = 15 * 1024 * 1024;
+// Kept in step with server/routes/upload.js — the server enforces these for real; these
+// checks just spare the patient a long upload that was always going to be rejected.
+const DOC_EXT = ['pdf', 'png', 'jpg', 'jpeg', 'doc', 'docx'];
+const VIDEO_EXT = ['mp4', 'mov', 'webm', 'ogg', 'ogv'];
+const OK_EXT = [...DOC_EXT, ...VIDEO_EXT];
+const DOC_MAX = 15 * 1024 * 1024;
+const VIDEO_MAX = 50 * 1024 * 1024;
+const VIDEO_COUNT_MAX = 2;
 const extOf = (n) => (n.split('.').pop() || '').toLowerCase();
+const isVideo = (name) => VIDEO_EXT.includes(extOf(name));
+const capFor = (name) => (isVideo(name) ? VIDEO_MAX : DOC_MAX);
 const fmtSize = (b) => (b < 1024 * 1024 ? (b / 1024).toFixed(0) + ' KB' : (b / 1024 / 1024).toFixed(1) + ' MB');
 
 export default function PortalUpload() {
@@ -29,7 +37,10 @@ export default function PortalUpload() {
     const rejected = [];
     Array.from(list).forEach((file) => {
       if (OK_EXT.indexOf(extOf(file.name)) === -1) { rejected.push(file.name + ' (unsupported type)'); return; }
-      if (file.size > MAX) { rejected.push(file.name + ' (over 15 MB)'); return; }
+      if (file.size > capFor(file.name)) { rejected.push(`${file.name} (over ${isVideo(file.name) ? 50 : 15} MB)`); return; }
+      if (isVideo(file.name) && next.filter((f) => isVideo(f.name)).length >= VIDEO_COUNT_MAX) {
+        rejected.push(`${file.name} (at most ${VIDEO_COUNT_MAX} videos)`); return;
+      }
       if (!next.some((f) => f.name === file.name && f.size === file.size)) next.push(file);
     });
     setFiles(next);
@@ -82,8 +93,8 @@ export default function PortalUpload() {
                 <h3>Drag &amp; drop your files here</h3>
                 <p>or</p>
                 <button type="button" className="btn btn-primary" onClick={() => inputRef.current?.click()}>Choose Files</button>
-                <input ref={inputRef} type="file" accept="application/pdf,image/*" multiple hidden onChange={(e) => { if (e.target.files) add(e.target.files); e.target.value = ''; }} />
-                <p style={{ marginTop: '1rem', fontSize: '.78rem' }}>Supported: PDF, JPG, PNG · Max 15 MB each</p>
+                <input ref={inputRef} type="file" accept="application/pdf,image/*,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,video/mp4,video/webm,video/ogg,video/quicktime" multiple hidden onChange={(e) => { if (e.target.files) add(e.target.files); e.target.value = ''; }} />
+                <p style={{ marginTop: '1rem', fontSize: '.78rem' }}>Supported: PDF, Word, JPG, PNG · Max 15 MB each · Video (MP4, MOV, WebM) up to 50 MB</p>
               </div>
 
               {error && <p style={{ color: '#c0392b', fontSize: '.82rem', fontWeight: 600, marginTop: '.8rem' }}>{error}</p>}

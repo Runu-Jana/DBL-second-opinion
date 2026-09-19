@@ -11,7 +11,19 @@ const router = express.Router();
 
 const ALLOWED = ['image/jpeg', 'image/png', 'image/webp'];
 const ALLOWED_VIDEO = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'];
-const ALLOWED_REPORT = ['application/pdf', 'image/jpeg', 'image/png'];
+const ALLOWED_DOC = ['application/pdf', 'image/jpeg', 'image/png',
+  'application/msword',                                                       // .doc
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];  // .docx
+const ALLOWED_REPORT = [...ALLOWED_DOC, ...ALLOWED_VIDEO];
+
+// Multer buffers uploads in memory and /report is public, so the ceiling here is the amount
+// of RAM one anonymous request can claim. Documents stay at 15 MB; video gets more, but only
+// a couple per submission, and the whole request is refused up front if it is oversized.
+const DOC_MAX = 15 * 1024 * 1024;
+const VIDEO_MAX = 50 * 1024 * 1024;
+const VIDEO_COUNT_MAX = 2;
+const REQUEST_MAX = 220 * 1024 * 1024;
+const mb = (n) => Math.round(n / (1024 * 1024));
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 const memory = multer.memoryStorage();
@@ -19,7 +31,7 @@ const only = (types, msg) => (_req, file, cb) => (types.includes(file.mimetype) 
 
 const upload = multer({ storage: memory, limits: { fileSize: 3 * 1024 * 1024 }, fileFilter: only(ALLOWED, 'Only JPG, PNG or WEBP images are allowed.') });
 const uploadVideo = multer({ storage: memory, limits: { fileSize: 100 * 1024 * 1024 }, fileFilter: only(ALLOWED_VIDEO, 'Only MP4, WebM, OGG or MOV videos are allowed.') });
-const uploadReport = multer({ storage: memory, limits: { fileSize: 15 * 1024 * 1024 }, fileFilter: only(ALLOWED_REPORT, 'Only PDF, JPG or PNG files are allowed.') });
+const uploadReport = multer({ storage: memory, limits: { fileSize: VIDEO_MAX, files: 10 }, fileFilter: only(ALLOWED_REPORT, 'Only PDF, Word, JPG, PNG or video files are allowed.') });
 
 // Save one buffered file to storage and return its /uploads/<key> URL.
 const store = (file) => storage.saveBuffer(file.buffer, storage.keyFor(file.originalname), file.mimetype).then((key) => '/uploads/' + key);
@@ -49,12 +61,25 @@ router.post('/video', requireAdmin, (req, res) => {
 
 // POST /api/upload/report  (public — patient uploads) -> creates "Pending Review" Report records
 router.post('/report', (req, res) => {
+  // Checked before multer runs: once parsing starts the memory is already committed.
+  const declared = Number(req.headers['content-length'] || 0);
+  if (declared > REQUEST_MAX) {
+    return res.status(413).json({ error: `That upload is too large (max ${mb(REQUEST_MAX)} MB in total). Please send fewer or smaller files.` });
+  }
   uploadReport.array('reports', 10)(req, res, async (err) => {
     if (err) {
-      const msg = err.code === 'LIMIT_FILE_SIZE' ? 'Each file must be under 15 MB.' : err.message;
+      const msg = err.code === 'LIMIT_FILE_SIZE' ? `Videos must be under ${mb(VIDEO_MAX)} MB and other files under ${mb(DOC_MAX)} MB.` : err.message;
       return res.status(400).json({ error: msg });
     }
     if (!req.files || !req.files.length) return res.status(400).json({ error: 'No files uploaded.' });
+
+    // multer's single fileSize had to be the video ceiling, so hold documents to their own.
+    const tooBig = req.files.find((x) => !ALLOWED_VIDEO.includes(x.mimetype) && x.size > DOC_MAX);
+    if (tooBig) return res.status(400).json({ error: `${tooBig.originalname} is too large — documents and images must be under ${mb(DOC_MAX)} MB.` });
+    const videos = req.files.filter((x) => ALLOWED_VIDEO.includes(x.mimetype));
+    if (videos.length > VIDEO_COUNT_MAX) {
+      return res.status(400).json({ error: `Please attach at most ${VIDEO_COUNT_MAX} videos per submission.` });
+    }
     const patientName = String(req.body.patientName || '').trim() || 'Website Visitor';
     const email = req.body.email ? String(req.body.email).trim() : null;
     const now = new Date();

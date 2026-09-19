@@ -2,8 +2,14 @@ import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { api } from '../api.js';
 
-const OK_EXT = ['pdf', 'png', 'jpg', 'jpeg'];
-const MAX = 15 * 1024 * 1024;
+// Kept in step with server/routes/upload.js — the server enforces these for real; these
+// checks just spare the patient a long upload that was always going to be rejected.
+const DOC_EXT = ['pdf', 'png', 'jpg', 'jpeg', 'doc', 'docx'];
+const VIDEO_EXT = ['mp4', 'mov', 'webm', 'ogg', 'ogv'];
+const OK_EXT = [...DOC_EXT, ...VIDEO_EXT];
+const DOC_MAX = 15 * 1024 * 1024;
+const VIDEO_MAX = 50 * 1024 * 1024;
+const VIDEO_COUNT_MAX = 2;
 
 function humanSize(b) {
   if (b < 1024) return b + ' B';
@@ -11,6 +17,8 @@ function humanSize(b) {
   return (b / 1048576).toFixed(1) + ' MB';
 }
 const extOf = (n) => (n.split('.').pop() || '').toLowerCase();
+const isVideo = (name) => VIDEO_EXT.includes(extOf(name));
+const capFor = (name) => (isVideo(name) ? VIDEO_MAX : DOC_MAX);
 
 export default function UploadModal() {
   const { uploadOpen, setUploadOpen, session, logout } = useAuth();
@@ -36,7 +44,10 @@ export default function UploadModal() {
     const next = [...files];
     Array.from(list).forEach((file) => {
       if (OK_EXT.indexOf(extOf(file.name)) === -1) { rejected.push(file.name + ' (unsupported type)'); return; }
-      if (file.size > MAX) { rejected.push(file.name + ' (over 15 MB)'); return; }
+      if (file.size > capFor(file.name)) { rejected.push(`${file.name} (over ${isVideo(file.name) ? 50 : 15} MB)`); return; }
+      if (isVideo(file.name) && next.filter((f) => isVideo(f.name)).length >= VIDEO_COUNT_MAX) {
+        rejected.push(`${file.name} (at most ${VIDEO_COUNT_MAX} videos)`); return;
+      }
       if (!next.some((f) => f.name === file.name && f.size === file.size)) next.push(file);
     });
     setFiles(next);
@@ -79,13 +90,13 @@ export default function UploadModal() {
           onDragLeave={(e) => { e.preventDefault(); setDrag(false); }}
           onDrop={(e) => { e.preventDefault(); setDrag(false); if (e.dataTransfer?.files) addFiles(e.dataTransfer.files); }}
         >
-          <input ref={inputRef} type="file" accept="application/pdf,image/*" multiple hidden
+          <input ref={inputRef} type="file" accept="application/pdf,image/*,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,video/mp4,video/webm,video/ogg,video/quicktime" multiple hidden
             onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
           <span className="dropzone-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 16V6m0 0-4 4m4-4 4 4" /><path d="M5 15v2.5A2.5 2.5 0 0 0 7.5 20h9a2.5 2.5 0 0 0 2.5-2.5V15" /></svg>
           </span>
           <strong>Drag &amp; drop your reports here</strong>
-          <span className="dropzone-hint">or click to browse — PDF, PNG, JPG, JPEG · up to 15&nbsp;MB each</span>
+          <span className="dropzone-hint">or click to browse — PDF, Word, PNG, JPG · up to 15&nbsp;MB each, or video up to 50&nbsp;MB</span>
         </label>
 
         {files.length > 0 && (

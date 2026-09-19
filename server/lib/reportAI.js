@@ -52,7 +52,9 @@ async function analyzeReport(report) {
   } else if (file.contentType === 'image/png' || file.contentType === 'image/jpeg') {
     media = { type: 'image', source: { type: 'base64', media_type: file.contentType, data } };
   } else {
-    const e = new Error('Only PDF, JPG or PNG reports can be analysed.'); e.code = 'UNSUPPORTED'; throw e;
+    // Word files and video can be uploaded and stored, but nothing reads them automatically —
+    // a counsellor opens those by hand.
+    const e = new Error('This file type cannot be read automatically — only PDF, JPG and PNG can. Please open it manually.'); e.code = 'UNSUPPORTED'; throw e;
   }
 
   const msg = await client.messages.create({
