@@ -51,6 +51,11 @@ function PatientModal({ patient, onClose, onSaved, on401 }) {
   );
 }
 
+// Registration date. Patient.createdAt is stamped by the database on insert, so this is
+// present for every patient without anyone having to fill anything in.
+const joined = (iso) => (iso ? new Date(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—');
+const tel = (v) => (!v ? null : /^[0-9]+$/.test(v) ? `+${v}` : v);
+
 export default function PatientsAdmin({ flash, on401 }) {
   const [list, setList] = useState([]);
   const [q, setQ] = useState('');
@@ -97,19 +102,22 @@ export default function PatientsAdmin({ flash, on401 }) {
       <section className="admin-panel">
         <div className="admin-table-wrap">
           <table className="admin-table">
-            <thead><tr><th>Patient</th><th>UHID</th><th>Cancer Type</th><th>Stage</th><th>Status</th><th>Doctor</th><th>Last Visit</th><th></th></tr></thead>
+            <thead><tr><th>Patient</th><th>UHID</th><th>Cancer Type</th><th>Stage</th><th>Status</th><th>Doctor</th><th>Joined</th><th></th></tr></thead>
             <tbody>
               {loading && <tr><td colSpan="8" className="admin-empty">Loading…</td></tr>}
               {!loading && list.length === 0 && <tr><td colSpan="8" className="admin-empty">No patients found.</td></tr>}
               {!loading && list.map((p) => (
                 <tr key={p.id}>
-                  <td className="t-name">{p.name}{p.age ? <span className="t-sub"> · {p.age}{p.gender ? `, ${p.gender}` : ''}</span> : ''}</td>
+                  <td className="t-name">{p.name}
+                    {p.age ? <span className="t-sub"> · {p.age}{p.gender ? `, ${p.gender}` : ''}</span> : ''}
+                    {(p.phone || p.email) && <span className="t-contact">{[tel(p.phone), p.email].filter(Boolean).join('  ·  ')}</span>}
+                  </td>
                   <td className="mono">{p.uhid}</td>
                   <td>{p.cancerType || '—'}</td>
                   <td>{p.stage || '—'}</td>
                   <td><span className={'adm-badge ' + (TONE[p.status] || 'blue')}>{p.status}</span></td>
                   <td>{p.doctor || '—'}</td>
-                  <td>{p.lastVisit || '—'}</td>
+                  <td>{joined(p.createdAt)}</td>
                   <td><div className="row-actions"><button className="icon-btn" onClick={() => setModal(p)}>Edit</button><button className="icon-btn danger" onClick={() => del(p)}>Delete</button></div></td>
                 </tr>
               ))}

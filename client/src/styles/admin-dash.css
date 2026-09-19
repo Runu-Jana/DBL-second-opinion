@@ -547,3 +547,7 @@
   .hide-sm{display:none}                    /* fullscreen + language buttons: hide on phones (the class had no rule) */
   .adm-analytics-grid{grid-template-columns:1fr}
 }
+
+/* contact line under a patient name — a new lead has no diagnosis yet, so the phone and
+   email are the useful part of the row */
+.admin-table .t-contact{display:block;margin-top:2px;color:var(--muted);font-weight:500;font-size:.78rem}
