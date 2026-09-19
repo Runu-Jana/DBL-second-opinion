@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Select } from '../components/AdminFields.jsx';
 import { CATEGORY_TONE } from '../lib/categories.js';
 import CounsellorPortal from './CounsellorPortal.jsx';
 import { getDoctorToken, setDoctorToken, clearDoctorToken, endDoctorSession, SESSION_ENDED } from '../api.js';
 
-const REPORT_STATUSES = ['Pending Review', 'Reviewed', 'Uploaded', 'Archived'];
 const RTONE = { 'Pending Review': 'amber', Reviewed: 'green', Uploaded: 'blue', Archived: 'gray' };
 const PTONE = { 'New Patient': 'blue', 'Under Treatment': 'teal', 'Follow-up': 'amber', Completed: 'green', Discharged: 'gray' };
 const initials = (n = '') => n.replace(/^(Dr|Mr|Ms|Mrs)\.?\s*/i, '').split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
@@ -69,7 +67,7 @@ function DoctorLogin({ onLogin }) {
 
 function DoctorDashboard({ onLogout }) {
   const [me, setMe] = useState(null);
-  const [reports, setReports] = useState([]);
+  const [cases, setCases] = useState([]);
   const [patients, setPatients] = useState([]);
   const [msg, setMsg] = useState('');
   const [caseUhid, setCase] = useState(null);
@@ -79,7 +77,7 @@ function DoctorDashboard({ onLogout }) {
 
   const load = () => {
     docApi('/doctor/me').then(setMe).catch(() => onLogout());
-    docApi('/doctor/reports').then(setReports).catch(() => {});
+    docApi('/doctor/cases').then(setCases).catch(() => {});
     docApi('/doctor/patients').then(setPatients).catch(() => {});
   };
   useEffect(load, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -119,11 +117,6 @@ function DoctorDashboard({ onLogout }) {
       .finally(() => setBusy(''));
   };
 
-  const changeStatus = (r, status) => {
-    docApi(`/doctor/reports/${r.id}`, { method: 'PUT', body: JSON.stringify({ status }) })
-      .then(() => { setMsg('Report status updated.'); load(); setTimeout(() => setMsg(''), 2500); })
-      .catch((e) => setMsg(e.message));
-  };
 
   const name = me?.doctor?.name || 'Doctor';
   const stats = me?.stats || { patients: 0, pendingReports: 0, totalReports: 0 };
@@ -140,7 +133,7 @@ function DoctorDashboard({ onLogout }) {
       </header>
 
       <main className="doc-main">
-        <div className="doc-welcome"><h1>Welcome, {name} <span role="img" aria-label="wave">👋</span></h1><p>Here are the patients and reports assigned to you.</p></div>
+        <div className="doc-welcome"><h1>Welcome, {name} <span role="img" aria-label="wave">👋</span></h1><p>Here are the cases assigned to you.</p></div>
         {msg && <p className="doc-flash">{msg}</p>}
 
         <div className="doc-stats">
@@ -214,21 +207,30 @@ function DoctorDashboard({ onLogout }) {
           </section>
         )}
         <section className="adm-card">
-          <div className="adm-card-head"><h2>Reports to Review</h2></div>
+          <div className="adm-card-head"><h2>Cases to Review</h2></div>
           <div className="admin-table-wrap">
             <table className="admin-table">
-              <thead><tr><th>Patient</th><th>Type</th><th>Category</th><th>Date</th><th>File</th><th>Status</th><th></th></tr></thead>
+              <thead><tr><th>Patient</th><th>Category</th><th>Documents</th><th>Priority</th><th>Status</th><th></th></tr></thead>
               <tbody>
-                {reports.length === 0 && <tr><td colSpan="7" className="admin-empty">No reports assigned to you yet.</td></tr>}
-                {reports.map((r) => (
-                  <tr key={r.id}>
-                    <td className="t-name">{r.patientName}{r.patientUhid ? <span className="t-sub"> · {r.patientUhid}</span> : ''}</td>
-                    <td>{r.type}</td>
-                    <td>{r.category ? <span className={'adm-badge ' + (CATEGORY_TONE[r.category] || 'gray')}>{r.category}</span> : '—'}</td>
-                    <td>{r.date || '—'}</td>
-                    <td>{r.fileUrl ? <a className="adm-link" href={r.fileUrl} target="_blank" rel="noreferrer">View</a> : '—'}</td>
-                    <td><span className={'adm-badge ' + (RTONE[r.status] || 'blue')}>{r.status}</span></td>
-                    <td><div className="row-actions">{r.patientUhid && <button className="icon-btn" onClick={() => setCase(r.patientUhid)}>Open case</button>}</div></td>
+                {cases.length === 0 && <tr><td colSpan="6" className="admin-empty">No cases assigned to you yet.</td></tr>}
+                {cases.map((c) => (
+                  <tr key={c.key}>
+                    <td className="t-name">{c.patientName}{c.uhid ? <span className="t-sub"> · {c.uhid}</span> : ''}</td>
+                    <td>{c.category ? <span className={'adm-badge ' + (CATEGORY_TONE[c.category] || 'gray')}>{c.category}</span> : '—'}</td>
+                    <td>
+                      {c.documents} file{c.documents === 1 ? '' : 's'}
+                      {c.pending > 0 && <span className="adm-badge amber" style={{ marginLeft: '.4rem' }}>{c.pending} new</span>}
+                      {c.types.length > 0 && <span className="t-sub" style={{ display: 'block' }}>{c.types.join(', ')}</span>}
+                    </td>
+                    <td>{c.priority && c.priority !== 'Normal' ? <span className="adm-badge amber">{c.priority}</span> : '—'}</td>
+                    <td>
+                      {c.delivered
+                        ? <span className="adm-badge green">Opinion sent</span>
+                        : c.hasOpinion
+                          ? <span className="adm-badge blue">Draft saved</span>
+                          : <span className="adm-badge amber">Awaiting your opinion</span>}
+                    </td>
+                    <td><div className="row-actions">{c.uhid && <button className="icon-btn" onClick={() => setCase(c.uhid)}>Open case</button>}</div></td>
                   </tr>
                 ))}
               </tbody>

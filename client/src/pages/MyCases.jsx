@@ -7,20 +7,20 @@ const s = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.7, strokeLineca
 const IcoDoc = <svg viewBox="0 0 24 24" width="15" height="15" {...s}><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6" /></svg>;
 const IcoFile = <svg viewBox="0 0 24 24" width="15" height="15" {...s}><path d="M7 3h7l4 4v14H7z" /><path d="M14 3v4h4" /></svg>;
 
-const STONE = { 'Pending Review': 'amber', Reviewed: 'green', Uploaded: 'blue', Archived: 'gray' };
-const FILTERS = ['All', 'Pending Review', 'Reviewed', 'Archived'];
+const STONE = { 'Awaiting Review': 'amber', 'Under Review': 'blue', 'Opinion Ready': 'green', Delivered: 'green' };
+const FILTERS = ['All', 'Awaiting Review', 'Under Review', 'Delivered'];
 
 export default function MyCases() {
   const [filter, setFilter] = useState('All');
-  const [reports, setReports] = useState(null); // null = loading
+  const [cases, setCases] = useState(null); // null = loading
   const [err, setErr] = useState('');
 
   useEffect(() => {
-    patientApi('/portal/reports').then(setReports).catch((e) => { setErr(e.message); setReports([]); });
+    patientApi('/portal/cases').then(setCases).catch((e) => { setErr(e.message); setCases([]); });
   }, []);
 
-  const all = reports || [];
-  const list = filter === 'All' ? all : all.filter((r) => r.status === filter);
+  const all = cases || [];
+  const list = filter === 'All' ? all : all.filter((c) => c.status === filter);
 
   return (
     <DashboardLayout active="cases">
@@ -43,22 +43,24 @@ export default function MyCases() {
         })}
       </div>
 
-      {reports === null ? (
+      {cases === null ? (
         <div className="dash-card empty"><p>Loading your cases…</p></div>
       ) : list.length ? (
         <div className="pg-grid">
-          {list.map((r) => (
-            <article className="case-card" key={r.id}>
+          {list.map((c) => (
+            <article className="case-card" key={c.id}>
               <div className="case-card-top">
-                <span className="case-id">DBL-{String(r.id).padStart(4, '0')}</span>
-                <span className={'pill pill-' + (STONE[r.status] || 'blue')}>{r.status}</span>
+                <span className="case-id">{c.reference}</span>
+                <span className={'pill pill-' + (STONE[c.status] || 'blue')}>{c.delivered ? 'Opinion ready' : c.status}</span>
               </div>
-              <h3>{r.type}{r.category ? ` · ${r.category}` : ''}</h3>
-              <div className="case-row">{IcoDoc} {r.doctor || (r.category ? 'Assigning specialist…' : 'Awaiting triage')}</div>
-              <div className="case-row">{IcoFile} Submitted {r.date || '—'}</div>
+              <h3>{c.cancerType || 'Second opinion'}</h3>
+              <div className="case-row">{IcoDoc} {c.doctor || 'Awaiting specialist'}</div>
+              <div className="case-row">{IcoFile} {c.documents.length} document{c.documents.length === 1 ? '' : 's'}{c.submittedDate ? ` · submitted ${c.submittedDate}` : ''}</div>
               <div className="case-foot">
-                <span className="case-row" style={{ color: 'var(--muted)' }}>Case #{r.id}</span>
-                <Link to={'/dashboard/cases/' + r.id} className="dash-link">View Details →</Link>
+                <span className="case-row" style={{ color: 'var(--muted)' }}>
+                  {c.delivered ? 'Your opinion is ready to read' : 'We will let you know when it is ready'}
+                </span>
+                {c.documents[0] && <Link to={'/dashboard/cases/' + c.documents[0].id} className="dash-link">View Details →</Link>}
               </div>
             </article>
           ))}
@@ -66,7 +68,7 @@ export default function MyCases() {
       ) : (
         <div className="dash-card empty">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M7 3h7l4 4v14H7z" /></svg>
-          <p>{err ? err : all.length ? 'No cases in this category.' : 'No reports yet — upload one to get started.'}</p>
+          <p>{err ? err : all.length ? 'No cases in this category.' : 'No cases yet — upload your reports to get started.'}</p>
         </div>
       )}
     </DashboardLayout>

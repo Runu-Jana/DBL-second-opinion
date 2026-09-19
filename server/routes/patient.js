@@ -114,6 +114,56 @@ router.get('/consultations', requirePatient, async (req, res) => {
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not load your cases.' }); }
 });
 
+// GET /api/portal/cases — the patient's cases, one entry per case rather than per file.
+//
+// Uploading three files used to produce three "cases" on this screen, which reads as three
+// separate reviews when it is one. The documents are grouped under the case they belong to.
+router.get('/cases', requirePatient, async (req, res) => {
+  try {
+    const [documents, opinions] = await Promise.all([
+      prisma.report.findMany({ where: safeWhere(req), orderBy: [{ createdAt: 'desc' }] }),
+      prisma.secondOpinion.findMany({ where: safeWhere(req) }),
+    ]);
+    const doc = (d) => ({
+      id: d.id, type: d.type, date: d.date, status: d.status,
+      category: d.category, fileUrl: d.fileUrl, doctor: d.doctor,
+    });
+
+    if (opinions.length) {
+      // Documents follow the specialist the case was assigned to; anything not yet assigned
+      // belongs to the earliest case, which is the one still being worked on.
+      return res.json(opinions.map((o, idx) => {
+        const mine = documents.filter((d) => (o.expert && d.doctor === o.expert) || (!d.doctor && idx === 0));
+        return {
+          id: o.id,
+          reference: o.patientUhid || `DBL-${String(o.id).padStart(4, '0')}`,
+          cancerType: o.cancerType,
+          doctor: o.expert,
+          status: o.status,
+          delivered: o.status === 'Delivered',
+          submittedDate: o.submittedDate,
+          deliveredAt: o.deliveredAt,
+          documents: mine.map(doc),
+        };
+      }));
+    }
+
+    // Nothing triaged yet: still one case, not one per file.
+    if (!documents.length) return res.json([]);
+    res.json([{
+      id: 0,
+      reference: req.patient.uhid || 'Pending',
+      cancerType: documents.find((d) => d.category)?.category || null,
+      doctor: documents.find((d) => d.doctor)?.doctor || null,
+      status: 'Awaiting Review',
+      delivered: false,
+      submittedDate: documents[documents.length - 1].date,
+      deliveredAt: null,
+      documents: documents.map(doc),
+    }]);
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not load your cases.' }); }
+});
+
 // GET /api/portal/opinions — second opinions written for this patient.
 // Only delivered ones: a draft the specialist is still working on is not the patient's to read,
 // and the counsellor's internal assessment is never exposed here at all.

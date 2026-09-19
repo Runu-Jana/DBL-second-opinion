@@ -59,6 +59,62 @@ router.put('/reports/:id', requireDoctor, async (req, res) => {
 });
 
 // GET /api/doctor/patients -> only this doctor's patients
+// GET /api/doctor/cases -> the work list, one entry per PATIENT.
+//
+// A patient who uploads a scan, a discharge summary and a photo creates three Report rows,
+// and listing those directly showed the same person three times as if they were three
+// separate jobs. A case is the unit of work here, so the rows are grouped by patient and the
+// files are counted rather than enumerated.
+router.get('/cases', requireDoctor, async (req, res) => {
+  try {
+    const mine = await prisma.report.findMany({
+      where: { doctor: req.doctor.name },
+      orderBy: [{ updatedAt: 'desc' }],
+    });
+    const uhids = [...new Set(mine.map((r) => r.patientUhid).filter(Boolean))];
+    const cases = uhids.length
+      ? await prisma.secondOpinion.findMany({ where: { patientUhid: { in: uhids } } })
+      : [];
+
+    const byPatient = new Map();
+    for (const r of mine) {
+      const key = r.patientUhid || `name:${(r.patientName || '').toLowerCase()}`;
+      if (!byPatient.has(key)) {
+        byPatient.set(key, {
+          key,
+          uhid: r.patientUhid || null,
+          patientName: r.patientName,
+          documents: 0,
+          pending: 0,
+          category: r.category || null,
+          lastUpdated: r.updatedAt,
+          types: [],
+        });
+      }
+      const c = byPatient.get(key);
+      c.documents += 1;
+      if (r.status === 'Pending Review') c.pending += 1;
+      if (!c.category && r.category) c.category = r.category;
+      if (r.type && !c.types.includes(r.type)) c.types.push(r.type);
+      if (r.updatedAt > c.lastUpdated) c.lastUpdated = r.updatedAt;
+    }
+
+    const list = [...byPatient.values()].map((c) => {
+      const kase = cases.find((k) => k.patientUhid && k.patientUhid === c.uhid) || null;
+      return {
+        ...c,
+        priority: kase ? kase.priority : null,
+        caseStatus: kase ? kase.status : null,
+        counsellor: kase ? kase.counsellor : null,
+        hasOpinion: !!(kase && kase.doctorOpinion),
+        delivered: !!(kase && kase.status === 'Delivered'),
+      };
+    });
+    list.sort((a, b) => (b.pending - a.pending) || (new Date(b.lastUpdated) - new Date(a.lastUpdated)));
+    res.json(list);
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not load your cases.' }); }
+});
+
 // GET /api/doctor/cases/:uhid -> the counsellor's handover for one of THEIR patients:
 // the assessment they wrote, plus every document the patient uploaded. A specialist should
 // not have to hunt for the reasoning behind an assignment.
