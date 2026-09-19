@@ -4,6 +4,7 @@ const prisma = require('../db');
 const { requireDoctor } = require('./auth');
 const { logActivity } = require('../lib/audit');
 const { draftOpinion, configured: aiConfigured } = require('../lib/opinionAI');
+const { analyzeReport } = require('../lib/reportAI');
 const { sendOpinionReady } = require('../lib/email');
 
 const router = express.Router();
@@ -217,6 +218,35 @@ router.post('/cases/:uhid/deliver', requireDoctor, async (req, res) => {
     logActivity(req, { kind: 'audit', actor: req.doctor.name, action: `Second opinion delivered to ${kase.patientName}`, target: kase.patientUhid, category: 'Report' });
     res.json({ ok: true, case: updated, emailed });
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not send the opinion.' }); }
+});
+
+// POST /api/doctor/documents/:id/analyse -> AI reading of one document on their own case.
+// The counsellor may already have run this; a specialist re-reading a scan themselves, or
+// reading one that arrived after triage, should not have to ask them to do it.
+router.post('/documents/:id/analyse', requireDoctor, async (req, res) => {
+  try {
+    const report = await prisma.report.findUnique({ where: { id: +req.params.id } });
+    if (!report || report.doctor !== req.doctor.name) return res.status(404).json({ error: 'Document not found.' });
+    if (!aiConfigured()) return res.status(503).json({ error: 'AI is not configured on this server.' });
+    const summary = await analyzeReport(report);
+    const saved = await prisma.report.update({ where: { id: report.id }, data: { aiSummary: summary } });
+    res.json({ ok: true, aiSummary: saved.aiSummary });
+  } catch (e) {
+    if (e.code === 'UNSUPPORTED' || e.code === 'NO_FILE' || e.code === 'NO_AI') return res.status(400).json({ error: e.message });
+    console.error(e);
+    res.status(502).json({ error: 'The AI could not read this document right now.' });
+  }
+});
+
+// PUT /api/doctor/documents/:id/note -> the doctor's own note on one document, written by hand.
+router.put('/documents/:id/note', requireDoctor, async (req, res) => {
+  try {
+    const report = await prisma.report.findUnique({ where: { id: +req.params.id } });
+    if (!report || report.doctor !== req.doctor.name) return res.status(404).json({ error: 'Document not found.' });
+    const note = req.body.note == null ? '' : String(req.body.note).trim();
+    const saved = await prisma.report.update({ where: { id: report.id }, data: { notes: note || null } });
+    res.json({ ok: true, notes: saved.notes });
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not save your note.' }); }
 });
 
 module.exports = router;

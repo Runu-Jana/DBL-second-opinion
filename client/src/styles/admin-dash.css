@@ -646,3 +646,12 @@
   .doc-actbar .spacer{display:none}
   .doc-btn{flex:1 1 100%}
 }
+
+/* A doctor's own note on one document, distinct from the AI reading above it. */
+.doc-note-saved{margin:.55rem 0 0;padding:.6rem .75rem;border-left:3px solid var(--teal);
+  background:#fbfdfd;border-radius:0 8px 8px 0;font-size:.84rem;line-height:1.5;color:var(--ink-soft);white-space:pre-wrap}
+.doc-note-edit{margin-top:.6rem}
+.doc-note-edit textarea{width:100%;padding:.6rem .75rem;border:1.5px solid var(--line);border-radius:10px;
+  font:inherit;font-size:.85rem;line-height:1.5;resize:vertical}
+.doc-note-edit textarea:focus{outline:none;border-color:var(--teal)}
+.doc-note-edit-actions{display:flex;justify-content:flex-end;gap:.5rem;margin-top:.5rem}

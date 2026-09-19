@@ -74,6 +74,8 @@ function DoctorDashboard({ onLogout }) {
   const [handover, setHandover] = useState(null);
   const [opinion, setOpinion] = useState('');
   const [busy, setBusy] = useState('');
+  const [noteFor, setNoteFor] = useState(null);   // document id whose note is being edited
+  const [noteText, setNoteText] = useState('');
 
   const load = () => {
     docApi('/doctor/me').then(setMe).catch(() => onLogout());
@@ -101,6 +103,23 @@ function DoctorDashboard({ onLogout }) {
       .catch((e) => flash(e.message))
       .finally(() => setBusy(''));
   };
+  // The counsellor may already have read this; a specialist re-reading it themselves, or
+  // reading one that arrived after triage, should not have to go back and ask.
+  const analyseDoc = (docId) => {
+    setBusy('doc' + docId);
+    docApi(`/doctor/documents/${docId}/analyse`, { method: 'POST' })
+      .then(() => { flash('AI reading saved.'); return reopen(); })
+      .catch((e) => flash(e.message))
+      .finally(() => setBusy(''));
+  };
+  const saveNote = (docId) => {
+    setBusy('note' + docId);
+    docApi(`/doctor/documents/${docId}/note`, { method: 'PUT', body: JSON.stringify({ note: noteText }) })
+      .then(() => { flash('Note saved.'); setNoteFor(null); return reopen(); })
+      .catch((e) => flash(e.message))
+      .finally(() => setBusy(''));
+  };
+
   const saveOpinion = () => {
     setBusy('save');
     docApi(`/doctor/cases/${caseUhid}/opinion`, { method: 'PUT', body: JSON.stringify({ opinion }) })
@@ -175,9 +194,30 @@ function DoctorDashboard({ onLogout }) {
                     <span className="cns-doc-actions no-print">
                       {d.fileUrl && <a className="icon-btn" href={d.fileUrl} target="_blank" rel="noreferrer">View</a>}
                       {d.fileUrl && <a className="icon-btn" href={d.fileUrl} download>Download</a>}
+                      <button type="button" className="icon-btn" disabled={busy === 'doc' + d.id || !handover.ai}
+                        onClick={() => analyseDoc(d.id)}>
+                        {busy === 'doc' + d.id ? 'Reading…' : d.aiSummary ? 'Re-read with AI' : 'Summarise with AI'}
+                      </button>
+                      <button type="button" className="icon-btn"
+                        onClick={() => { setNoteFor(noteFor === d.id ? null : d.id); setNoteText(d.notes || ''); }}>
+                        {d.notes ? 'Edit note' : 'Add note'}
+                      </button>
                     </span>
                   </div>
                   {d.aiSummary && <pre className="cns-ai">{d.aiSummary}</pre>}
+                  {d.notes && noteFor !== d.id && <p className="doc-note-saved">{d.notes}</p>}
+                  {noteFor === d.id && (
+                    <div className="doc-note-edit no-print">
+                      <textarea rows={3} value={noteText} onChange={(e) => setNoteText(e.target.value)}
+                        placeholder="Your note on this document…" />
+                      <div className="doc-note-edit-actions">
+                        <button type="button" className="doc-btn doc-btn-outline" onClick={() => setNoteFor(null)}>Cancel</button>
+                        <button type="button" className="doc-btn doc-btn-primary" disabled={busy === 'note' + d.id} onClick={() => saveNote(d.id)}>
+                          {busy === 'note' + d.id ? 'Saving…' : 'Save note'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>
