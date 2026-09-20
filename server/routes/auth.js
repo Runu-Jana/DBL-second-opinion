@@ -211,14 +211,16 @@ router.post('/patient-forgot', async (req, res) => {
   try {
     const email = String(req.body?.email || '').trim().toLowerCase();
     if (!email) return res.status(400).json({ error: 'Please enter your email address.' });
-    const patient = await prisma.patient.findFirst({ where: { email: { equals: email, mode: 'insensitive' }, password: { not: null } } });
+    const patient = await prisma.patient.findFirst({ where: { email: { equals: email, mode: 'insensitive' } } });
+    // No password yet means this is a first-time set, not a reset — the email says so.
+    const firstTime = !!(patient && !patient.password);
     let devResetUrl;
     if (patient) {
       const token = jwt.sign({ id: patient.id, email: patient.email, purpose: 'pwreset' }, JWT_SECRET, { expiresIn: '30m' });
       const origin = req.headers.origin || process.env.PUBLIC_URL || '';
       const url = `${origin}/reset-password?token=${encodeURIComponent(token)}`;
       try {
-        const r = await sendPasswordReset({ to: patient.email, name: patient.name, url });
+        const r = await sendPasswordReset({ to: patient.email, name: patient.name, url, firstTime });
         if (r.skipped && process.env.NODE_ENV !== 'production') { console.log('[pwreset:DEV] reset link:', url); devResetUrl = url; }
       } catch (e) { console.error('password reset email failed:', e.message); }
     }
