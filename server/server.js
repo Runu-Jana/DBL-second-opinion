@@ -1,5 +1,6 @@
 // DBL International — Express server: serves the static frontend + JSON API
 require('dotenv').config();
+const fs = require('fs');
 const path = require('path');
 const express = require('express');
 const cors = require('cors');
@@ -150,6 +151,7 @@ app.get('/sitemap.xml', async (req, res) => {
 // filenames. index.html must NOT be, because it is the file that points at them: cache it and a
 // returning browser keeps loading yesterday's bundle and the deploy looks like it never happened.
 app.use(express.static(CLIENT_DIST, {
+  index: false,
   setHeaders: (res, filePath) => {
     if (filePath.endsWith('index.html')) res.setHeader('Cache-Control', 'no-cache');
     else if (/[.-][A-Za-z0-9_-]{8,}\.(js|css|woff2?|png|jpe?g|svg|webp)$/.test(filePath)) {
@@ -158,6 +160,39 @@ app.use(express.static(CLIENT_DIST, {
   },
 }));
 
+// index.html carries absolute URLs — the canonical link, the Open Graph and Twitter images,
+// and the schema.org organisation block. Social scrapers and crawlers do not run our JS, so
+// those static values are what they read, and a hardcoded host is wrong the moment the site
+// moves: it pointed at Render, then at a domain that was not live yet. Rewriting them to
+// whatever host actually served the page means they are right on the Railway address today
+// and on the custom domain the day it is switched on, with nothing to remember.
+const INDEX_HTML = path.join(CLIENT_DIST, 'index.html');
+const BAKED_ORIGIN = /https:\/\/(www\.)?(dblhealthcare\.com|dbl-second-opinion\.onrender\.com)/g;
+let indexTemplate = null;
+
+function sendIndex(req, res) {
+  res.setHeader('Cache-Control', 'no-cache');   // never pin the file that names the bundles
+  try {
+    if (indexTemplate === null) indexTemplate = fs.readFileSync(INDEX_HTML, 'utf8');
+    const origin = `${req.protocol}://${req.get('host')}`;
+    let html = indexTemplate.replace(BAKED_ORIGIN, origin);
+    // The baked canonical is the site root, so every route was claiming to be a duplicate of
+    // the homepage to any crawler that does not run JS. Point it at the page being served.
+    const clean = req.path.replace(/\/+$/, '') || '/';
+    html = html.replace(/<link rel="canonical" href="[^"]*"/,
+      `<link rel="canonical" href="${origin}${clean === '/' ? '/' : clean}"`);
+    res.type('html').send(html);
+  } catch (e) {
+    console.error('could not serve index.html:', e.message);
+    res.sendFile(INDEX_HTML);   // fall back to the file as-is rather than 500
+  }
+}
+
+// SPA fallback: all non-API routes are handled by React Router
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api/')) return next();
+  sendIndex(req, res);
+});
 // SPA fallback: all non-API routes are handled by React Router
 app.get('*', (req, res, next) => {
   if (req.path.startsWith('/api/')) return next();
