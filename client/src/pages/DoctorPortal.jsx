@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { CATEGORY_TONE } from '../lib/categories.js';
 import CounsellorPortal from './CounsellorPortal.jsx';
+import StaffBell from '../components/StaffBell.jsx';
 import { getDoctorToken, setDoctorToken, clearDoctorToken, endDoctorSession, SESSION_ENDED } from '../api.js';
 
 const RTONE = { 'Pending Review': 'amber', Reviewed: 'green', Uploaded: 'blue', Archived: 'gray' };
@@ -164,6 +165,7 @@ function DoctorDashboard({ onLogout }) {
       <header className="doc-topbar">
         <div className="doc-brand">{Shield}<span className="doc-brand-text"><strong>DBL Doctor Portal</strong><span>{me?.doctor?.department || 'Oncology'}</span></span></div>
         <div className="doc-user">
+          <StaffBell api={docApi} />
           <span className="doc-user-avatar">{initials(name)}</span>
           <span className="doc-user-meta"><strong>{name}</strong><span>{me?.doctor?.role || 'Doctor'}</span></span>
           <button type="button" className="doc-logout" onClick={onLogout}>Log out</button>

@@ -671,3 +671,32 @@
 .doc-chat-send textarea{flex:1;padding:.6rem .75rem;border:1.5px solid var(--line);border-radius:10px;
   font:inherit;font-size:.87rem;line-height:1.5;resize:vertical}
 .doc-chat-send textarea:focus{outline:none;border-color:var(--teal)}
+
+/* ---------- staff notification bell (components/StaffBell.jsx) ---------- */
+.staff-bell{position:relative;display:inline-flex}
+.staff-bell-btn{display:grid;place-items:center;width:38px;height:38px;border-radius:10px;
+  border:1px solid var(--line);background:#fff;color:var(--ink-soft);cursor:pointer;transition:.15s ease}
+.staff-bell-btn:hover{border-color:var(--teal);color:var(--teal-dark)}
+.staff-bell-dot{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;padding:0 4px;
+  display:grid;place-items:center;border-radius:999px;background:#e2574c;color:#fff;
+  font-size:.66rem;font-weight:800;line-height:1;border:2px solid #fff}
+
+.staff-bell-panel{position:absolute;top:calc(100% + .5rem);right:0;z-index:60;width:min(360px,86vw);
+  background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-md);overflow:hidden}
+.staff-bell-head{display:flex;align-items:center;justify-content:space-between;gap:.5rem;
+  padding:.7rem .9rem;border-bottom:1px solid var(--line)}
+.staff-bell-head strong{font-size:.9rem}
+.staff-bell-list{max-height:min(420px,60vh);overflow-y:auto}
+.staff-bell-empty{margin:0;padding:1.4rem .9rem;text-align:center;color:var(--muted);font-size:.85rem}
+
+.staff-bell-item{display:flex;flex-direction:column;gap:.2rem;width:100%;padding:.7rem .9rem;
+  background:none;border:0;border-bottom:1px solid var(--line);text-align:left;font:inherit;color:inherit;cursor:pointer}
+.staff-bell-item:last-child{border-bottom:0}
+.staff-bell-item:hover{background:#f7fbfb}
+/* Unread keeps its marker until it is opened — on these desks it is a piece of work, not a blip. */
+.staff-bell-item.unread{background:var(--teal-050);box-shadow:inset 3px 0 0 var(--teal)}
+.staff-bell-item.unread:hover{background:var(--teal-100)}
+.staff-bell-item-top{display:flex;align-items:baseline;justify-content:space-between;gap:.6rem}
+.staff-bell-item-top strong{font-size:.85rem;font-weight:700}
+.staff-bell-item-top em{flex:none;font-style:normal;font-size:.72rem;color:var(--muted)}
+.staff-bell-item-body{font-size:.8rem;color:var(--muted);line-height:1.45}

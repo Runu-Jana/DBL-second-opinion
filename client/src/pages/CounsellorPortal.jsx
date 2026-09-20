@@ -6,6 +6,7 @@
 // because that report is the whole point of this stage — it is what the specialist receives.
 import { useEffect, useState } from 'react';
 import { Select } from '../components/AdminFields.jsx';
+import StaffBell from '../components/StaffBell.jsx';
 
 const initials = (n = '') => n.replace(/^(Dr|Mr|Ms|Mrs)\.?\s*/i, '').split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
 const fmtDate = (iso) => (iso ? new Date(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—');
@@ -56,7 +57,7 @@ export default function CounsellorPortal({ api, me, onLogout }) {
 
   return (
     <div className="doc-shell">
-      <Topbar name={name} me={me} onLogout={onLogout} />
+      <Topbar name={name} me={me} onLogout={onLogout} api={api} />
       <main className="doc-main">
         {msg && <div className="doc-flash">{msg}</div>}
         <h1 className="doc-welcome">Welcome, {name.split(' ')[0]}</h1>
@@ -113,13 +114,14 @@ export default function CounsellorPortal({ api, me, onLogout }) {
   );
 }
 
-function Topbar({ name, me, onLogout }) {
+function Topbar({ name, me, onLogout, api }) {
   return (
     <header className="doc-topbar">
       <div className="doc-brand">
         <span className="doc-brand-text"><strong>DBL Counsellor Desk</strong><span>Patient intake &amp; triage</span></span>
       </div>
       <div className="doc-user">
+        {api && <StaffBell api={api} />}
         <span className="doc-user-avatar">{initials(name)}</span>
         <span className="doc-user-meta"><strong>{name}</strong><span>{me?.jobRole || 'Counsellor'}</span></span>
         <button type="button" className="doc-logout" onClick={onLogout}>Log out</button>
@@ -155,7 +157,7 @@ function Folder({ api, id, onBack, flash, msg, me, onLogout }) {
   }).catch((e) => flash(e.message));
   useEffect(load, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!data) return <div className="doc-shell"><Topbar name={me?.name} me={me} onLogout={onLogout} /><main className="doc-main"><p>Loading folder…</p></main></div>;
+  if (!data) return <div className="doc-shell"><Topbar name={me?.name} me={me} onLogout={onLogout} api={api} /><main className="doc-main"><p>Loading folder…</p></main></div>;
 
   const { patient, documents, doctors, categories } = data;
   const read = documents.filter((d) => d.aiSummary).length;
@@ -195,7 +197,7 @@ function Folder({ api, id, onBack, flash, msg, me, onLogout }) {
 
   return (
     <div className="doc-shell">
-      <Topbar name={me?.name} me={me} onLogout={onLogout} />
+      <Topbar name={me?.name} me={me} onLogout={onLogout} api={api} />
       <main className="doc-main">
         {msg && <div className="doc-flash">{msg}</div>}
         <button type="button" className="link-btn" onClick={onBack}>← All folders</button>
