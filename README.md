@@ -68,15 +68,17 @@ The app deploys as **one web service + one Postgres database**.
 - **Required env vars:** `DATABASE_URL`, `JWT_SECRET`, `ADMIN_EMAIL`,
   `ADMIN_PASSWORD`, `ADMIN_NAME`
 
-### Render (blueprint included)
+### Railway
 1. Push this repo to GitHub.
-2. Render → **New +** → **Blueprint** → select the repo. `render.yaml` provisions
-   the web service and a managed Postgres, and wires `DATABASE_URL` automatically.
-3. Set a strong `ADMIN_PASSWORD` in the dashboard; `JWT_SECRET` is auto-generated.
+2. Railway → **New Project** → **Deploy from GitHub repo**. `railway.json` supplies the
+   build and start commands; a `Procfile` is included for Heroku-style hosts too.
+3. Add a **PostgreSQL** service and set `DATABASE_URL` to `${{Postgres.DATABASE_URL}}`.
+4. Set the env vars above. `JWT_SECRET` is mandatory — the server refuses to boot in
+   production without one, rather than fall back to a guessable default.
 
-### Railway / Heroku-style
-A `Procfile` is included (`release:` runs migrations + seed, `web:` starts the app).
-Add a Postgres plugin and set the env vars above.
+`npm start` runs the release step before booting, so the schema is pushed and seeded
+wherever the app starts. Build containers cannot reach the private network on Railway,
+which is why that work happens at start rather than during the build.
 
 ---
 

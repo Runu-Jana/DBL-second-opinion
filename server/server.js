@@ -32,7 +32,8 @@ const PORT = process.env.PORT || 5177;
 const ROOT = path.join(__dirname, '..');
 const CLIENT_DIST = path.join(ROOT, 'client', 'dist');
 
-// Behind Render's proxy — required so rate limiting sees the real client IP.
+// Behind a hosting proxy (Railway, and anything else that terminates TLS in front of us)
+// — required so rate limiting sees the real client IP rather than the proxy's.
 app.set('trust proxy', 1);
 
 // Security headers. CSP is left off so it won't block the bundled SPA or cross-origin

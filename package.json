@@ -10,7 +10,6 @@
     "client:install": "npm --prefix client install",
     "client:dev": "npm --prefix client run dev",
     "build": "prisma generate && npm --prefix client install --include=dev && npm --prefix client run build",
-    "render:build": "npm install --include=dev && npm run build && npm run release",
     "release": "prisma db push && node prisma/seed.js",
     "generate": "prisma generate",
     "db:push": "prisma db push",
