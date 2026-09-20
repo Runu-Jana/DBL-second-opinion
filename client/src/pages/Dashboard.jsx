@@ -36,10 +36,12 @@ export default function Dashboard() {
   const name = session?.name || 'there';
   const [stats, setStats] = useState(null);
   const [reports, setReports] = useState(null);
+  const [opinions, setOpinions] = useState([]);
 
   useEffect(() => {
     patientApi('/portal/me').then((r) => setStats(r.stats)).catch(() => setStats({ reports: 0, pendingReports: 0, appointments: 0, cases: 0 }));
     patientApi('/portal/reports').then(setReports).catch(() => setReports([]));
+    patientApi('/portal/opinions').then((d) => setOpinions(Array.isArray(d) ? d : [])).catch(() => {});
   }, []);
 
   const recent = (reports || []).slice(0, 5);
@@ -52,6 +54,26 @@ export default function Dashboard() {
         <h1>{justSignedUp ? 'Welcome to DBL International' : 'Welcome Back'}, {name} <span role="img" aria-label="wave">👋</span></h1>
         <p>{justSignedUp ? 'Your account is ready — upload your first report to begin your second-opinion journey.' : "Here's an overview of your health journey."}</p>
       </div>
+
+      {/* A delivered opinion is the whole reason this patient is here. It belongs at the top of
+          the page they land on, not behind a bell icon. */}
+      {opinions.length > 0 && (
+        <Link to="/dashboard/opinion" className="opinion-ready">
+          <span className="opinion-ready-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M7 3h7l4 4v14H7z" /><path d="M14 3v4h4M9.5 13l2 2 3.5-3.5" />
+            </svg>
+          </span>
+          <span className="opinion-ready-text">
+            <strong>Your second opinion is ready</strong>
+            <span>
+              {opinions[0].doctor ? `${opinions[0].doctor} has completed your review.` : 'Your specialist has completed your review.'}
+              {' Tap to read it.'}
+            </span>
+          </span>
+          <span className="opinion-ready-cta">Read it →</span>
+        </Link>
+      )}
 
       <div className="dash-grid">
         <div className="dash-main-col">

@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { api } from '../../api.js';
+import ProfileModal from '../../components/ProfileModal.jsx';
 import { Select, DateField, RefreshButton } from '../../components/AdminFields.jsx';
 import { CATEGORIES, splitCategories } from '../../lib/categories.js';
 
@@ -119,6 +120,7 @@ export default function StaffAdmin({ flash, on401 }) {
   const [q, setQ] = useState('');
   const [status, setStatus] = useState('');
   const [modal, setModal] = useState(undefined);
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const load = () => {
@@ -177,7 +179,7 @@ export default function StaffAdmin({ flash, on401 }) {
                   <td>
                     <div className="adm-cell-user">
                       <span className="adm-mini-avatar sm" style={m.photoUrl ? { backgroundImage: `url("${m.photoUrl}")`, backgroundSize: 'cover' } : undefined}>{m.photoUrl ? '' : initials(m.name)}</span>
-                      <span className="adm-cell-user-meta"><strong>{m.name}</strong>{m.qualifications ? <span>{m.qualifications}</span> : null}</span>
+                      <span className="adm-cell-user-meta"><strong><button type="button" className="link-name" onClick={() => setProfile(m.id)}>{m.name}</button></strong>{m.qualifications ? <span>{m.qualifications}</span> : null}</span>
                     </div>
                   </td>
                   <td>{m.role ? <span className={'adm-badge ' + (ROLE_TONE[m.role] || 'gray')}>{m.role}</span> : '—'}</td>
@@ -209,6 +211,7 @@ export default function StaffAdmin({ flash, on401 }) {
         </div>
       </section>
 
+      {profile !== null && <ProfileModal kind="staff" id={profile} on401={on401} onClose={() => setProfile(null)} />}
       {modal !== undefined && <StaffModal member={modal} on401={on401} onClose={() => setModal(undefined)} onSaved={(m) => { setModal(undefined); flash(m); load(); }} />}
     </div>
   );

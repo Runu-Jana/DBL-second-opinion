@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../api.js';
+import ProfileModal from '../../components/ProfileModal.jsx';
 import { Select, DateField, RefreshButton } from '../../components/AdminFields.jsx';
 
 const STATUSES = ['New Patient', 'Under Treatment', 'Follow-up', 'Completed', 'Discharged'];
@@ -61,6 +62,7 @@ export default function PatientsAdmin({ flash, on401 }) {
   const [q, setQ] = useState('');
   const [status, setStatus] = useState('');
   const [modal, setModal] = useState(undefined); // undefined=closed, null=new, obj=edit
+  const [profile, setProfile] = useState(null);   // patient id whose profile is open
   const [loading, setLoading] = useState(true);
 
   const load = () => {
@@ -108,7 +110,7 @@ export default function PatientsAdmin({ flash, on401 }) {
               {!loading && list.length === 0 && <tr><td colSpan="8" className="admin-empty">No patients found.</td></tr>}
               {!loading && list.map((p) => (
                 <tr key={p.id}>
-                  <td className="t-name">{p.name}
+                  <td className="t-name"><button type="button" className="link-name" onClick={() => setProfile(p.id)}>{p.name}</button>
                     {p.age ? <span className="t-sub"> · {p.age}{p.gender ? `, ${p.gender}` : ''}</span> : ''}
                     {(p.phone || p.email) && <span className="t-contact">{[tel(p.phone), p.email].filter(Boolean).join('  ·  ')}</span>}
                   </td>
@@ -126,6 +128,7 @@ export default function PatientsAdmin({ flash, on401 }) {
         </div>
       </section>
 
+      {profile !== null && <ProfileModal kind="patient" id={profile} on401={on401} onClose={() => setProfile(null)} />}
       {modal !== undefined && <PatientModal patient={modal} on401={on401} onClose={() => setModal(undefined)} onSaved={(m) => { setModal(undefined); flash(m); load(); }} />}
     </div>
   );

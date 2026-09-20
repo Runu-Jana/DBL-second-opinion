@@ -84,7 +84,7 @@ export default function MessagesAdmin({ flash, on401 }) {
               </div>
               <div className="chat-body" ref={bodyRef}>
                 {thread.map((m) => (
-                  <div className={'bubble ' + (m.sender === 'care' ? 'me' : 'them')} key={m.id}>{m.body}<span className="tm">{timeOf(m.createdAt)}</span></div>
+                  <div className={'bubble ' + (m.sender === 'care' ? 'me' : 'them')} key={m.id}>{m.sender === 'care' && m.author && <span className="bubble-who">{m.author}</span>}{m.body}<span className="tm">{timeOf(m.createdAt)}</span></div>
                 ))}
               </div>
               <form className="chat-compose" onSubmit={reply}>

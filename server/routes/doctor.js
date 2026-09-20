@@ -219,12 +219,12 @@ router.post('/cases/:uhid/deliver', requireDoctor, async (req, res) => {
     if (patient && patient.email) {
       const r = await sendOpinionReady({
         to: patient.email, name: patient.name, doctor: req.doctor.name,
-        url: `${origin}/dashboard/cases`,
+        url: `${origin}/dashboard/opinion`,
       }).catch((e) => { console.error('opinion email failed:', e.message); return { skipped: true }; });
       emailed = !!(r && r.ok);
     }
     await notifyPatient(kase.patientUhid, { kind: 'report', title: 'Your second opinion is ready',
-      body: `${req.doctor.name} has completed your review. Tap to read it.`, link: '/dashboard/cases' });
+      body: `${req.doctor.name} has completed your review. Tap to read it.`, link: '/dashboard/opinion' });
     if (kase.counsellor) {
       await notifyCounsellor(kase.counsellor, { kind: 'case', title: 'Opinion delivered',
         body: `${req.doctor.name} sent the opinion for ${kase.patientName}.`, link: null });

@@ -29,6 +29,7 @@ const About = lazy(() => import('./pages/About.jsx'));
 const Report = lazy(() => import('./pages/Report.jsx'));
 const Dashboard = lazy(() => import('./pages/Dashboard.jsx'));
 const MyCases = lazy(() => import('./pages/MyCases.jsx'));
+const MyOpinion = lazy(() => import('./pages/MyOpinion.jsx'));
 const CaseDetail = lazy(() => import('./pages/CaseDetail.jsx'));
 const PortalUpload = lazy(() => import('./pages/PortalUpload.jsx'));
 const Appointments = lazy(() => import('./pages/Appointments.jsx'));
@@ -87,6 +88,7 @@ export default function App() {
         <Route path="/report" element={<Report />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/dashboard/cases" element={<MyCases />} />
+        <Route path="/dashboard/opinion" element={<MyOpinion />} />
         <Route path="/dashboard/cases/:id" element={<CaseDetail />} />
         <Route path="/dashboard/upload" element={<PortalUpload />} />
         <Route path="/dashboard/appointments" element={<Appointments />} />

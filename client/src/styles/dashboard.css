@@ -334,3 +334,39 @@
 .notif-body span{font-size:.84rem;color:var(--muted);line-height:1.45}
 .notif-time{flex:none;font-size:.75rem;color:var(--muted);white-space:nowrap;padding-top:.15rem}
 @media (max-width:520px){.notif-time{display:none}}
+
+/* ---------- "your opinion is ready" banner + the opinion document ---------- */
+.opinion-ready{display:flex;align-items:center;gap:1rem;margin-bottom:1.15rem;padding:1.05rem 1.2rem;
+  border-radius:16px;text-decoration:none;color:#fff;
+  background:linear-gradient(135deg,var(--teal),var(--teal-dark));
+  box-shadow:0 10px 26px rgba(14,159,142,.28);transition:transform .15s ease,box-shadow .15s ease}
+.opinion-ready:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(14,159,142,.36)}
+.opinion-ready-ico{flex:none;display:grid;place-items:center;width:44px;height:44px;border-radius:12px;
+  background:rgba(255,255,255,.18)}
+.opinion-ready-ico svg{width:22px;height:22px}
+.opinion-ready-text{display:flex;flex-direction:column;gap:.15rem;min-width:0;flex:1}
+.opinion-ready-text strong{font-size:1.02rem;font-weight:800}
+.opinion-ready-text span{font-size:.86rem;opacity:.93;line-height:1.45}
+.opinion-ready-cta{flex:none;font-size:.86rem;font-weight:800;white-space:nowrap}
+@media (max-width:560px){
+  .opinion-ready{flex-wrap:wrap}
+  .opinion-ready-cta{width:100%;text-align:right}
+}
+
+.opinion-doc{margin-bottom:1.1rem}
+.opinion-doc-head{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;
+  padding-bottom:.8rem;border-bottom:1px solid var(--line);margin-bottom:1rem}
+.opinion-doc-head h2{margin:0;font-size:1.1rem}
+.opinion-doc-head p{margin:.2rem 0 0;color:var(--muted);font-size:.86rem}
+.opinion-doc-date{color:var(--muted);font-size:.82rem;white-space:nowrap}
+/* The doctor's own headings and line breaks are the document — keep them exactly. */
+.opinion-doc-body{white-space:pre-wrap;word-break:break-word;font-size:.93rem;line-height:1.7;color:var(--ink)}
+.opinion-doc-foot{margin-top:1.1rem;padding-top:.8rem;border-top:1px solid var(--line);
+  color:var(--muted);font-size:.8rem;line-height:1.5}
+
+@media print{
+  .dash-side,.dash-topbar,.pg-head .pg-action,.no-print{display:none !important}
+  .dash-card,.opinion-doc{border:0;box-shadow:none;padding:0}
+  .opinion-doc-body{font-size:11pt}
+  @page{margin:18mm}
+}
