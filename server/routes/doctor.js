@@ -6,6 +6,7 @@ const { logActivity } = require('../lib/audit');
 const { draftOpinion, configured: aiConfigured } = require('../lib/opinionAI');
 const { analyzeReport } = require('../lib/reportAI');
 const { sendOpinionReady } = require('../lib/email');
+const { notifyPatient, notifyCounsellor } = require('../lib/notify');
 
 const router = express.Router();
 const REPORT_STATUSES = ['Pending Review', 'Reviewed', 'Uploaded', 'Archived'];
@@ -128,6 +129,13 @@ router.get('/cases/:uhid', requireDoctor, async (req, res) => {
       prisma.patient.findFirst({ where: { uhid } }),
       prisma.report.findMany({ where: { patientUhid: uhid, doctor: req.doctor.name }, orderBy: [{ createdAt: 'desc' }] }),
     ]);
+    // Opening the case is the moment review actually starts. Stamped once, so the patient is
+    // told when it begins rather than every time the specialist revisits the page.
+    if (!kase.reviewStartedAt) {
+      await prisma.secondOpinion.update({ where: { id: kase.id }, data: { reviewStartedAt: new Date() } }).catch(() => {});
+      await notifyPatient(kase.patientUhid, { kind: 'case', title: 'Your reports are being reviewed',
+        body: `${req.doctor.name} has started reviewing your case.`, link: '/dashboard/cases' });
+    }
     res.json({
       patient,
       documents,
@@ -215,6 +223,12 @@ router.post('/cases/:uhid/deliver', requireDoctor, async (req, res) => {
       }).catch((e) => { console.error('opinion email failed:', e.message); return { skipped: true }; });
       emailed = !!(r && r.ok);
     }
+    await notifyPatient(kase.patientUhid, { kind: 'report', title: 'Your second opinion is ready',
+      body: `${req.doctor.name} has completed your review. Tap to read it.`, link: '/dashboard/cases' });
+    if (kase.counsellor) {
+      await notifyCounsellor(kase.counsellor, { kind: 'case', title: 'Opinion delivered',
+        body: `${req.doctor.name} sent the opinion for ${kase.patientName}.`, link: null });
+    }
     logActivity(req, { kind: 'audit', actor: req.doctor.name, action: `Second opinion delivered to ${kase.patientName}`, target: kase.patientUhid, category: 'Report' });
     res.json({ ok: true, case: updated, emailed });
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not send the opinion.' }); }
@@ -277,6 +291,8 @@ router.post('/messages/:uhid', requireDoctor, async (req, res) => {
     const msg = await prisma.message.create({
       data: { patientUhid: uhid, patientName: patient.name, sender: 'care', author: req.doctor.name, body, readByCare: true, readByPatient: false },
     });
+    await notifyPatient(uhid, { kind: 'message', title: `New message from ${req.doctor.name}`,
+      body: body.length > 120 ? body.slice(0, 117) + '…' : body, link: '/dashboard/messages' });
     logActivity(req, { kind: 'activity', actor: req.doctor.name, action: `Messaged ${patient.name}`, target: uhid, category: 'Message' });
     res.status(201).json(msg);
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not send your message.' }); }

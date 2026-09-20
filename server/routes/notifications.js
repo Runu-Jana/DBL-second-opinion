@@ -13,6 +13,52 @@ const { requireAdmin } = require('./auth');
 
 const router = express.Router();
 
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
+
+// Every panel reads its own feed from one place. Rather than four near-identical routes, the
+// token says who is asking: patients are addressed by UHID, staff by name.
+function whoAmI(req, res, next) {
+  const header = req.headers.authorization || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7) : null;
+  if (!token) return res.status(401).json({ error: 'Not authenticated.' });
+  try {
+    const p = jwt.verify(token, JWT_SECRET);
+    if (p.purpose) return res.status(403).json({ error: 'Not a session token.' });
+    const audience = p.role === 'patient' ? 'patient'
+      : p.role === 'doctor' ? 'doctor'
+      : p.role === 'counsellor' ? 'counsellor'
+      : 'admin';
+    const recipient = audience === 'patient' ? p.uhid : p.name;
+    if (!recipient) return res.status(400).json({ error: 'This account has no notification address yet.' });
+    req.who = { audience, recipient };
+    next();
+  } catch { res.status(401).json({ error: 'Session expired. Please log in again.' }); }
+}
+
+// GET /api/notifications/mine -> this person's feed, newest first
+router.get('/mine', whoAmI, async (req, res) => {
+  try {
+    const list = await prisma.notification.findMany({
+      where: req.who,
+      orderBy: [{ createdAt: 'desc' }],
+      take: 50,
+    });
+    res.json({ unread: list.filter((n) => !n.readAt).length, items: list });
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not load notifications.' }); }
+});
+
+// POST /api/notifications/mine/read  { id? } -> mark one, or all, as read
+router.post('/mine/read', whoAmI, async (req, res) => {
+  try {
+    const id = Number((req.body || {}).id);
+    const where = { ...req.who, readAt: null, ...(Number.isInteger(id) && id > 0 ? { id } : {}) };
+    const r = await prisma.notification.updateMany({ where, data: { readAt: new Date() } });
+    res.json({ ok: true, marked: r.count });
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not update notifications.' }); }
+});
+
+
 // An unparseable or missing timestamp means "never looked" — count everything.
 function since(value) {
   if (!value) return new Date(0);

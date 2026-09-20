@@ -267,6 +267,7 @@ model SecondOpinion {
   assignedAt    DateTime?                        // when a doctor was put on the case
   doctorOpinion String?                          // the specialist's second opinion — what the patient receives
   doctorAiDraft String?                          // AI first draft of that opinion, kept beside the final text
+  reviewStartedAt DateTime?                      // first time the specialist opened the case
   deliveredAt   DateTime?                        // when the opinion was released to the patient
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -399,4 +400,20 @@ model ContactMessage {
   updatedAt DateTime @updatedAt
 
   @@index([status])
+}
+
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  audience  String                                   // patient | doctor | counsellor | admin
+  recipient String                                   // patient UHID, or the staff member's name
+  kind      String   @default("case")                // case | report | message | appointment | account
+  title     String
+  body      String?
+  link      String?                                  // where the panel should send them
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([audience, recipient, readAt])
+  @@index([createdAt])
 }

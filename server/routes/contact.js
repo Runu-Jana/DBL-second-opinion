@@ -5,6 +5,7 @@ const prisma = require('../db');
 const { requireAdmin, publicPatient, signPatient } = require('./auth');
 const { logActivity } = require('../lib/audit');
 const { sendContactNotification } = require('../lib/email');
+const { notifyPatient, notifyCounsellors } = require('../lib/notify');
 const { sendCode, otpChannel, otpTarget, otpConfigured, normalizePhone } = require('../lib/otp');
 
 const router = express.Router();
@@ -89,6 +90,11 @@ router.post('/otp/verify', async (req, res) => {
       // Only the channel that actually carried the code counts as verified.
       const verified = otpTarget() === 'email' ? { emailVerified: true } : { phoneVerified: true };
       patient = await prisma.patient.create({ data: { name: rec.name, phone, email: rec.email || null, uhid, status: 'New Patient', ...verified } });
+      // They have just handed us their details; say so, and tell intake there is a new lead.
+      await notifyPatient(uhid, { kind: 'account', title: 'Welcome to DBL International',
+        body: `Your details are verified. Upload your medical reports and our team will review them.`, link: '/dashboard/upload' });
+      await notifyCounsellors({ kind: 'case', title: 'New patient registered',
+        body: `${rec.name} registered and may upload reports shortly.`, link: null });
       logActivity(req, { kind: 'activity', actor: rec.name, action: `New verified customer (${otpChannel()} OTP)`, target: uhid, category: 'Patient' });
       sendContactNotification({ name: rec.name, email: rec.email || '', subject: 'New verified lead', message: `Verified via ${otpChannel()} OTP.
 Phone: +${phone}

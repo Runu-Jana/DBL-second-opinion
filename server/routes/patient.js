@@ -5,6 +5,7 @@ const express = require('express');
 const prisma = require('../db');
 const { requirePatient, publicPatient } = require('./auth');
 const { logActivity } = require('../lib/audit');
+const { notifyDoctor } = require('../lib/notify');
 
 const router = express.Router();
 
@@ -212,6 +213,12 @@ router.post('/messages', requirePatient, async (req, res) => {
     const msg = await prisma.message.create({
       data: { patientUhid: req.patient.uhid || null, patientName: req.patient.name, sender: 'patient', body, readByCare: false, readByPatient: true },
     });
+    // If they have a specialist, the message is almost always for them.
+    const mine = await prisma.patient.findFirst({ where: { uhid: req.patient.uhid || undefined } }).catch(() => null);
+    if (mine && mine.doctor) {
+      await notifyDoctor(mine.doctor, { kind: 'message', title: `New message from ${req.patient.name}`,
+        body: body.length > 120 ? body.slice(0, 117) + '…' : body, link: null });
+    }
     logActivity(null, { kind: 'activity', actor: req.patient.name, action: 'Sent a message to the care team', target: `Patient · ${req.patient.name}`, category: 'Message' });
     res.status(201).json(msg);
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not send your message.' }); }

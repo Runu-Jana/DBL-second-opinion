@@ -5,6 +5,7 @@ const multer = require('multer');
 const { requireAdmin } = require('./auth');
 const prisma = require('../db');
 const storage = require('../lib/storage');
+const { notifyPatient, notifyCounsellors } = require('../lib/notify');
 
 const express = require('express');
 const router = express.Router();
@@ -118,6 +119,11 @@ router.post('/report', (req, res) => {
           notes: email ? `Submitted via website by ${email} · ${f.name}` : `Submitted via website · ${f.name}`,
         },
       })));
+      // Receipt matters here: files vanish into a form and nothing visibly happens otherwise.
+      await notifyPatient(patientUhid, { kind: 'report', title: 'We have received your reports',
+        body: `${created.length} document${created.length === 1 ? '' : 's'} received. Our team will review them and come back to you.`, link: '/dashboard/cases' });
+      await notifyCounsellors({ kind: 'report', title: 'New documents awaiting triage',
+        body: `${patientName} uploaded ${created.length} document${created.length === 1 ? '' : 's'}.`, link: null });
       res.status(201).json({ ok: true, count: created.length, patientUhid });
     } catch (e) { console.error(e); res.status(500).json({ error: 'Could not save your reports.' }); }
   });

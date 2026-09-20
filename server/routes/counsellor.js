@@ -12,6 +12,7 @@ const express = require('express');
 const prisma = require('../db');
 const { requireCounsellor } = require('./auth');
 const { logActivity } = require('../lib/audit');
+const { notifyPatient, notifyDoctor } = require('../lib/notify');
 const { analyzeReport, configured: aiConfigured } = require('../lib/reportAI');
 const { CATEGORIES, splitCategories } = require('../lib/categories');
 
@@ -229,6 +230,11 @@ router.post('/folders/:id/assign', requireCounsellor, async (req, res) => {
       kind: 'audit', actor: req.counsellor.name,
       action: `Assigned ${patient.name} to ${doctor}`, target: patient.uhid, category: 'Report',
     });
+    // Both ends of the handover hear about it: the patient gets a name, the specialist gets work.
+    await notifyPatient(patient.uhid, { kind: 'case', title: 'A specialist has been assigned to your case',
+      body: `${doctor} will review your reports${category ? ` for ${category}` : ''}.`, link: '/dashboard/cases' });
+    await notifyDoctor(doctor, { kind: 'case', title: 'New case assigned to you',
+      body: `${patient.name}${patient.uhid ? ` (${patient.uhid})` : ''} — reviewed and handed over by ${req.counsellor.name}.`, link: null });
     res.json({ ok: true, case: updated });
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not assign the specialist.' }); }
 });
