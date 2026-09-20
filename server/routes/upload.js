@@ -86,17 +86,27 @@ router.post('/report', (req, res) => {
     const now = new Date();
     const date = `${now.getDate()} ${MONTHS[now.getMonth()]} ${now.getFullYear()}`;
     try {
-      // Find (or auto-register) the patient so the report links to them; reports land in the
-      // admin triage queue (category = null, doctor = null) until a counselor categorises them.
-      let patient = await prisma.patient.findFirst({
-        where: {
-          OR: [
-            ...(email ? [{ email: { equals: email, mode: 'insensitive' } }] : []),
-            { name: { equals: patientName, mode: 'insensitive' } },
-          ],
-        },
-      });
+      // Work out whose documents these are. Email and name are not equal evidence: an email
+      // identifies one person, a name does not. Matching them with a single OR let a namesake
+      // who happened to be created first win over the person whose email actually matched —
+      // attaching one patient's medical documents to another's record.
+      let patient = null;
+      let ambiguous = false;
+
+      if (email) {
+        patient = await prisma.patient.findFirst({ where: { email: { equals: email, mode: 'insensitive' } } });
+      }
       if (!patient && patientName && patientName !== 'Website Visitor') {
+        const namesakes = await prisma.patient.findMany({
+          where: { name: { equals: patientName, mode: 'insensitive' } },
+          take: 2,
+        });
+        if (namesakes.length === 1) patient = namesakes[0];
+        // Two people with this name and nothing else to tell them apart. Guessing here means a
+        // 50% chance of filing a scan under the wrong patient, so leave it for a human instead.
+        else if (namesakes.length > 1) ambiguous = true;
+      }
+      if (!patient && !ambiguous && patientName && patientName !== 'Website Visitor') {
         const uhid = 'DBL' + (100000 + Math.floor(Math.random() * 900000));
         patient = await prisma.patient.create({
           data: { name: patientName, uhid, email, status: 'New Patient', lastVisit: date },
@@ -116,7 +126,11 @@ router.post('/report', (req, res) => {
           date,
           fileUrl: f.url,
           status: 'Pending Review',
-          notes: email ? `Submitted via website by ${email} · ${f.name}` : `Submitted via website · ${f.name}`,
+          notes: [
+            email ? `Submitted via website by ${email}` : 'Submitted via website',
+            f.name,
+            ambiguous ? `NEEDS MATCHING: more than one patient is called ${patientName} and no email was given` : null,
+          ].filter(Boolean).join(' · '),
         },
       })));
       // Receipt matters here: files vanish into a form and nothing visibly happens otherwise.
