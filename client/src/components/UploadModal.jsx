@@ -24,6 +24,7 @@ export default function UploadModal() {
   const { uploadOpen, setUploadOpen, session, logout } = useAuth();
   const [files, setFiles] = useState([]);
   const [status, setStatus] = useState(null); // {msg, kind}
+  const [questions, setQuestions] = useState('');
   const [busy, setBusy] = useState(false);
   const [drag, setDrag] = useState(false);
   const inputRef = useRef(null);
@@ -62,6 +63,7 @@ export default function UploadModal() {
     files.forEach((f) => fd.append('reports', f));
     fd.append('patientName', session?.name || 'Website Visitor');
     if (session?.email) fd.append('email', session.email);
+    if (questions.trim()) fd.append('questions', questions.trim());
     api('/upload/report', { method: 'POST', body: fd, auth: false })
       .then((r) => {
         setFiles([]);
@@ -97,6 +99,14 @@ export default function UploadModal() {
           </span>
           <strong>Drag &amp; drop your reports here</strong>
           <span className="dropzone-hint">or click to browse — PDF, Word, PNG, JPG · up to 15&nbsp;MB each, or video up to 50&nbsp;MB</span>
+        </label>
+        {/* Asked here, before they send, while they are still thinking about their own case.
+            The counsellor and the specialist both receive this with the documents. */}
+        <label className="upl-questions">
+          <span>What would you like the specialist to answer?<em> (optional)</em></span>
+          <textarea rows={3} value={questions} onChange={(e) => setQuestions(e.target.value)}
+            maxLength={4000}
+            placeholder="e.g. Is surgery necessary? Are there other treatment options? What are the side effects?" />
         </label>
 
         {files.length > 0 && (

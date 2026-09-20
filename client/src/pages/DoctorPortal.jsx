@@ -200,6 +200,12 @@ function DoctorDashboard({ onLogout }) {
               {handover.priority && handover.priority !== 'Normal' && <span className="adm-badge amber">{handover.priority}</span>}
             </div>
 
+            {handover.patientQuestions && (
+              <>
+                <h3 className="doc-case-h3">What the patient asked</h3>
+                <pre className="cns-ai">{handover.patientQuestions}</pre>
+              </>
+            )}
             <h3 className="doc-case-h3">Counsellor handover{handover.counsellor ? ` — ${handover.counsellor}` : ''}</h3>
             {handover.counsellorReport
               ? <pre className="cns-ai">{handover.counsellorReport}</pre>

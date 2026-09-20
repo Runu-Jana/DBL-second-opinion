@@ -261,6 +261,7 @@ model SecondOpinion {
   submittedDate String?
   status        String   @default("Awaiting Review") // Awaiting Review / Under Review / Opinion Ready / Delivered
   summary       String?
+  patientQuestions String?                       // what the patient asked when they uploaded
   counsellor    String?                          // staff member who triaged and wrote the case report
   counsellorReport String?                       // the counsellor's written assessment handed to the doctor
   aiDraft       String?                          // AI first draft, kept so the human edit can be compared

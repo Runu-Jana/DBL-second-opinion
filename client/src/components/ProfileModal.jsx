@@ -109,6 +109,12 @@ function PatientBody({ d }) {
             <Row label="Triaged by">{k.counsellor}</Row>
             <Row label="Specialist">{k.expert}</Row>
             <Row label="Opinion sent">{k.deliveredAt ? fmtWhen(k.deliveredAt) : 'Not sent'}</Row>
+            {k.patientQuestions && (
+              <>
+                <h5>What the patient asked</h5>
+                <pre className="cns-ai">{k.patientQuestions}</pre>
+              </>
+            )}
             {k.counsellorReport && (
               <>
                 <h5>Counsellor&rsquo;s assessment <em>(internal)</em></h5>

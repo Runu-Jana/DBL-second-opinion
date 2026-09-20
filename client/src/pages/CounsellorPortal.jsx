@@ -217,6 +217,15 @@ function Folder({ api, id, onBack, flash, msg, me, onLogout }) {
         </div>
 
         {/* ---- documents ---- */}
+        {/* What the patient actually wants answered. It belongs above the scans, because it is
+            the question the whole case is meant to answer. */}
+        {data.case?.patientQuestions && (
+          <section className="dash-card">
+            <div className="dash-card-head"><h2>What the patient asked</h2></div>
+            <pre className="cns-ai">{data.case.patientQuestions}</pre>
+          </section>
+        )}
+
         <section className="dash-card">
           <div className="dash-card-head">
             <h2>Documents ({documents.length})</h2>

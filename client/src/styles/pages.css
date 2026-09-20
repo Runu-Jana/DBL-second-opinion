@@ -969,3 +969,11 @@ table.admin-table{width:100%;border-collapse:collapse;min-width:720px}
 /* lead pop-up: the quieter "later" option under the primary upload action */
 .lead-later{display:block;margin:.6rem auto 0;color:var(--muted);font-size:.85rem}
 .lead-later:hover{color:var(--teal-dark)}
+
+/* The patient's own questions, asked alongside the files they are sending. */
+.upl-questions{display:flex;flex-direction:column;gap:.35rem;margin-top:1rem}
+.upl-questions > span{font-size:.85rem;font-weight:600;color:var(--ink-soft)}
+.upl-questions > span em{font-style:normal;font-weight:400;color:var(--muted)}
+.upl-questions textarea{width:100%;padding:.65rem .8rem;border:1.5px solid var(--line);border-radius:10px;
+  font:inherit;font-size:.87rem;line-height:1.5;resize:vertical}
+.upl-questions textarea:focus{outline:none;border-color:var(--teal)}

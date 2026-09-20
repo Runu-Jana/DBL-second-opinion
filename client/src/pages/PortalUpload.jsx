@@ -26,6 +26,7 @@ const fmtSize = (b) => (b < 1024 * 1024 ? (b / 1024).toFixed(0) + ' KB' : (b / 1
 export default function PortalUpload() {
   const { session } = useAuth();
   const [files, setFiles] = useState([]); // actual File objects
+  const [questions, setQuestions] = useState('');
   const [drag, setDrag] = useState(false);
   const [done, setDone] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -57,6 +58,7 @@ export default function PortalUpload() {
     files.forEach((f) => fd.append('reports', f));
     fd.append('patientName', session?.name || 'Website Visitor');
     if (session?.email) fd.append('email', session.email);
+    if (questions.trim()) fd.append('questions', questions.trim());
     api('/upload/report', { method: 'POST', body: fd, auth: false })
       .then(() => { setFiles([]); setDone(true); })
       .catch((ex) => setError(ex.message || 'Upload failed. Please try again.'))
@@ -95,6 +97,14 @@ export default function PortalUpload() {
                 <button type="button" className="btn btn-primary" onClick={() => inputRef.current?.click()}>Choose Files</button>
                 <input ref={inputRef} type="file" accept="application/pdf,image/*,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,video/mp4,video/webm,video/ogg,video/quicktime" multiple hidden onChange={(e) => { if (e.target.files) add(e.target.files); e.target.value = ''; }} />
                 <p style={{ marginTop: '1rem', fontSize: '.78rem' }}>Supported: PDF, Word, JPG, PNG · Max 15 MB each · Video (MP4, MOV, WebM) up to 50 MB</p>
+              {/* Asked here, before they send, while they are still thinking about their own case.
+                  The counsellor and the specialist both receive this with the documents. */}
+              <label className="upl-questions">
+                <span>What would you like the specialist to answer?<em> (optional)</em></span>
+                <textarea rows={3} value={questions} onChange={(e) => setQuestions(e.target.value)}
+                  maxLength={4000}
+                  placeholder="e.g. Is surgery necessary? Are there other treatment options? What are the side effects?" />
+              </label>
               </div>
 
               {error && <p style={{ color: '#c0392b', fontSize: '.82rem', fontWeight: 600, marginTop: '.8rem' }}>{error}</p>}

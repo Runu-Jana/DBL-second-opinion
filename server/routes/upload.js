@@ -83,6 +83,9 @@ router.post('/report', (req, res) => {
     }
     const patientName = String(req.body.patientName || '').trim() || 'Website Visitor';
     const email = req.body.email ? String(req.body.email).trim() : null;
+    // What the patient actually wants to know. Asked at upload time, while they are thinking
+    // about their own case — not left for a counsellor to guess at from the scans.
+    const questions = String(req.body.questions || '').trim().slice(0, 4000);
     const now = new Date();
     const date = `${now.getDate()} ${MONTHS[now.getMonth()]} ${now.getFullYear()}`;
     try {
@@ -134,6 +137,25 @@ router.post('/report', (req, res) => {
         },
       })));
       // Receipt matters here: files vanish into a form and nothing visibly happens otherwise.
+      if (questions && patientUhid) {
+        const existing = await prisma.secondOpinion.findFirst({ where: { patientUhid } });
+        if (existing) {
+          // A second upload adds to the question list rather than overwriting the first.
+          const merged = existing.patientQuestions
+            ? `${existing.patientQuestions}\n\n[${date}] ${questions}`
+            : questions;
+          await prisma.secondOpinion.update({ where: { id: existing.id }, data: { patientQuestions: merged } })
+            .catch((e) => console.error('could not save questions:', e.message));
+        } else {
+          await prisma.secondOpinion.create({
+            data: {
+              patientName, patientUhid, patientQuestions: questions,
+              submittedDate: date, status: 'Awaiting Review', priority: 'Normal',
+            },
+          }).catch((e) => console.error('could not open the case:', e.message));
+        }
+      }
+
       await notifyPatient(patientUhid, { kind: 'report', title: 'We have received your reports',
         body: `${created.length} document${created.length === 1 ? '' : 's'} received. Our team will review them and come back to you.`, link: '/dashboard/cases' });
       await notifyCounsellors({ kind: 'report', title: 'New documents awaiting triage',

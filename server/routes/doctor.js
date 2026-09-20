@@ -140,6 +140,7 @@ router.get('/cases/:uhid', requireDoctor, async (req, res) => {
       patient,
       documents,
       counsellor: kase.counsellor,
+      patientQuestions: kase.patientQuestions,
       counsellorReport: kase.counsellorReport,
       cancerType: kase.cancerType,
       priority: kase.priority,
