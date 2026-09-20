@@ -173,7 +173,12 @@ let indexTemplate = null;
 function sendIndex(req, res) {
   res.setHeader('Cache-Control', 'no-cache');   // never pin the file that names the bundles
   try {
-    if (indexTemplate === null) indexTemplate = fs.readFileSync(INDEX_HTML, 'utf8');
+    // Cached in production, where a new build means a new process. In development the file is
+    // rebuilt under a running server, and a cached copy would keep serving the previous bundle
+    // long after the rebuild — which looks exactly like the change not working.
+    if (indexTemplate === null || process.env.NODE_ENV !== 'production') {
+      indexTemplate = fs.readFileSync(INDEX_HTML, 'utf8');
+    }
     const origin = `${req.protocol}://${req.get('host')}`;
     let html = indexTemplate.replace(BAKED_ORIGIN, origin);
     // The baked canonical is the site root, so every route was claiming to be a duplicate of

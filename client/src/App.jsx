@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
-import { Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext.jsx';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext.jsx';
+import { getPatientToken } from './api.js';
 import ScrollToTop from './components/ScrollToTop.jsx';
 import { RouteSeo } from './components/Seo.jsx';
 import AuthModal from './components/AuthModal.jsx';
@@ -49,6 +50,19 @@ const RouteFallback = () => (
   <div className="route-loading" role="status" aria-label="Loading"><span className="route-spinner" /></div>
 );
 
+// "/" is two different pages depending on who is asking. A visitor gets the marketing home;
+// someone already signed in gets their dashboard, the same way they land there after logging
+// in. Without this they arrived back on the sales pitch every visit and had to go looking for
+// their own records.
+function HomeOrDashboard() {
+  const { session, loading } = useAuth();
+  // Only wait when there is actually a session to restore. With no stored token there is
+  // nothing to load, and the public page must not flash a spinner at a first-time visitor.
+  if (loading && getPatientToken()) return <RouteFallback />;
+  if (session) return <Navigate to="/dashboard" replace />;
+  return <Home />;
+}
+
 export default function App() {
   return (
     <AuthProvider>
@@ -56,7 +70,7 @@ export default function App() {
       <RouteSeo />
       <Suspense fallback={<RouteFallback />}>
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<HomeOrDashboard />} />
         <Route path="/oncologists" element={<Oncologists />} />
         <Route path="/oncologists/:id" element={<DoctorDetail />} />
         <Route path="/services" element={<Services />} />
