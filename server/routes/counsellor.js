@@ -49,6 +49,17 @@ async function upsertCase(patient, data) {
   });
 }
 
+// ---- GET /api/counsellor/me — the signed-in counsellor's own current record ------------
+// The token is minted at login and never changes, so reading the name/role from it goes stale
+// the moment an admin edits this staff member. Reading the row fresh keeps the desk in step.
+router.get('/me', requireCounsellor, async (req, res) => {
+  try {
+    const staff = await prisma.staff.findUnique({ where: { id: req.counsellor.id } });
+    if (!staff) return res.status(404).json({ error: 'Account not found.' });
+    res.json({ id: staff.id, name: staff.name, jobRole: staff.role, department: staff.department, email: staff.email });
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not load your profile.' }); }
+});
+
 // ---- GET /api/counsellor/summary — dashboard counters ----------------------------------
 router.get('/summary', requireCounsellor, async (_req, res) => {
   try {

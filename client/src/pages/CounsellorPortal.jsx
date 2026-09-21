@@ -9,6 +9,8 @@ import { Select } from '../components/AdminFields.jsx';
 import StaffBell from '../components/StaffBell.jsx';
 
 const initials = (n = '') => n.replace(/^(Dr|Mr|Ms|Mrs)\.?\s*/i, '').split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
+// First name for the greeting, with any title stripped — otherwise "Dr. Anirudh" greets "Dr.".
+const firstName = (n = '') => n.replace(/^(Dr|Mr|Ms|Mrs)\.?\s*/i, '').split(/\s+/)[0] || n;
 const fmtDate = (iso) => (iso ? new Date(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—');
 const extOf = (u = '') => (u.split('?')[0].split('.').pop() || '').toLowerCase();
 const isVideo = (u) => ['mp4', 'mov', 'webm', 'ogg', 'ogv'].includes(extOf(u));
@@ -24,6 +26,7 @@ export default function CounsellorPortal({ api, me, onLogout }) {
   const [openId, setOpenId] = useState(null);
   const [msg, setMsg] = useState('');
   const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState(null);   // fresh from the server, so admin edits to name/role show without re-login
 
   const flash = (m) => { setMsg(m); setTimeout(() => setMsg(''), 3500); };
 
@@ -34,9 +37,12 @@ export default function CounsellorPortal({ api, me, onLogout }) {
       .catch((e) => { flash(e.message); setLoading(false); });
   };
   useEffect(() => { api('/counsellor/summary').then(setSummary).catch(() => {}); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { api('/counsellor/me').then(setProfile).catch(() => {}); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { const t = setTimeout(loadFolders, 250); return () => clearTimeout(t); }, [q]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const name = me?.name || 'Counsellor';
+  // Prefer the freshly-fetched record over the login token, so an admin rename shows here.
+  const meLive = profile || me;
+  const name = meLive?.name || 'Counsellor';
 
   if (openId) {
     return (
@@ -46,7 +52,7 @@ export default function CounsellorPortal({ api, me, onLogout }) {
         onBack={() => { setOpenId(null); loadFolders(); api('/counsellor/summary').then(setSummary).catch(() => {}); }}
         flash={flash}
         msg={msg}
-        me={me}
+        me={meLive}
         onLogout={onLogout}
       />
     );
@@ -57,10 +63,10 @@ export default function CounsellorPortal({ api, me, onLogout }) {
 
   return (
     <div className="doc-shell">
-      <Topbar name={name} me={me} onLogout={onLogout} api={api} />
+      <Topbar name={name} me={meLive} onLogout={onLogout} api={api} />
       <main className="doc-main">
         {msg && <div className="doc-flash">{msg}</div>}
-        <h1 className="doc-welcome">Welcome, {name.split(' ')[0]}</h1>
+        <h1 className="doc-welcome">Welcome, {firstName(name)}</h1>
         <p className="doc-note">Review what each patient sent, write the case report, then assign the specialist.</p>
 
         <div className="doc-stats">
@@ -200,7 +206,7 @@ function Folder({ api, id, onBack, flash, msg, me, onLogout }) {
       <Topbar name={me?.name} me={me} onLogout={onLogout} api={api} />
       <main className="doc-main">
         {msg && <div className="doc-flash">{msg}</div>}
-        <button type="button" className="link-btn" onClick={onBack}>← All folders</button>
+        <button type="button" className="link-btn" style={{ alignSelf: 'flex-start' }} onClick={onBack}>← All folders</button>
 
         <div className="cns-folder-head">
           <span className="adm-mini-avatar">{initials(patient.name)}</span>
