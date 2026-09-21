@@ -82,6 +82,25 @@ which is why that work happens at start rather than during the build.
 
 ---
 
+## Tests
+
+`tests/api/` holds the regression suites. Each one drives the real HTTP API against the real
+database as every role in turn, creates the rows it needs and deletes them afterwards. They
+expect a server on port 5500 started with the secret the suites mint their tokens with, and
+with the per-IP throttles off (a full run makes more upload and login calls than the limits
+allow in a quarter of an hour; the switch is ignored in production):
+
+```bash
+docker compose up -d && npm run db:push && npm run seed   # once
+PORT=5500 JWT_SECRET=t RATE_LIMIT=off node server/server.js   # terminal 1
+npm test                                                      # terminal 2  (or: npm test -- questions)
+```
+
+`npm test` runs every suite in turn, prints one line per suite and a total, and exits non-zero
+if any check fails. The suites write rows, so never point them at a production database.
+
+---
+
 ## Notes
 - **Uploads:** doctor photos are stored on local disk (`uploads/`). On ephemeral
   hosts (e.g. serverless), switch to object storage (S3/Cloudinary) for persistence.

@@ -15,7 +15,8 @@
     "db:push": "prisma db push",
     "migrate": "prisma migrate dev --name init",
     "seed": "node prisma/seed.js",
-    "i18n:sync": "node scripts/i18n-sync.js"
+    "i18n:sync": "node scripts/i18n-sync.js",
+    "test": "node tests/run.js"
   },
   "engines": {
     "node": ">=18"

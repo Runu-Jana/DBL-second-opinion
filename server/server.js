@@ -54,8 +54,14 @@ app.use(cors({ origin: ALLOWED_ORIGINS.length ? ALLOWED_ORIGINS : true }));
 app.use(express.json({ limit: '1mb' }));
 
 // Throttle sensitive endpoints per IP against brute force / abuse (and API-cost blowouts).
-const limiter = (windowMs, max) => rateLimit({ windowMs, max, standardHeaders: true, legacyHeaders: false,
-  message: { error: 'Too many requests. Please try again in a little while.' } });
+// RATE_LIMIT=off switches them off for the test suites, which make hundreds of calls to these
+// routes in a minute and would otherwise need a server restart between runs (the counters live
+// in memory). Ignored in production, so the switch cannot be left on by accident.
+const limitsOff = process.env.RATE_LIMIT === 'off' && process.env.NODE_ENV !== 'production';
+const limiter = (windowMs, max) => (limitsOff
+  ? (_req, _res, next) => next()
+  : rateLimit({ windowMs, max, standardHeaders: true, legacyHeaders: false,
+    message: { error: 'Too many requests. Please try again in a little while.' } }));
 app.use('/api/auth', limiter(15 * 60 * 1000, 40));         // login / signup / forgot / reset
 app.use('/api/contact/otp', limiter(10 * 60 * 1000, 12));  // WhatsApp OTP (cost + spam)
 app.use('/api/chat', limiter(60 * 1000, 20));              // AI chat (Anthropic cost)
