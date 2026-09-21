@@ -23,6 +23,9 @@ const ROLE_TONE = {
   Receptionist: 'gray',
 };
 const REVIEW_ROLES = ['Oncologist', 'Surgeon', 'Radiologist'];
+// Roles with no clinical department to belong to — the Department field is hidden for them,
+// and any department already picked is cleared when switching to one of these.
+const NO_DEPARTMENT_ROLES = ['Counsellor', 'Receptionist'];
 const TONE = { Active: 'green', 'On Leave': 'amber', Inactive: 'gray' };
 const initials = (n = '') => n.replace(/^(Dr|Mr|Ms|Mrs)\.?\s*/i, '').split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
 
@@ -67,8 +70,10 @@ function StaffModal({ member, onClose, onSaved, on401 }) {
         <form className="admin-form" onSubmit={submit}>
           <div className="admin-form-grid">
             <label>Full name *<input value={f.name} onChange={set('name')} required placeholder="Dr. Full Name" /></label>
-            <label>Role *<Select value={f.role} onChange={(v) => setF({ ...f, role: v })} options={ROLES} placeholder="Select role" /></label>
-            <label>Department<Select value={f.department} onChange={(v) => setF({ ...f, department: v })} options={DEPARTMENTS} placeholder="Select department" /></label>
+            <label>Role *<Select value={f.role} onChange={(v) => setF({ ...f, role: v, ...(NO_DEPARTMENT_ROLES.includes(v) ? { department: '' } : {}) })} options={ROLES} placeholder="Select role" /></label>
+            {!NO_DEPARTMENT_ROLES.includes(f.role) && (
+              <label>Department<Select value={f.department} onChange={(v) => setF({ ...f, department: v })} options={DEPARTMENTS} placeholder="Select department" /></label>
+            )}
             <label>Status<Select value={f.status} onChange={(v) => setF({ ...f, status: v })} options={STATUSES} /></label>
             <label className="full">Qualifications<input value={f.qualifications} onChange={set('qualifications')} placeholder="MBBS, MD, DM (Oncology)" /></label>
             <label>Email<input type="email" value={f.email} onChange={set('email')} placeholder="name@dblhealthcare.com" /></label>
