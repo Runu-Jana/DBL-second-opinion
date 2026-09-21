@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { api } from '../../api.js';
+import { api, setDoctorToken } from '../../api.js';
 import ProfileModal from '../../components/ProfileModal.jsx';
 import { Select, DateField, RefreshButton } from '../../components/AdminFields.jsx';
 import { CATEGORIES, splitCategories } from '../../lib/categories.js';
@@ -166,6 +166,18 @@ export default function StaffAdmin({ flash, on401 }) {
     api(`/staff/${m.id}`, { method: 'DELETE', on401 }).then(() => { flash('Staff member deleted.'); load(); }).catch((e) => flash(e.message, 'err'));
   };
 
+  // Opens this staff member's own dashboard as a read-only admin preview, in a new tab. No
+  // password: the server hands back a short-lived preview token, which the portal treats as
+  // look-don't-touch. Every open is written to the audit log.
+  const openDash = (m) => {
+    api(`/staff/${m.id}/impersonate`, { method: 'POST', on401 })
+      .then((r) => {
+        setDoctorToken(r.token);            // the /doctor tab reads this on load (same origin)
+        window.open('/doctor', '_blank', 'noopener');
+      })
+      .catch((e) => flash(e.message, 'err'));
+  };
+
   // Emails this staff member a one-time link to choose their own staff portal password.
   const invite = (m) => {
     if (!window.confirm(`Email ${m.email} a link to set their staff portal password?`)) return;
@@ -231,6 +243,9 @@ export default function StaffAdmin({ flash, on401 }) {
                   <td><span className={'adm-badge ' + (TONE[m.status] || 'gray')}>{m.status}</span></td>
                   <td>{m.onCall ? <span className="adm-badge teal">On call</span> : '—'}</td>
                   <td><div className="row-actions">
+                    {(m.canLogin ?? LOGIN_ROLES.includes(m.role)) && (
+                      <button className="icon-btn" title={`Open ${m.name}'s dashboard as a read-only admin preview`} onClick={() => openDash(m)}>Open dashboard</button>
+                    )}
                     <button className="icon-btn" onClick={() => setModal(m)}>Edit</button>
                     <button className="icon-btn" title={m.email ? `Email ${m.email} a link to set their portal password` : 'Add an email address first'} disabled={!m.email} onClick={() => invite(m)}>Send login</button>
                     <button className="icon-btn danger" onClick={() => del(m)}>Delete</button>

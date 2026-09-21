@@ -130,8 +130,9 @@ router.get('/cases/:uhid', requireDoctor, async (req, res) => {
       prisma.report.findMany({ where: { patientUhid: uhid, doctor: req.doctor.name }, orderBy: [{ createdAt: 'desc' }] }),
     ]);
     // Opening the case is the moment review actually starts. Stamped once, so the patient is
-    // told when it begins rather than every time the specialist revisits the page.
-    if (!kase.reviewStartedAt) {
+    // told when it begins rather than every time the specialist revisits the page. An admin
+    // preview must not trigger it — the patient should not hear "review started" from a look.
+    if (!kase.reviewStartedAt && !req.doctor.imp) {
       await prisma.secondOpinion.update({ where: { id: kase.id }, data: { reviewStartedAt: new Date() } }).catch(() => {});
       await notifyPatient(kase.patientUhid, { kind: 'case', title: 'Your reports are being reviewed',
         body: `${req.doctor.name} has started reviewing your case.`, link: '/dashboard/cases' });
@@ -276,8 +277,11 @@ router.get('/messages/:uhid', requireDoctor, async (req, res) => {
     const patient = await prisma.patient.findFirst({ where: { uhid, doctor: req.doctor.name } });
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
     const list = await prisma.message.findMany({ where: { patientUhid: uhid }, orderBy: [{ createdAt: 'asc' }] });
-    // Opening the thread is reading it.
-    await prisma.message.updateMany({ where: { patientUhid: uhid, sender: 'patient', readByCare: false }, data: { readByCare: true } });
+    // Opening the thread is reading it — but an admin preview reading it must not mark the
+    // patient's messages read on the doctor's behalf.
+    if (!req.doctor.imp) {
+      await prisma.message.updateMany({ where: { patientUhid: uhid, sender: 'patient', readByCare: false }, data: { readByCare: true } });
+    }
     res.json({ patient: { name: patient.name, uhid: patient.uhid }, messages: list });
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not load the conversation.' }); }
 });

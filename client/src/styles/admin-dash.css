@@ -502,6 +502,15 @@
   font:inherit;font-size:.82rem;font-weight:700;cursor:pointer;text-decoration:underline}
 .doc-forgot:hover{color:var(--teal)}
 
+/* Admin preview banner — a persistent strip so a read-only preview is never mistaken for the
+   staff member's own session. */
+.imp-banner{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:1rem;
+  flex-wrap:wrap;padding:.6rem 1rem;background:#fff4e0;color:#8a5a00;border-bottom:1px solid #f0d9a8;font-size:.85rem}
+.imp-banner strong{color:#7a4f00}
+.imp-exit{flex:0 0 auto;border:1px solid #d9a44a;background:#fff;color:#8a5a00;border-radius:8px;padding:.35rem .8rem;
+  font:inherit;font-size:.82rem;font-weight:700;cursor:pointer}
+.imp-exit:hover{background:#8a5a00;color:#fff;border-color:#8a5a00}
+
 .doc-shell{min-height:100vh;background:var(--adm-bg)}
 .doc-topbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;
   padding:.7rem clamp(14px,3vw,32px);background:#fff;border-bottom:1px solid var(--line)}

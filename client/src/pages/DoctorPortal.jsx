@@ -387,6 +387,22 @@ export default function DoctorPortal() {
   const logout = () => { clearDoctorToken(); setToken(null); };
   if (!token) return <DoctorLogin onLogin={setToken} />;
   const session = sessionOf(token);
-  if (session.role === 'counsellor') return <CounsellorPortal api={docApi} me={session} onLogout={logout} />;
-  return <DoctorDashboard onLogout={logout} />;
+  // Leaving a preview closes the tab it opened in; if it was opened directly, drop back to login.
+  const exitPreview = () => { clearDoctorToken(); window.close(); setToken(null); };
+  const banner = session.imp ? <PreviewBanner name={session.name} by={session.by} onExit={exitPreview} /> : null;
+  if (session.role === 'counsellor') return <>{banner}<CounsellorPortal api={docApi} me={session} onLogout={logout} /></>;
+  return <>{banner}<DoctorDashboard onLogout={logout} /></>;
+}
+
+// Shown across the top when an admin is viewing a staff dashboard as a read-only preview, so it
+// can never be mistaken for the staff member's own session. Writes are blocked on the server too.
+function PreviewBanner({ name, by, onExit }) {
+  return (
+    <div className="imp-banner">
+      <span>
+        <strong>Admin preview</strong> — viewing {name || 'this staff member'}&rsquo;s dashboard{by ? ` as ${by}` : ''}. Read-only: nothing you do here is saved or sent.
+      </span>
+      <button type="button" className="imp-exit" onClick={onExit}>Exit preview</button>
+    </div>
+  );
 }

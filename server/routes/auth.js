@@ -257,6 +257,7 @@ function requireCounsellor(req, res, next) {
   try {
     const payload = jwt.verify(token, JWT_SECRET);
     if (payload.role !== 'counsellor') return res.status(403).json({ error: 'Not a counsellor account.' });
+    if (payload.imp && req.method !== 'GET') return res.status(403).json({ error: 'Admin preview is read-only. Sign in as this staff member to make changes.' });
     req.counsellor = payload;
     next();
   } catch { res.status(401).json({ error: 'Session expired. Please log in again.' }); }
@@ -282,6 +283,8 @@ function requireDoctor(req, res, next) {
   try {
     const payload = jwt.verify(token, JWT_SECRET);
     if (payload.role !== 'doctor') return res.status(403).json({ error: 'Not a doctor account.' });
+    // An admin preview token (imp) may look but not touch — nothing goes out under the doctor's name.
+    if (payload.imp && req.method !== 'GET') return res.status(403).json({ error: 'Admin preview is read-only. Sign in as this staff member to make changes.' });
     req.doctor = payload;
     next();
   } catch { res.status(401).json({ error: 'Session expired. Please log in again.' }); }
@@ -337,4 +340,19 @@ module.exports.linkOrigin = linkOrigin;
 module.exports.signPatient = signPatient;
 module.exports.requireCounsellor = requireCounsellor;
 module.exports.portalFor = portalFor;   // used by the staff directory to say which roles can log in
+
+// A short-lived token that drops an admin into a staff member's dashboard to look, not act.
+// It carries imp:true (the portals block every write and hide the review-started signal) and the
+// admin's name for the on-screen banner. Returns null for a role with no dashboard.
+function signStaffPreview(staff, admin) {
+  const portal = portalFor(staff.role);
+  if (!portal) return null;
+  const token = jwt.sign(
+    { id: staff.id, name: staff.name, email: staff.email, role: portal, jobRole: staff.role, imp: true, by: (admin && admin.name) || 'an admin' },
+    JWT_SECRET,
+    { expiresIn: '2h' },
+  );
+  return { token, portal };
+}
+module.exports.signStaffPreview = signStaffPreview;
 module.exports.portalFor = portalFor;

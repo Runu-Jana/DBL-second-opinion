@@ -1,7 +1,7 @@
 // Doctor & Staff CRUD — admin only (internal staff directory)
 const express = require('express');
 const prisma = require('../db');
-const { requireAdmin, inviteStaff, linkOrigin, portalFor } = require('./auth');
+const { requireAdmin, inviteStaff, linkOrigin, portalFor, signStaffPreview } = require('./auth');
 const { logCrud, logActivity } = require('../lib/audit');
 
 const router = express.Router();
@@ -95,6 +95,21 @@ router.post('/:id/invite', requireAdmin, async (req, res) => {
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not send the set-password email.' }); }
 });
 
+// POST /api/staff/:id/impersonate (admin) — a read-only token to open this staff member's own
+// dashboard as an admin preview. No password, no side effects: the portal blocks every write and
+// hides the "review started" signal. Every open is written to the audit log against the admin.
+router.post('/:id/impersonate', requireAdmin, async (req, res) => {
+  try {
+    const staff = await prisma.staff.findUnique({ where: { id: +req.params.id } });
+    if (!staff) return res.status(404).json({ error: 'Not found.' });
+    const made = signStaffPreview(staff, req.admin);
+    if (!made) return res.status(400).json({ error: `${staff.role || 'This role'} has no dashboard to open.` });
+    logActivity(req, { kind: 'audit', actor: (req.admin && req.admin.name) || 'Admin',
+      action: `Opened ${staff.name}'s ${made.portal} dashboard (admin preview)`, target: `Staff · ${staff.name}`, category: 'Login' });
+    res.json(made);
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not open the dashboard.' }); }
+});
+
 // PUT /api/staff/:id (admin)
 router.put('/:id', requireAdmin, async (req, res) => {
   try {
@@ -102,7 +117,7 @@ router.put('/:id', requireAdmin, async (req, res) => {
     if (!data.name || !data.role) return res.status(400).json({ error: 'Name and role are required.' });
     const updated = await prisma.staff.update({ where: { id: +req.params.id }, data });
     logCrud(req, 'Updated', 'Staff', updated.name);
-    res.json(updated);
+    res.json(publicStaff(updated));
   } catch (e) {
     if (e.code === 'P2025') return res.status(404).json({ error: 'Not found.' });
     console.error(e); res.status(500).json({ error: 'Could not update staff member.' });
