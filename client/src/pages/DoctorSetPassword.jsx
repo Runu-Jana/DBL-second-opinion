@@ -47,7 +47,7 @@ export default function DoctorSetPassword() {
           ) : (
             <form className="auth-form" onSubmit={submit} noValidate>
               <p style={{ margin: '0 0 1rem', fontSize: '.88rem', color: 'var(--muted)' }}>
-                Choose a password for your Doctor Portal. You'll sign in with your email address and this password.
+                Choose a password for your DBL staff account. You'll sign in with your email address and this password.
               </p>
               <label>Password<input type={show ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" autoComplete="new-password" required autoFocus /></label>
               <label>Confirm password<input type={show ? 'text' : 'password'} value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Re-enter password" autoComplete="new-password" required /></label>
@@ -55,7 +55,7 @@ export default function DoctorSetPassword() {
               {err && <p className="form-error">{err}</p>}
               <button type="submit" className="btn btn-primary btn-block" disabled={busy}>{busy ? 'Saving…' : 'Set password & sign in'}</button>
               <p style={{ margin: '.9rem 0 0', fontSize: '.82rem', color: 'var(--muted)', textAlign: 'center' }}>
-                Already set it? <Link to="/doctor">Go to the Doctor Portal</Link>
+                Already set it? <Link to="/doctor">Go to the staff login</Link>
               </p>
             </form>
           )}

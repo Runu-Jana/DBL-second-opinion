@@ -121,7 +121,7 @@ function StaffModal({ member, onClose, onSaved, on401 }) {
               {!member && (
                 <label title={f.email ? '' : 'Add an email address to send the invite'}>
                   <input type="checkbox" checked={f.portalAccess} onChange={set('portalAccess')} disabled={!f.email} />
-                  {' '}Give Doctor Portal access — emails them a link to set their own password
+                  {' '}Give staff portal access — emails them a link to set their own password
                 </label>
               )}
             </div>
@@ -158,9 +158,9 @@ export default function StaffAdmin({ flash, on401 }) {
     api(`/staff/${m.id}`, { method: 'DELETE', on401 }).then(() => { flash('Staff member deleted.'); load(); }).catch((e) => flash(e.message, 'err'));
   };
 
-  // Emails this staff member a one-time link to choose their own Doctor Portal password.
+  // Emails this staff member a one-time link to choose their own staff portal password.
   const invite = (m) => {
-    if (!window.confirm(`Email ${m.email} a link to set their Doctor Portal password?`)) return;
+    if (!window.confirm(`Email ${m.email} a link to set their staff portal password?`)) return;
     api(`/staff/${m.id}/invite`, { method: 'POST', on401 })
       .then((r) => flash(`Set-password link sent to ${r.sentTo}.`))
       .catch((e) => flash(e.message, 'err'));

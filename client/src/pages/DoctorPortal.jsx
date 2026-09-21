@@ -54,8 +54,8 @@ function DoctorLogin({ onLogin }) {
     <div className="doc-login-wrap">
       <form className="doc-login" onSubmit={submit}>
         <span className="doc-login-mark">{Shield}</span>
-        <h1>Doctor Portal</h1>
-        <p>Sign in to review reports assigned to you.</p>
+        <h1>Staff Login</h1>
+        <p>Doctors and counsellors, sign in to your dashboard.</p>
         <label>Email<input type="email" name="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" placeholder="you@dblhealthcare.com" required /></label>
         <PasswordField label="Password" name="password" autoComplete="current-password" placeholder="Your password" />
         {err && <p className="doc-err">{err}</p>}
