@@ -1,12 +1,20 @@
 // Doctor & Staff CRUD — admin only (internal staff directory)
 const express = require('express');
 const prisma = require('../db');
-const { requireAdmin, inviteStaff, linkOrigin } = require('./auth');
+const { requireAdmin, inviteStaff, linkOrigin, portalFor } = require('./auth');
 const { logCrud, logActivity } = require('../lib/audit');
 
 const router = express.Router();
 
 const STATUSES = ['Active', 'On Leave', 'Inactive'];
+
+// Never send the password hash to the client. Instead expose what the admin actually needs:
+// whether this role can log in at all, whether they have set a password (activated), and when
+// they last signed in — the three facts behind the "login pending / signed in" tag.
+function publicStaff(s) {
+  const { password, ...rest } = s;
+  return { ...rest, hasPassword: !!password, canLogin: !!portalFor(s.role) };
+}
 
 function parseBody(b = {}) {
   return {
@@ -39,7 +47,7 @@ router.get('/', requireAdmin, async (req, res) => {
       ];
     }
     const list = await prisma.staff.findMany({ where, orderBy: [{ name: 'asc' }] });
-    res.json(list);
+    res.json(list.map(publicStaff));
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not load staff.' }); }
 });
 
@@ -48,7 +56,7 @@ router.get('/:id', requireAdmin, async (req, res) => {
   try {
     const s = await prisma.staff.findUnique({ where: { id: +req.params.id } });
     if (!s) return res.status(404).json({ error: 'Not found.' });
-    res.json(s);
+    res.json(publicStaff(s));
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not load staff member.' }); }
 });
 

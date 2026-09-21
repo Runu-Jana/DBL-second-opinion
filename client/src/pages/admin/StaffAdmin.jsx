@@ -26,6 +26,20 @@ const REVIEW_ROLES = ['Oncologist', 'Surgeon', 'Radiologist'];
 // Roles with no clinical department to belong to — the Department field is hidden for them,
 // and any department already picked is cleared when switching to one of these.
 const NO_DEPARTMENT_ROLES = ['Counsellor', 'Receptionist'];
+// Roles that actually get a portal login (mirrors portalFor on the server). Others are staff
+// on the directory who never sign in, so no login tag is shown for them.
+const LOGIN_ROLES = ['Oncologist', 'Surgeon', 'Radiologist', 'Counsellor', 'Care Coordinator'];
+
+const fmtDay = (iso) => { try { return new Date(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }); } catch { return ''; } };
+
+// The login state the admin sees per staff row, from the three facts the API now returns:
+// can this role log in, have they set a password (activated), and have they ever signed in.
+function loginTag(m) {
+  if (!(m.canLogin ?? LOGIN_ROLES.includes(m.role))) return null; // role has no portal — nothing to show
+  if (m.lastLoginAt) return { label: `Signed in · ${fmtDay(m.lastLoginAt)}`, tone: 'green', title: `Last signed in ${fmtDay(m.lastLoginAt)}` };
+  if (!m.hasPassword) return { label: 'Login pending', tone: 'amber', title: 'Invited but has not set a password or signed in yet. Use “Send login” to email them the link again.' };
+  return { label: 'Never signed in', tone: 'blue', title: 'Password is set but they have not signed in yet.' };
+}
 const TONE = { Active: 'green', 'On Leave': 'amber', Inactive: 'gray' };
 const initials = (n = '') => n.replace(/^(Dr|Mr|Ms|Mrs)\.?\s*/i, '').split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
 
@@ -184,7 +198,11 @@ export default function StaffAdmin({ flash, on401 }) {
                   <td>
                     <div className="adm-cell-user">
                       <span className="adm-mini-avatar sm" style={m.photoUrl ? { backgroundImage: `url("${m.photoUrl}")`, backgroundSize: 'cover' } : undefined}>{m.photoUrl ? '' : initials(m.name)}</span>
-                      <span className="adm-cell-user-meta"><strong><button type="button" className="link-name" onClick={() => setProfile(m.id)}>{m.name}</button></strong>{m.qualifications ? <span>{m.qualifications}</span> : null}</span>
+                      <span className="adm-cell-user-meta">
+                        <strong><button type="button" className="link-name" onClick={() => setProfile(m.id)}>{m.name}</button></strong>
+                        {m.qualifications ? <span>{m.qualifications}</span> : null}
+                        {(() => { const t = loginTag(m); return t ? <span className={'adm-badge ' + t.tone} style={{ marginTop: '.25rem', width: 'fit-content' }} title={t.title}>{t.label}</span> : null; })()}
+                      </span>
                     </div>
                   </td>
                   <td>{m.role ? <span className={'adm-badge ' + (ROLE_TONE[m.role] || 'gray')}>{m.role}</span> : '—'}</td>

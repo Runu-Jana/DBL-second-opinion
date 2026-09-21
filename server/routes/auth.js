@@ -79,6 +79,8 @@ router.post('/doctor-login', async (req, res) => {
     if (!portal) {
       return res.status(403).json({ error: `The staff portal is for clinical and counselling staff. Your account is set up as ${staff.role || 'staff'} — please contact the admin team.` });
     }
+    // Record the sign-in so the admin panel can show who has actually started using their portal.
+    await prisma.staff.update({ where: { id: staff.id }, data: { lastLoginAt: new Date() } }).catch(() => {});
     const token = jwt.sign({ id: staff.id, name: staff.name, email: staff.email, role: portal, jobRole: staff.role }, JWT_SECRET, { expiresIn: SESSION_TTL });
     logActivity(null, { kind: 'audit', actor: staff.name, action: 'Signed in', target: `${portal === 'counsellor' ? 'Counsellor' : 'Doctor'} portal`, category: 'Login' });
     res.json({ token, portal, doctor: { id: staff.id, name: staff.name, email: staff.email, role: staff.role, department: staff.department } });
@@ -128,7 +130,8 @@ router.post('/doctor-set-password', async (req, res) => {
     }
 
     const hash = await bcrypt.hash(password, 10);
-    await prisma.staff.update({ where: { id: staff.id }, data: { password: hash } });
+    // Activating sets the password and signs them straight in, so it counts as their first login.
+    await prisma.staff.update({ where: { id: staff.id }, data: { password: hash, lastLoginAt: new Date() } });
     const login = jwt.sign({ id: staff.id, name: staff.name, email: staff.email, role: portalFor(staff.role) || 'doctor', jobRole: staff.role }, JWT_SECRET, { expiresIn: SESSION_TTL });
     logActivity(null, {
       kind: 'audit', actor: staff.name, target: 'Doctor portal', category: 'Login',
@@ -333,4 +336,5 @@ module.exports.linkOrigin = linkOrigin;
 
 module.exports.signPatient = signPatient;
 module.exports.requireCounsellor = requireCounsellor;
+module.exports.portalFor = portalFor;   // used by the staff directory to say which roles can log in
 module.exports.portalFor = portalFor;
