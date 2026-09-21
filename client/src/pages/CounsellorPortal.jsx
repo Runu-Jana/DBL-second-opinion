@@ -230,7 +230,7 @@ function Folder({ api, id, onBack, flash, msg, me, onLogout }) {
               {` · joined ${fmtDate(patient.createdAt)}`}
             </p>
           </div>
-          {data.case?.expert && <span className="adm-badge green">Assigned to {data.case.expert}</span>}
+          {data.case?.expert && <span className="adm-badge green cns-assigned">Assigned to {data.case.expert}</span>}
         </div>
 
         {/* ---- documents ---- */}
@@ -243,6 +243,8 @@ function Folder({ api, id, onBack, flash, msg, me, onLogout }) {
           </section>
         )}
 
+        <div className="cns-folder-body">
+        <div className="cns-col">
         <section className="dash-card">
           <div className="dash-card-head">
             <h2>Documents ({documents.length})</h2>
@@ -270,7 +272,9 @@ function Folder({ api, id, onBack, flash, msg, me, onLogout }) {
             ))}
           </ul>
         </section>
+        </div>
 
+        <div className="cns-col">
         {/* ---- the counsellor's own report ---- */}
         <section className="dash-card">
           <div className="dash-card-head">
@@ -327,6 +331,8 @@ function Folder({ api, id, onBack, flash, msg, me, onLogout }) {
             </p>
           )}
         </section>
+        </div>
+        </div>
       </main>
     </div>
   );

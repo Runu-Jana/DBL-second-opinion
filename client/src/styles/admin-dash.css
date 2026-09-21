@@ -570,8 +570,17 @@
 .cns-warn{margin:0 0 .7rem;padding:.6rem .8rem;border-radius:10px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;font-size:.85rem}
 
 .cns-folder-head{display:flex;align-items:center;gap:.9rem;flex-wrap:wrap;margin:1rem 0 1.4rem}
+.cns-folder-head > div{min-width:0}
 .cns-folder-head h1{margin:0;font-size:1.45rem}
 .cns-folder-head p{margin:.2rem 0 0;color:var(--muted);font-size:.85rem}
+/* The assigned-to status pill sits at the right edge of the header, vertically centred, rather
+   than floating in the gap after the name. */
+.cns-assigned{margin-left:auto}
+/* Folder detail body: documents beside the writing panel on wide screens, stacked on narrow,
+   so the working area fills the width instead of leaving a tall empty column. */
+.cns-folder-body{display:grid;gap:1.15rem;grid-template-columns:1fr;align-items:start}
+.cns-col{display:flex;flex-direction:column;gap:1.15rem;min-width:0}
+@media (min-width:1000px){ .cns-folder-body{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)} }
 
 .cns-docs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.7rem}
 .cns-docs li{border:1px solid var(--line);border-radius:12px;padding:.8rem .9rem;background:#fff}
