@@ -5,6 +5,7 @@ const express = require('express');
 const prisma = require('../db');
 const { requirePatient, publicPatient } = require('./auth');
 const { logActivity } = require('../lib/audit');
+const bcrypt = require('bcryptjs');
 const { notifyDoctor } = require('../lib/notify');
 
 const router = express.Router();
@@ -50,6 +51,30 @@ router.put('/me', requirePatient, async (req, res) => {
     logActivity(null, { kind: 'audit', actor: updated.name, action: 'Updated own profile', target: `Patient · ${updated.name}`, category: 'Patient' });
     res.json({ patient: publicPatient(updated) });
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not save your profile.' }); }
+});
+
+// PUT /api/portal/password { password, current? } — set or change the patient's own password.
+// A patient who registered through the OTP pop-up has an account and no password at all;
+// setting one here is what lets them sign in from another device without the reset email.
+// Once a password exists the current one must be given to change it, so a session left open
+// on a shared machine cannot be used to lock the real owner out.
+router.put('/password', requirePatient, async (req, res) => {
+  try {
+    const password = String(req.body?.password ?? '');
+    if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters.' });
+    const patient = await prisma.patient.findUnique({ where: { id: req.patient.id } });
+    if (!patient) return res.status(404).json({ error: 'Account not found.' });
+    if (!patient.email) return res.status(400).json({ error: 'Add an email address to your profile first — that is what you sign in with.' });
+    if (patient.password) {
+      const current = String(req.body?.current ?? '');
+      const ok = current && await bcrypt.compare(current, patient.password);
+      if (!ok) return res.status(400).json({ error: 'Your current password is incorrect.' });
+    }
+    const hash = await bcrypt.hash(password, 10);
+    const updated = await prisma.patient.update({ where: { id: patient.id }, data: { password: hash } });
+    logActivity(null, { kind: 'audit', actor: updated.name, action: patient.password ? 'Changed own password' : 'Set a password', target: `Patient · ${updated.name}`, category: 'Patient' });
+    res.json({ ok: true, patient: publicPatient(updated) });
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not save your password.' }); }
 });
 
 // GET /api/portal/reports — the patient's uploaded reports + their live status/category/assigned doctor

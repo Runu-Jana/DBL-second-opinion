@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { api } from '../api.js';
+import { useEffect, useRef, useState } from 'react';
+import { api, patientApi, setPatientToken } from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
 /* Scroll-triggered "second opinion" registration pop-up. Appears once per session after the
@@ -9,7 +9,7 @@ import { useAuth } from '../context/AuthContext.jsx';
    Which contact detail gets the code is a server setting, so /contact/otp/channel is asked on
    open: the server can be switched from email to WhatsApp or SMS without redeploying this. */
 export default function LeadPopup() {
-  const { finishLogin, requestUpload } = useAuth();
+  const { finishLogin, setUploadOpen, session, loading } = useAuth();
   const [show, setShow] = useState(false);
   const [step, setStep] = useState('form'); // form -> otp -> done
   const [name, setName] = useState('');
@@ -17,12 +17,19 @@ export default function LeadPopup() {
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [uhid, setUhid] = useState('');
+  const [regEmail, setRegEmail] = useState('');   // the address on the record we just verified
+  const [pw, setPw] = useState('');
+  const [pwSaved, setPwSaved] = useState(false);
+  const pending = useRef(null);   // the session earned by verifying, adopted when they leave
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const [devCode, setDevCode] = useState('');
   const [channel, setChannel] = useState('email');   // which channel the server will send over
 
+  // Never for someone already signed in: they have an account, and a "register" pop-up reads
+  // as having to do it all again. The stored session restores asynchronously, so wait for it.
   useEffect(() => {
+    if (loading || session) return;
     if (sessionStorage.getItem('dbl_lead_shown')) return;
     const onScroll = () => {
       const h = document.documentElement.scrollHeight - window.innerHeight;
@@ -34,7 +41,7 @@ export default function LeadPopup() {
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+  }, [loading, session]);
 
   useEffect(() => {
     if (!show) return;
@@ -48,7 +55,14 @@ export default function LeadPopup() {
     return () => { document.body.style.overflow = prev; };
   }, [show]);
 
-  const close = () => setShow(false);
+  // Leaving the pop-up, by any route, is when the session it earned takes effect. Adopting it
+  // earlier would have the home page send them to their dashboard mid-pop-up, taking the
+  // reference code and the password offer with it.
+  const close = () => {
+    setShow(false);
+    const p = pending.current;
+    if (p) { pending.current = null; finishLogin(p.token, p.patient); }
+  };
 
   const needsEmail = channel === 'email';
 
@@ -73,10 +87,25 @@ export default function LeadPopup() {
     try {
       const r = await api('/contact/otp/verify', { method: 'POST', auth: false, body: JSON.stringify({ name: name.trim(), phone: phone.trim(), code: code.trim() }) });
       setUhid(r.uhid || '');
-      // Verifying the code signed them in; adopt the session so the rest of the site knows.
-      if (r.token && r.patient) finishLogin(r.token, r.patient);
+      setRegEmail(r.patient?.email || '');
+      // Store the token now, so closing the tab still leaves them signed in next time, but keep
+      // it out of the app until they leave the pop-up (see close).
+      if (r.token && r.patient) { setPatientToken(r.token); pending.current = { token: r.token, patient: r.patient }; }
       setStep('done');
     } catch (ex) { setErr(ex.message || 'Could not verify the code. Please try again.'); }
+    finally { setBusy(false); }
+  };
+
+  // Optional, offered right after registering: without it the only way back in from another
+  // device is the reset email, which most people only discover once they are locked out.
+  const savePassword = async (e) => {
+    e?.preventDefault();
+    if (pw.length < 6) { setErr('Password must be at least 6 characters.'); return; }
+    setErr(''); setBusy(true);
+    try {
+      await patientApi('/portal/password', { method: 'PUT', body: JSON.stringify({ password: pw }) });
+      setPwSaved(true); setPw('');
+    } catch (ex) { setErr(ex.message || 'Could not save your password. Please try again.'); }
     finally { setBusy(false); }
   };
 
@@ -131,7 +160,18 @@ export default function LeadPopup() {
             <h4>You’re registered, {name.trim().split(' ')[0] || 'there'}!</h4>
             <p>Your {needsEmail ? 'email is' : 'number is'} verified. Our care team will be in touch shortly to help with your second opinion.</p>
             {uhid && <p className="lead-code">Your reference code: <strong>{uhid}</strong><br /><span>Keep this — we’ll use it to track your reports and records.</span></p>}
-            <button type="button" className="btn btn-primary" onClick={() => { close(); requestUpload(); }}>Upload my reports</button>
+            {regEmail && !pwSaved && (
+              <form className="lead-pw" onSubmit={savePassword}>
+                <p>Set a password so you can sign in with <strong>{regEmail}</strong> from any device. Optional — you are already signed in here.</p>
+                <label className="lead-field"><span>Password</span>
+                  <input type="password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="At least 6 characters" autoComplete="new-password" />
+                </label>
+                {err && <p className="lead-err">{err}</p>}
+                <button type="submit" className="btn btn-outline lead-submit" disabled={busy || !pw}>{busy ? 'Saving…' : 'Save password'}</button>
+              </form>
+            )}
+            {pwSaved && <p className="lead-pw-ok">Password saved. You can now sign in with {regEmail} from any device.</p>}
+            <button type="button" className="btn btn-primary" onClick={() => { close(); setUploadOpen(true); }}>Upload my reports</button>
             <button type="button" className="link-btn lead-later" onClick={close}>I’ll do this later</button>
           </div>
         )}

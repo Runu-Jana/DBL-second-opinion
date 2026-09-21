@@ -665,6 +665,11 @@ html[dir="rtl"] .lang-item,html[dir="rtl"] .hero-trust,html[dir="rtl"] .btn-stac
 .lead-code{margin:.3rem 0 0;background:var(--teal-050);border:1px dashed var(--teal-100);border-radius:12px;padding:.7rem .9rem;color:var(--ink-soft);font-size:.9rem}
 .lead-code strong{font-size:1.15rem;color:var(--teal-dark);letter-spacing:.03em}
 .lead-code span{font-size:.78rem;color:var(--muted)}
+/* Offered once registered: a password is optional here, so it sits below the reference code. */
+.lead-pw{width:100%;margin-top:.7rem;padding-top:.9rem;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:.7rem;text-align:left}
+.lead-pw p{font-size:.85rem}
+.lead-done .lead-pw .btn{margin-top:0;align-self:flex-start}
+.lead-pw-ok{margin-top:.6rem;color:var(--teal-dark);font-weight:600;font-size:.88rem}
 @media (max-width:420px){
   .lead-doc{height:190px}
   .lead-banner-text{padding-right:124px}

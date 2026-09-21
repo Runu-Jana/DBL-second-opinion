@@ -81,7 +81,7 @@ export function AuthProvider({ children }) {
 
   const value = {
     session, loading, authOpen, setAuthOpen, uploadOpen, setUploadOpen,
-    requestUpload, login, signup, logout, refreshSession, setSession,
+    requestUpload, finishLogin, login, signup, logout, refreshSession, setSession,
     forgotPassword, resetPassword, justSignedUp,
   };
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
