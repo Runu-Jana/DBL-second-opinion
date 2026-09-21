@@ -4,7 +4,7 @@
 // patient sent, the AI's reading of each document, the counsellor's own assessment, and the
 // assignment that hands the case on. A case cannot be assigned until the assessment is written,
 // because that report is the whole point of this stage — it is what the specialist receives.
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Select } from '../components/AdminFields.jsx';
 import StaffBell from '../components/StaffBell.jsx';
 
@@ -154,6 +154,17 @@ function Folder({ api, id, onBack, flash, msg, me, onLogout }) {
   const [doctor, setDoctor] = useState('');
   const [busy, setBusy] = useState('');
 
+  // The case-report box starts small and grows with what is typed, up to a cap, then scrolls —
+  // so an empty folder is not dominated by a tall empty field, and a long assessment still fits.
+  const reportRef = useRef(null);
+  const autosize = () => {
+    const el = reportRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.max(72, Math.min(el.scrollHeight, 384))}px`;
+  };
+  useEffect(autosize, [report, data]);
+
   const load = () => api(`/counsellor/folders/${id}`).then((d) => {
     setData(d);
     setReport(d.case?.counsellorReport || '');
@@ -272,7 +283,8 @@ function Folder({ api, id, onBack, flash, msg, me, onLogout }) {
             This is what the specialist receives. The AI draft is a starting point built from the readings above —
             check it against the documents and write your own assessment before assigning.
           </p>
-          <textarea className="cns-report" rows={7} value={report} onChange={(e) => setReport(e.target.value)}
+          <textarea ref={reportRef} className="cns-report cns-report-auto" rows={3} value={report}
+            onChange={(e) => { setReport(e.target.value); autosize(); }}
             placeholder="Your assessment of this patient's case…" />
           <div className="cns-row">
             <label>Cancer type

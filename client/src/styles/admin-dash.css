@@ -585,6 +585,9 @@
 .cns-report{width:100%;padding:.8rem .9rem;border:1.5px solid var(--line);border-radius:12px;font:inherit;font-size:.87rem;
   line-height:1.6;resize:vertical;white-space:pre-wrap}
 .cns-report:focus{outline:none;border-color:var(--teal)}
+/* Auto-growing variant: height is driven by JS, so drop manual resize and hide the overflow
+   until it reaches the cap, where overflow-y takes over and it scrolls. */
+.cns-report-auto{resize:none;overflow-y:auto}
 .cns-row{display:flex;flex-wrap:wrap;align-items:flex-end;gap:.8rem;margin-top:.8rem}
 .cns-row label{display:flex;flex-direction:column;gap:.25rem;font-size:.8rem;font-weight:600;color:var(--ink-soft);min-width:200px}
 
