@@ -253,6 +253,7 @@ function DoctorDashboard({ onLogout }) {
             <p className="cns-muted no-print">
               This is what the patient receives. An AI draft is a starting point built from the handover and the
               document readings — check every line against the reports before you send it.
+              {handover.patientQuestions && ' The patient asked questions, above: answer each of them in your opinion.'}
             </p>
             <textarea className="cns-report no-print" rows={16} value={opinion} onChange={(e) => setOpinion(e.target.value)}
               placeholder="Your opinion for this patient…" />

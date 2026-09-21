@@ -174,6 +174,7 @@ router.post('/cases/:uhid/draft', requireDoctor, async (req, res) => {
       patientName: kase.patientName,
       cancerType: kase.cancerType,
       counsellorReport: kase.counsellorReport,
+      patientQuestions: kase.patientQuestions,
       readings,
     });
     const saved = await prisma.secondOpinion.update({ where: { id: kase.id }, data: { doctorAiDraft: draft } });

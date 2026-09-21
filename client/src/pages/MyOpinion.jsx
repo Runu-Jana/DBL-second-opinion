@@ -57,6 +57,12 @@ export default function MyOpinion() {
               </div>
               {o.deliveredAt && <span className="opinion-doc-date">{fmt(o.deliveredAt)}</span>}
             </header>
+            {o.patientQuestions && (
+              <section className="opinion-doc-asked">
+                <h3>What you asked</h3>
+                <p>{o.patientQuestions}</p>
+              </section>
+            )}
             {/* Preserved exactly as the doctor wrote it — their headings, their line breaks. */}
             <div className="opinion-doc-body">{o.opinion}</div>
             <footer className="opinion-doc-foot">

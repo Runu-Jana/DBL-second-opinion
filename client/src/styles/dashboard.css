@@ -363,10 +363,16 @@
 .opinion-doc-body{white-space:pre-wrap;word-break:break-word;font-size:.93rem;line-height:1.7;color:var(--ink)}
 .opinion-doc-foot{margin-top:1.1rem;padding-top:.8rem;border-top:1px solid var(--line);
   color:var(--muted);font-size:.8rem;line-height:1.5}
+/* The questions the patient typed at upload, shown back beside the answer so they can check
+   each one was addressed. */
+.opinion-doc-asked{margin:0 0 1rem;padding:.75rem .9rem;background:var(--teal-050);border:1px solid var(--teal-100);border-radius:10px}
+.opinion-doc-asked h3{margin:0 0 .3rem;font-size:.76rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--teal-dark)}
+.opinion-doc-asked p{margin:0;white-space:pre-wrap;word-break:break-word;font-size:.88rem;line-height:1.6;color:var(--ink-soft)}
 
 @media print{
   .dash-side,.dash-topbar,.pg-head .pg-action,.no-print{display:none !important}
   .dash-card,.opinion-doc{border:0;box-shadow:none;padding:0}
   .opinion-doc-body{font-size:11pt}
+  .opinion-doc-asked{background:#fff;border:1px solid #ddd}
   @page{margin:18mm}
 }

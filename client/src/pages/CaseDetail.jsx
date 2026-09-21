@@ -90,7 +90,7 @@ export default function CaseDetail() {
               <div className="list-row" style={{ borderBottom: 0, background: 'var(--teal-050)', borderRadius: '12px' }}>
                 <span className="list-ico" style={{ background: '#fff' }}>{Ico.download}</span>
                 <div className="list-body"><h3>Second Opinion Ready</h3><p>Reviewed by {r.doctor || 'our specialist'}{r.notes ? ` · ${r.notes}` : ''}</p></div>
-                {r.fileUrl && <a className="btn btn-primary" style={{ padding: '.55rem 1rem', fontSize: '.82rem' }} href={r.fileUrl} target="_blank" rel="noreferrer">View</a>}
+                <Link to="/dashboard/opinion" className="btn btn-primary" style={{ padding: '.55rem 1rem', fontSize: '.82rem' }}>Read opinion</Link>
               </div>
             ) : (
               <div className="empty" style={{ padding: '1.6rem 1rem' }}>

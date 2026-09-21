@@ -139,6 +139,7 @@ router.get('/cases', requirePatient, async (req, res) => {
           id: o.id,
           reference: o.patientUhid || `DBL-${String(o.id).padStart(4, '0')}`,
           cancerType: o.cancerType,
+          patientQuestions: o.patientQuestions,
           doctor: o.expert,
           status: o.status,
           delivered: o.status === 'Delivered',
@@ -179,6 +180,8 @@ router.get('/opinions', requirePatient, async (req, res) => {
       cancerType: o.cancerType,
       doctor: o.expert,
       opinion: o.doctorOpinion,
+      // Shown back beside the answer, so they can check each one was addressed.
+      patientQuestions: o.patientQuestions,
       deliveredAt: o.deliveredAt,
       submittedDate: o.submittedDate,
     })));
