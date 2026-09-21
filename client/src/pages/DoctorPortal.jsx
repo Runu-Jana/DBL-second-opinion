@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { CATEGORY_TONE } from '../lib/categories.js';
 import CounsellorPortal from './CounsellorPortal.jsx';
 import StaffBell from '../components/StaffBell.jsx';
+import PasswordField from '../components/PasswordField.jsx';
 import { getDoctorToken, setDoctorToken, clearDoctorToken, endDoctorSession, SESSION_ENDED } from '../api.js';
 
 const RTONE = { 'Pending Review': 'amber', Reviewed: 'green', Uploaded: 'blue', Archived: 'gray' };
@@ -56,7 +57,7 @@ function DoctorLogin({ onLogin }) {
         <h1>Doctor Portal</h1>
         <p>Sign in to review reports assigned to you.</p>
         <label>Email<input type="email" name="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" placeholder="you@dblhealthcare.com" required /></label>
-        <label>Password<input type="password" name="password" autoComplete="current-password" placeholder="Your password" required /></label>
+        <PasswordField label="Password" name="password" autoComplete="current-password" placeholder="Your password" />
         {err && <p className="doc-err">{err}</p>}
         {note && <p className="doc-note">{note}</p>}
         <button type="submit" className="btn btn-primary btn-block">Log in</button>

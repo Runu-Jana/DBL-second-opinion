@@ -494,6 +494,8 @@
 .doc-login label{display:block;text-align:left;font-size:.8rem;font-weight:700;color:var(--ink-soft);margin-bottom:.8rem}
 .doc-login input{width:100%;margin-top:.3rem;font:inherit;padding:.7rem .8rem;border:1.5px solid var(--line);border-radius:10px;background:#fbfdfd}
 .doc-login input:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 4px rgba(14,159,142,.14)}
+/* The password field carries a show/hide eye (PasswordField): keep room so the dots never run under it. */
+.doc-login .pw-wrap input{padding-right:2.9rem}
 .doc-err{color:#c0392b;font-size:.82rem;font-weight:600;margin:0 0 .8rem}
 .doc-note{color:#0b7d5e;background:#e5f7f0;border-radius:8px;padding:.55rem .7rem;font-size:.82rem;font-weight:600;margin:0 0 .8rem;text-align:left}
 .doc-forgot{display:block;width:100%;margin-top:.9rem;border:0;background:none;color:var(--teal-dark);
