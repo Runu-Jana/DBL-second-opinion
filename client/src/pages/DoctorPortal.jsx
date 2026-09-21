@@ -67,7 +67,7 @@ function DoctorLogin({ onLogin }) {
   );
 }
 
-function DoctorDashboard({ onLogout }) {
+function DoctorDashboard({ onLogout, preview = false }) {
   const [me, setMe] = useState(null);
   const [cases, setCases] = useState([]);
   const [patients, setPatients] = useState([]);
@@ -222,7 +222,7 @@ function DoctorDashboard({ onLogout }) {
                     <span className="cns-doc-actions no-print">
                       {d.fileUrl && <a className="icon-btn" href={d.fileUrl} target="_blank" rel="noreferrer">View</a>}
                       {d.fileUrl && <a className="icon-btn" href={d.fileUrl} download>Download</a>}
-                      <button type="button" className="icon-btn" disabled={busy === 'doc' + d.id || !handover.ai}
+                      <button type="button" className="icon-btn" disabled={preview || busy === 'doc' + d.id || !handover.ai}
                         onClick={() => analyseDoc(d.id)}>
                         {busy === 'doc' + d.id ? 'Reading…' : d.aiSummary ? 'Re-read with AI' : 'Summarise with AI'}
                       </button>
@@ -236,11 +236,11 @@ function DoctorDashboard({ onLogout }) {
                   {d.notes && noteFor !== d.id && <p className="doc-note-saved">{d.notes}</p>}
                   {noteFor === d.id && (
                     <div className="doc-note-edit no-print">
-                      <textarea rows={3} value={noteText} onChange={(e) => setNoteText(e.target.value)}
+                      <textarea rows={3} value={noteText} readOnly={preview} onChange={(e) => setNoteText(e.target.value)}
                         placeholder="Your note on this document…" />
                       <div className="doc-note-edit-actions">
                         <button type="button" className="doc-btn doc-btn-outline" onClick={() => setNoteFor(null)}>Cancel</button>
-                        <button type="button" className="doc-btn doc-btn-primary" disabled={busy === 'note' + d.id} onClick={() => saveNote(d.id)}>
+                        <button type="button" className="doc-btn doc-btn-primary" disabled={preview || busy === 'note' + d.id} onClick={() => saveNote(d.id)}>
                           {busy === 'note' + d.id ? 'Saving…' : 'Save note'}
                         </button>
                       </div>
@@ -256,18 +256,18 @@ function DoctorDashboard({ onLogout }) {
               document readings — check every line against the reports before you send it.
               {handover.patientQuestions && ' The patient asked questions, above: answer each of them in your opinion.'}
             </p>
-            <textarea className="cns-report no-print" rows={16} value={opinion} onChange={(e) => setOpinion(e.target.value)}
+            <textarea className="cns-report no-print" rows={16} value={opinion} readOnly={preview} onChange={(e) => setOpinion(e.target.value)}
               placeholder="Your opinion for this patient…" />
             <pre className="cns-ai print-only">{opinion}</pre>
             <div className="doc-actbar no-print">
-              <button type="button" className="doc-btn doc-btn-ghost" disabled={busy === 'draft' || !handover.ai} onClick={draftWithAI}>
+              <button type="button" className="doc-btn doc-btn-ghost" disabled={preview || busy === 'draft' || !handover.ai} onClick={draftWithAI}>
                 {busy === 'draft' ? 'Drafting…' : 'Draft with AI'}
               </button>
               <span className="spacer" />
-              <button type="button" className="doc-btn doc-btn-outline" disabled={busy === 'save'} onClick={saveOpinion}>
+              <button type="button" className="doc-btn doc-btn-outline" disabled={preview || busy === 'save'} onClick={saveOpinion}>
                 {busy === 'save' ? 'Saving…' : 'Save draft'}
               </button>
-              <button type="button" className="doc-btn doc-btn-primary" disabled={busy === 'send' || !handover.doctorOpinion} onClick={deliver}>
+              <button type="button" className="doc-btn doc-btn-primary" disabled={preview || busy === 'send' || !handover.doctorOpinion} onClick={deliver}>
                 {busy === 'send' ? 'Sending…' : handover.status === 'Delivered' ? 'Re-send to patient' : 'Send to patient'}
               </button>
               {(!handover.ai || !handover.doctorOpinion) && (
@@ -296,9 +296,9 @@ function DoctorDashboard({ onLogout }) {
                 ))}
               </div>
               <form className="doc-chat-send" onSubmit={sendMessage}>
-                <textarea rows={2} value={draft} onChange={(e) => setDraft(e.target.value)}
+                <textarea rows={2} value={draft} readOnly={preview} onChange={(e) => setDraft(e.target.value)}
                   placeholder="Write to your patient…" />
-                <button type="submit" className="doc-btn doc-btn-primary" disabled={busy === 'msg' || !draft.trim()}>
+                <button type="submit" className="doc-btn doc-btn-primary" disabled={preview || busy === 'msg' || !draft.trim()}>
                   {busy === 'msg' ? 'Sending…' : 'Send'}
                 </button>
               </form>
@@ -389,9 +389,10 @@ export default function DoctorPortal() {
   const session = sessionOf(token);
   // Leaving a preview closes the tab it opened in; if it was opened directly, drop back to login.
   const exitPreview = () => { clearDoctorToken(); window.close(); setToken(null); };
-  const banner = session.imp ? <PreviewBanner name={session.name} by={session.by} onExit={exitPreview} /> : null;
-  if (session.role === 'counsellor') return <>{banner}<CounsellorPortal api={docApi} me={session} onLogout={logout} /></>;
-  return <>{banner}<DoctorDashboard onLogout={logout} /></>;
+  const preview = !!session.imp;
+  const banner = preview ? <PreviewBanner name={session.name} by={session.by} onExit={exitPreview} /> : null;
+  if (session.role === 'counsellor') return <>{banner}<CounsellorPortal api={docApi} me={session} onLogout={logout} preview={preview} /></>;
+  return <>{banner}<DoctorDashboard onLogout={logout} preview={preview} /></>;
 }
 
 // Shown across the top when an admin is viewing a staff dashboard as a read-only preview, so it

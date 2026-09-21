@@ -18,7 +18,7 @@ const isImage = (u) => ['png', 'jpg', 'jpeg', 'webp'].includes(extOf(u));
 const isWord = (u) => ['doc', 'docx'].includes(extOf(u));
 const kindOf = (u) => (isVideo(u) ? 'Video' : isImage(u) ? 'Image' : isWord(u) ? 'Word' : extOf(u) === 'pdf' ? 'PDF' : 'File');
 
-export default function CounsellorPortal({ api, me, onLogout }) {
+export default function CounsellorPortal({ api, me, onLogout, preview = false }) {
   const [tab, setTab] = useState('folders');
   const [summary, setSummary] = useState(null);
   const [folders, setFolders] = useState([]);
@@ -54,6 +54,7 @@ export default function CounsellorPortal({ api, me, onLogout }) {
         msg={msg}
         me={meLive}
         onLogout={onLogout}
+        preview={preview}
       />
     );
   }
@@ -146,7 +147,7 @@ function Stat({ label, value, tone }) {
 }
 
 // ---- one patient's folder ----------------------------------------------------------------
-function Folder({ api, id, onBack, flash, msg, me, onLogout }) {
+function Folder({ api, id, onBack, flash, msg, me, onLogout, preview = false }) {
   const [data, setData] = useState(null);
   const [report, setReport] = useState('');
   const [cancerType, setCancerType] = useState('');
@@ -264,7 +265,7 @@ function Folder({ api, id, onBack, flash, msg, me, onLogout }) {
                   <span className="cns-doc-actions">
                     {d.fileUrl && <a className="icon-btn" href={d.fileUrl} target="_blank" rel="noreferrer">View</a>}
                     {d.fileUrl && <a className="icon-btn" href={d.fileUrl} download>Download</a>}
-                    <button type="button" className="icon-btn" disabled={busy === 'doc' + d.id} onClick={() => analyse(d.id)}>
+                    <button type="button" className="icon-btn" disabled={preview || busy === 'doc' + d.id} onClick={() => analyse(d.id)}>
                       {busy === 'doc' + d.id ? 'Reading…' : d.aiSummary ? 'Re-read with AI' : 'Read with AI'}
                     </button>
                   </span>
@@ -282,7 +283,7 @@ function Folder({ api, id, onBack, flash, msg, me, onLogout }) {
         <section className="dash-card">
           <div className="dash-card-head">
             <h2>Case report</h2>
-            <button type="button" className="doc-btn doc-btn-ghost" disabled={busy === 'draft'} onClick={buildDraft}>
+            <button type="button" className="doc-btn doc-btn-ghost" disabled={preview || busy === 'draft'} onClick={buildDraft}>
               {busy === 'draft' ? 'Building…' : 'Build AI draft'}
             </button>
           </div>
@@ -290,7 +291,7 @@ function Folder({ api, id, onBack, flash, msg, me, onLogout }) {
             This is what the specialist receives. The AI draft is a starting point built from the readings above —
             check it against the documents and write your own assessment before assigning.
           </p>
-          <textarea ref={reportRef} className="cns-report cns-report-auto" rows={3} value={report}
+          <textarea ref={reportRef} className="cns-report cns-report-auto" rows={3} value={report} readOnly={preview}
             onChange={(e) => { setReport(e.target.value); autosize(); }}
             placeholder="Your assessment of this patient's case…" />
           <div className="cns-row">
@@ -300,7 +301,7 @@ function Folder({ api, id, onBack, flash, msg, me, onLogout }) {
             <label>Priority
               <Select value={priority} onChange={setPriority} options={['Normal', 'High', 'Urgent']} />
             </label>
-            <button type="button" className="doc-btn doc-btn-primary" disabled={busy === 'save'} onClick={saveReport}>
+            <button type="button" className="doc-btn doc-btn-primary" disabled={preview || busy === 'save'} onClick={saveReport}>
               {busy === 'save' ? 'Saving…' : 'Save case report'}
             </button>
           </div>
@@ -310,7 +311,10 @@ function Folder({ api, id, onBack, flash, msg, me, onLogout }) {
         {/* ---- hand it to a specialist ---- */}
         <section className="dash-card">
           <div className="dash-card-head"><h2>Assign a specialist</h2></div>
-          {!data.case?.counsellorReport && (
+          {preview && (
+            <p className="cns-muted">Admin preview — read-only. Sign in as this counsellor to change the assignment.</p>
+          )}
+          {!preview && !data.case?.counsellorReport && (
             <p className="cns-warn">Save your case report first — it is what the specialist receives with the patient.</p>
           )}
 
@@ -322,7 +326,7 @@ function Folder({ api, id, onBack, flash, msg, me, onLogout }) {
                 <span className="adm-badge green">Assigned</span>
                 <span>Case is with <strong>{data.case.expert}</strong>{data.case.assignedAt ? ` since ${fmtDate(data.case.assignedAt)}` : ''}.</span>
               </div>
-              <button type="button" className="doc-btn doc-btn-outline" onClick={() => { setChanging(true); setDoctor(data.case.expert || ''); }}>
+              <button type="button" className="doc-btn doc-btn-outline" disabled={preview} onClick={() => { setChanging(true); setDoctor(data.case.expert || ''); }}>
                 Change assignment
               </button>
             </div>
@@ -337,7 +341,7 @@ function Folder({ api, id, onBack, flash, msg, me, onLogout }) {
                 />
               </label>
               <button type="button" className="doc-btn doc-btn-primary"
-                disabled={busy === 'assign' || !data.case?.counsellorReport || !doctor || (changing && doctor === data.case?.expert)}
+                disabled={preview || busy === 'assign' || !data.case?.counsellorReport || !doctor || (changing && doctor === data.case?.expert)}
                 onClick={assign}>
                 {busy === 'assign' ? 'Saving…' : data.case?.expert ? 'Reassign & send' : 'Assign & send case'}
               </button>
