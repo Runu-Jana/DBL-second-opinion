@@ -31,6 +31,9 @@ const NO_DEPARTMENT_ROLES = ['Counsellor', 'Receptionist'];
 const LOGIN_ROLES = ['Oncologist', 'Surgeon', 'Radiologist', 'Counsellor', 'Care Coordinator'];
 
 const fmtDay = (iso) => { try { return new Date(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }); } catch { return ''; } };
+// A phone number is digits and the punctuation that formats them — never letters. Strip anything
+// else as it is typed, so the field cannot hold "fvhsdg…". Emptiness stays allowed (phone is optional).
+const sanitizePhone = (v = '') => v.replace(/[^\d+()\-\s]/g, '');
 
 // The login state the admin sees per staff row, from the three facts the API now returns:
 // can this role log in, have they set a password (activated), and have they ever signed in.
@@ -70,6 +73,10 @@ function StaffModal({ member, onClose, onSaved, on401 }) {
   const submit = (e) => {
     e.preventDefault();
     if (!f.name.trim() || !f.role) return setErr('Name and role are required.');
+    const digits = (f.phone || '').replace(/\D/g, '');
+    if (f.phone && f.phone.trim() && (digits.length < 7 || digits.length > 15)) {
+      return setErr('Enter a valid phone number (7–15 digits), or leave it blank.');
+    }
     const req = member
       ? api(`/staff/${member.id}`, { method: 'PUT', on401, body: JSON.stringify(f) })
       : api('/staff', { method: 'POST', on401, body: JSON.stringify(f) });
@@ -91,7 +98,8 @@ function StaffModal({ member, onClose, onSaved, on401 }) {
             <label>Status<Select value={f.status} onChange={(v) => setF({ ...f, status: v })} options={STATUSES} /></label>
             <label className="full">Qualifications<input value={f.qualifications} onChange={set('qualifications')} placeholder="MBBS, MD, DM (Oncology)" /></label>
             <label>Email<input type="email" value={f.email} onChange={set('email')} placeholder="name@dblhealthcare.com" /></label>
-            <label>Phone<input value={f.phone} onChange={set('phone')} placeholder="+91 …" /></label>
+            <label>Phone<input type="tel" inputMode="tel" autoComplete="tel" maxLength={20} value={f.phone}
+              onChange={(e) => setF({ ...f, phone: sanitizePhone(e.target.value) })} placeholder="+91 …" /></label>
             <label>Joined date<DateField value={f.joinedDate} onChange={(v) => setF({ ...f, joinedDate: v })} /></label>
             <label className="full">Photo
               <div className="photo-field">

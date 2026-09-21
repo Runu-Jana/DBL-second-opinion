@@ -24,7 +24,9 @@ function parseBody(b = {}) {
     specialties: b.specialties ? String(b.specialties).trim() : null,
     qualifications: b.qualifications ? String(b.qualifications).trim() : null,
     email: b.email ? String(b.email).trim() : null,
-    phone: b.phone ? String(b.phone).trim() : null,
+    // Phone is digits and formatting only — strip letters so a direct API call cannot store junk
+    // the form now blocks. Empty after stripping is treated as no phone.
+    phone: b.phone ? (String(b.phone).replace(/[^\d+()\-\s]/g, '').trim() || null) : null,
     status: STATUSES.includes(b.status) ? b.status : 'Active',
     onCall: !!b.onCall,
     photoUrl: b.photoUrl ? String(b.photoUrl).trim() : null,
