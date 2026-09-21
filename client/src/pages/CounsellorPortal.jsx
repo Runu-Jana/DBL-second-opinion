@@ -272,7 +272,7 @@ function Folder({ api, id, onBack, flash, msg, me, onLogout }) {
             This is what the specialist receives. The AI draft is a starting point built from the readings above —
             check it against the documents and write your own assessment before assigning.
           </p>
-          <textarea className="cns-report" rows={14} value={report} onChange={(e) => setReport(e.target.value)}
+          <textarea className="cns-report" rows={7} value={report} onChange={(e) => setReport(e.target.value)}
             placeholder="Your assessment of this patient's case…" />
           <div className="cns-row">
             <label>Cancer type
