@@ -217,6 +217,15 @@ router.post('/folders/:id/assign', requireCounsellor, async (req, res) => {
       return res.status(400).json({ error: 'Write and save your case report before assigning a doctor — it is what the specialist receives.' });
     }
 
+    const previous = kase.expert || null;
+    const reassigning = previous && previous !== doctor;
+
+    // Keep a record of every hand-over: who, when, the stage the case was at, and who moved it.
+    // This is the maintained history behind "change assignment" — a case's doctor can change, and
+    // when it does there is a dated trail rather than a silently overwritten name.
+    const history = (() => { try { return JSON.parse(kase.assignmentHistory || '[]'); } catch { return []; } })();
+    history.push({ doctor, from: previous, at: new Date().toISOString(), stage: kase.status || 'Awaiting Review', by: req.counsellor.name });
+
     // Stamp the assignment on the documents as well as the case, so the doctor's existing
     // "assigned to me" view picks the whole folder up unchanged.
     await prisma.report.updateMany({
@@ -229,6 +238,7 @@ router.post('/folders/:id/assign', requireCounsellor, async (req, res) => {
         expert: doctor,
         assignedAt: new Date(),
         status: 'Under Review',
+        assignmentHistory: JSON.stringify(history),
         ...(category ? { cancerType: category } : {}),
       },
     });
@@ -239,13 +249,21 @@ router.post('/folders/:id/assign', requireCounsellor, async (req, res) => {
 
     logActivity(req, {
       kind: 'audit', actor: req.counsellor.name,
-      action: `Assigned ${patient.name} to ${doctor}`, target: patient.uhid, category: 'Report',
+      action: reassigning
+        ? `Reassigned ${patient.name} from ${previous} to ${doctor} (was ${kase.status})`
+        : `Assigned ${patient.name} to ${doctor}`,
+      target: patient.uhid, category: 'Report',
     });
     // Both ends of the handover hear about it: the patient gets a name, the specialist gets work.
     await notifyPatient(patient.uhid, { kind: 'case', title: 'A specialist has been assigned to your case',
       body: `${doctor} will review your reports${category ? ` for ${category}` : ''}.`, link: '/dashboard/cases' });
     await notifyDoctor(doctor, { kind: 'case', title: 'New case assigned to you',
       body: `${patient.name}${patient.uhid ? ` (${patient.uhid})` : ''} — reviewed and handed over by ${req.counsellor.name}.`, link: null });
+    // If this moved the case off another specialist, tell them it is no longer theirs.
+    if (reassigning) {
+      await notifyDoctor(previous, { kind: 'case', title: 'A case was reassigned from you',
+        body: `${patient.name}${patient.uhid ? ` (${patient.uhid})` : ''} has been reassigned to ${doctor} by ${req.counsellor.name}.`, link: null });
+    }
     res.json({ ok: true, case: updated });
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not assign the specialist.' }); }
 });

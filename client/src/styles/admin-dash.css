@@ -585,6 +585,14 @@
 /* The assigned-to status pill sits at the right edge of the header, vertically centred, rather
    than floating in the gap after the name. */
 .cns-assigned{margin-left:auto}
+/* Locked assignment row: the case is already with a specialist, and changing it is a separate act. */
+.cns-assigned-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.cns-assigned-now{display:flex;align-items:center;gap:.6rem;font-size:.9rem;color:var(--ink-soft)}
+/* The dated record of every specialist the case has been handed to. */
+.cns-assign-history{margin-top:1rem;padding-top:.9rem;border-top:1px solid var(--line)}
+.cns-assign-history h3{margin:0 0 .5rem;font-size:.8rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.cns-assign-history ol{margin:0;padding-left:1.1rem;display:flex;flex-direction:column;gap:.35rem}
+.cns-assign-history li{font-size:.85rem;color:var(--ink-soft);line-height:1.45}
 /* Folder detail body: documents beside the writing panel on wide screens, stacked on narrow,
    so the working area fills the width instead of leaving a tall empty column. */
 .cns-folder-body{display:grid;gap:1.15rem;grid-template-columns:1fr;align-items:start}

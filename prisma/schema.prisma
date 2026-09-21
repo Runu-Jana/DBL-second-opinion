@@ -267,6 +267,7 @@ model SecondOpinion {
   counsellorReport String?                       // the counsellor's written assessment handed to the doctor
   aiDraft       String?                          // AI first draft, kept so the human edit can be compared
   assignedAt    DateTime?                        // when a doctor was put on the case
+  assignmentHistory String?                      // JSON log of every assignment/reassignment: who, when, stage, by whom
   doctorOpinion String?                          // the specialist's second opinion — what the patient receives
   doctorAiDraft String?                          // AI first draft of that opinion, kept beside the final text
   reviewStartedAt DateTime?                      // first time the specialist opened the case

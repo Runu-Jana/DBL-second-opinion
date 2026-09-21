@@ -12,7 +12,7 @@ const initials = (n = '') => n.replace(/^(Dr|Mr|Ms|Mrs)\.?\s*/i, '').split(/\s+/
 // First name for the greeting, with any title stripped — otherwise "Dr. Anirudh" greets "Dr.".
 const firstName = (n = '') => n.replace(/^(Dr|Mr|Ms|Mrs)\.?\s*/i, '').split(/\s+/)[0] || n;
 const fmtDate = (iso) => (iso ? new Date(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—');
-const extOf = (u = '') => (u.split('?')[0].split('.').pop() || '').toLowerCase();
+const extOf = (u) => (String(u || '').split('?')[0].split('.').pop() || '').toLowerCase();
 const isVideo = (u) => ['mp4', 'mov', 'webm', 'ogg', 'ogv'].includes(extOf(u));
 const isImage = (u) => ['png', 'jpg', 'jpeg', 'webp'].includes(extOf(u));
 const isWord = (u) => ['doc', 'docx'].includes(extOf(u));
@@ -153,6 +153,7 @@ function Folder({ api, id, onBack, flash, msg, me, onLogout }) {
   const [priority, setPriority] = useState('Normal');
   const [doctor, setDoctor] = useState('');
   const [busy, setBusy] = useState('');
+  const [changing, setChanging] = useState(false);   // reveal the picker again to change an existing assignment
 
   // The case-report box starts small and grows with what is typed, up to a cap, then scrolls —
   // so an empty folder is not dominated by a tall empty field, and a long assessment still fits.
@@ -202,8 +203,9 @@ function Folder({ api, id, onBack, flash, msg, me, onLogout }) {
   };
   const assign = () => {
     setBusy('assign');
+    const wasAssigned = !!data.case?.expert;
     api(`/counsellor/folders/${id}/assign`, { method: 'POST', body: JSON.stringify({ doctor, category: cancerType }) })
-      .then(() => { flash(`Case assigned to ${doctor}.`); return load(); })
+      .then(() => { flash(wasAssigned ? `Case reassigned to ${doctor}.` : `Case assigned to ${doctor}.`); setChanging(false); return load(); })
       .catch((e) => flash(e.message))
       .finally(() => setBusy(''));
   };
@@ -211,6 +213,7 @@ function Folder({ api, id, onBack, flash, msg, me, onLogout }) {
   // Specialists who cover the chosen category float to the top; the rest stay selectable.
   const matching = cancerType ? doctors.filter((d) => d.categories.includes(cancerType)) : doctors;
   const others = cancerType ? doctors.filter((d) => !d.categories.includes(cancerType)) : [];
+  const assignHistory = (() => { try { return JSON.parse(data.case?.assignmentHistory || '[]'); } catch { return []; } })();
 
   return (
     <div className="doc-shell">
@@ -310,25 +313,64 @@ function Folder({ api, id, onBack, flash, msg, me, onLogout }) {
           {!data.case?.counsellorReport && (
             <p className="cns-warn">Save your case report first — it is what the specialist receives with the patient.</p>
           )}
-          <div className="cns-row">
-            <label>Specialist
-              <Select
-                value={doctor}
-                onChange={setDoctor}
-                options={[...matching.map((d) => d.name), ...others.map((d) => d.name)]}
-                placeholder={cancerType ? `Doctors covering ${cancerType}` : 'Select a doctor'}
-              />
-            </label>
-            <button type="button" className="doc-btn doc-btn-primary" disabled={busy === 'assign' || !data.case?.counsellorReport} onClick={assign}>
-              {busy === 'assign' ? 'Assigning…' : 'Assign & send case'}
-            </button>
-          </div>
-          {cancerType && (
+
+          {data.case?.expert && !changing ? (
+            // Already assigned: the case is with a specialist, so the button locks. Changing it is a
+            // deliberate, separate action.
+            <div className="cns-assigned-row">
+              <div className="cns-assigned-now">
+                <span className="adm-badge green">Assigned</span>
+                <span>Case is with <strong>{data.case.expert}</strong>{data.case.assignedAt ? ` since ${fmtDate(data.case.assignedAt)}` : ''}.</span>
+              </div>
+              <button type="button" className="doc-btn doc-btn-outline" onClick={() => { setChanging(true); setDoctor(data.case.expert || ''); }}>
+                Change assignment
+              </button>
+            </div>
+          ) : (
+            <div className="cns-row">
+              <label>Specialist
+                <Select
+                  value={doctor}
+                  onChange={setDoctor}
+                  options={[...matching.map((d) => d.name), ...others.map((d) => d.name)]}
+                  placeholder={cancerType ? `Doctors covering ${cancerType}` : 'Select a doctor'}
+                />
+              </label>
+              <button type="button" className="doc-btn doc-btn-primary"
+                disabled={busy === 'assign' || !data.case?.counsellorReport || !doctor || (changing && doctor === data.case?.expert)}
+                onClick={assign}>
+                {busy === 'assign' ? 'Saving…' : data.case?.expert ? 'Reassign & send' : 'Assign & send case'}
+              </button>
+              {changing && (
+                <button type="button" className="doc-btn doc-btn-ghost" onClick={() => { setChanging(false); setDoctor(data.case?.expert || ''); }}>
+                  Cancel
+                </button>
+              )}
+            </div>
+          )}
+
+          {cancerType && (data.case?.expert ? changing : true) && (
             <p className="cns-muted">
               {matching.length
                 ? `${matching.length} specialist(s) cover ${cancerType}.`
                 : `No specialist is tagged for ${cancerType} — tag one in Doctor & Staff Management, or pick someone below.`}
             </p>
+          )}
+
+          {/* The maintained record: every specialist the case has been with, dated, with the stage
+              it was at and who moved it. */}
+          {assignHistory.length > 0 && (
+            <div className="cns-assign-history">
+              <h3>Assignment history</h3>
+              <ol>
+                {assignHistory.map((h, i) => (
+                  <li key={i}>
+                    {h.from ? <>Reassigned from <strong>{h.from}</strong> to <strong>{h.doctor}</strong></> : <>Assigned to <strong>{h.doctor}</strong></>}
+                    <span className="cns-muted"> · {fmtDate(h.at)} · at stage &ldquo;{h.stage}&rdquo;{h.by ? ` · by ${h.by}` : ''}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
           )}
         </section>
         </div>
