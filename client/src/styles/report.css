@@ -106,8 +106,11 @@
 .doc-report-frame,.prof-report-frame,.doc-report-preview{background:#eef2f5;border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:10px}
 .prof-report-frame{max-height:68vh;overflow:auto}
 .doc-report-frame .report,.prof-report-frame .report,.doc-report-preview .report,.opinion-report-wrap .report{background:transparent;min-height:0;padding:0}
-.doc-report-frame .rp-page,.prof-report-frame .rp-page,.doc-report-preview .rp-page{width:100%;min-height:auto;margin:0 auto 16px;padding:22px 24px 46px;box-shadow:0 1px 3px rgba(16,42,58,.08)}
+.doc-report-frame .rp-page,.prof-report-frame .rp-page,.doc-report-preview .rp-page{width:100%;min-height:auto;margin:0 auto 16px;padding:22px 24px 22px;box-shadow:0 1px 3px rgba(16,42,58,.08)}
 .doc-report-frame .rp-page::after,.prof-report-frame .rp-page::after,.doc-report-preview .rp-page::after{display:none}
+/* On screen the pages are only as tall as their content, so the A4 footer cannot sit absolutely at
+   a fixed bottom — it would land on top of the last rows. Let it flow after the content instead. */
+.doc-report-frame .rp-foot,.prof-report-frame .rp-foot,.doc-report-preview .rp-foot{position:static;left:auto;right:auto;bottom:auto;margin-top:18px}
 /* Preview shows the finished document (read-only), so its pages get a lift and a paper feel. */
 .doc-report-preview{background:#e9eef2;padding:18px}
 .doc-report-preview .rp-page{box-shadow:0 6px 22px rgba(16,42,58,.16)}
@@ -151,6 +154,8 @@
   /* Embedded frames print as a clean document too */
   .doc-report-frame,.prof-report-frame,.doc-report-preview{background:#fff;border:0;padding:0;margin:0;max-height:none;overflow:visible}
   .doc-report-frame .rp-page,.prof-report-frame .rp-page,.doc-report-preview .rp-page{width:210mm;min-height:297mm;box-shadow:none;padding:14mm 13mm 16mm}
+  /* real A4 pages in print → the footer goes back to the fixed page bottom */
+  .doc-report-frame .rp-foot,.prof-report-frame .rp-foot,.doc-report-preview .rp-foot{position:absolute;left:13mm;right:13mm;bottom:9mm;margin-top:0}
   /* When the doctor prints from the preview, ONLY the finished report becomes the PDF — none of the
      case chrome (handover, documents, buttons) comes with it. */
   body:has(.doc-report-preview) .doc-topbar,

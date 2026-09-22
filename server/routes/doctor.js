@@ -274,6 +274,23 @@ router.put('/cases/:uhid/report', requireDoctor, async (req, res) => {
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not save the report.' }); }
 });
 
+// DELETE /api/doctor/cases/:uhid/report -> discard the generated report so the doctor can start
+// again. The tick-box intake is kept, so they can regenerate without re-answering; a report already
+// sent to the patient cannot be deleted here.
+router.delete('/cases/:uhid/report', requireDoctor, async (req, res) => {
+  try {
+    const kase = await ownCase(req);
+    if (!kase) return res.status(404).json({ error: 'Case not found.' });
+    if (req.doctor.imp) return res.status(403).json({ error: 'Preview is read-only.' });
+    if (kase.status === 'Delivered') return res.status(400).json({ error: 'This report has already been sent to the patient and cannot be deleted.' });
+    const updated = await prisma.secondOpinion.update({
+      where: { id: kase.id },
+      data: { reportData: null, doctorOpinion: null, status: 'Under Review' },
+    });
+    res.json({ ok: true, status: updated.status });
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not delete the report.' }); }
+});
+
 // PUT /api/doctor/cases/:uhid/opinion -> save the doctor's own text (draft state, not sent yet)
 router.put('/cases/:uhid/opinion', requireDoctor, async (req, res) => {
   try {

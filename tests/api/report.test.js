@@ -101,6 +101,17 @@
   check('the handover returns the report', handover.body.reportData.secondOpinion.overallOpinion, 'Continue the current plan.');
   check('the handover returns the intake', handover.body.reportForm.planAppropriate, true);
 
+  // --- delete the generated report: owner-only, keeps the intake so it can be regenerated ---
+  check('a counsellor cannot delete the report', [401, 403].includes((await call('DELETE', `/doctor/cases/${uhid}/report`, cTok)).status), true);
+  check('another doctor cannot delete the report', (await call('DELETE', `/doctor/cases/${uhid}/report`, otherDoc)).status, 404);
+  check('a preview cannot delete the report', (await call('DELETE', `/doctor/cases/${uhid}/report`, impTok)).status, 403);
+  check('the assigned doctor deletes the report', (await call('DELETE', `/doctor/cases/${uhid}/report`, dTok)).status, 200);
+  const afterDel = await call('GET', `/doctor/cases/${uhid}`, dTok);
+  check('  the report is gone', afterDel.body.reportData, null);
+  check('  but the tick-box intake is kept', afterDel.body.reportForm.planAppropriate, true);
+  // Put the report back so the rest of the flow (submit → deliver) has something to send.
+  await call('PUT', `/doctor/cases/${uhid}/report`, dTok, { reportData: sample, form });
+
   // --- submit to admin (the plain-text flattening set by the save satisfies the submit gate) ---
   const submitted = await call('POST', `/doctor/cases/${uhid}/submit`, dTok);
   check('the doctor submits for review', submitted.body.case.status, 'Pending Approval');
@@ -117,6 +128,8 @@
 
   const sent = await call('POST', `/second-opinions/${caseId}/deliver`, adminTok);
   check('the admin delivers', sent.body.case.status, 'Delivered');
+  // Once it has reached the patient, the doctor can no longer delete it.
+  check('a delivered report cannot be deleted', (await call('DELETE', `/doctor/cases/${uhid}/report`, dTok)).status, 400);
 
   // --- the patient reads the styled report ---
   const mine = await call('GET', '/portal/opinions', pTok);

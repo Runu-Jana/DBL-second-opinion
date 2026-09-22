@@ -693,6 +693,8 @@
 .doc-btn-ghost:hover:not(:disabled){background:var(--teal-100)}
 .doc-btn-outline{background:#fff;color:var(--ink-soft);border-color:var(--line)}
 .doc-btn-outline:hover:not(:disabled){border-color:var(--teal);color:var(--teal-dark)}
+.doc-btn-danger{background:#fff;color:#b42318;border-color:#f0c4bd}
+.doc-btn-danger:hover:not(:disabled){background:#fef2f2;border-color:#e0857a}
 .doc-btn-primary{background:var(--teal-dark);color:#fff}
 .doc-btn-primary:hover:not(:disabled){background:var(--teal-deep);box-shadow:0 4px 12px rgba(14,159,142,.28)}
 

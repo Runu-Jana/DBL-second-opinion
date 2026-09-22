@@ -163,6 +163,17 @@ function DoctorDashboard({ onLogout, preview = false }) {
       .catch((e) => flash(e.message))
       .finally(() => setBusy(''));
   };
+  // Scrap the generated report and start over. The tick-box answers are kept, so the doctor can
+  // adjust them and regenerate without re-answering everything.
+  const deleteReport = () => {
+    if (!report) return;
+    if (!window.confirm('Delete this generated report? Your tick-box answers are kept so you can generate it again. This cannot be undone.')) return;
+    setBusy('delete');
+    docApi(`/doctor/cases/${caseUhid}/report`, { method: 'DELETE' })
+      .then(() => { setReport(null); setPreviewMode(false); flash('Report deleted. Adjust your answers and generate again when ready.'); return reopen(); })
+      .catch((e) => flash(e.message))
+      .finally(() => setBusy(''));
+  };
   // The doctor no longer sends to the patient directly — this submits the opinion to the admin
   // team, who review it and send it on.
   const submit = () => {
@@ -299,6 +310,9 @@ function DoctorDashboard({ onLogout, preview = false }) {
                 <div className="doc-actbar no-print">
                   <button type="button" className="doc-btn doc-btn-ghost" onClick={() => setPreviewMode(true)}>Preview &amp; print</button>
                   <span className="spacer" />
+                  <button type="button" className="doc-btn doc-btn-danger" disabled={preview || busy === 'delete' || handover.status === 'Delivered'} onClick={deleteReport}>
+                    {busy === 'delete' ? 'Deleting…' : 'Delete report'}
+                  </button>
                   <button type="button" className="doc-btn doc-btn-outline" disabled={preview || busy === 'save'} onClick={saveReport}>
                     {busy === 'save' ? 'Saving…' : 'Save draft'}
                   </button>
