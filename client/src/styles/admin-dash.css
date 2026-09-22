@@ -817,3 +817,8 @@
 .doc-report-head{margin-top:18px}
 .doc-report-head .cns-muted{display:block;margin-top:2px}
 @media (max-width:720px){.rf-grid{grid-template-columns:1fr}}
+
+/* Report preview bar (doctor flips the generated report to a clean, read-only, printable view) */
+.doc-preview-bar{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-top:18px}
+.doc-preview-bar .cns-muted{display:block;margin-top:2px}
+.doc-preview-actions{display:flex;gap:.5rem;flex-shrink:0}

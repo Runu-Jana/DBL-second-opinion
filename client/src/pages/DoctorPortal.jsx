@@ -78,6 +78,7 @@ function DoctorDashboard({ onLogout, preview = false }) {
   const [handover, setHandover] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);   // the doctor's tick-box intake
   const [report, setReport] = useState(null);     // the generated structured report (reportData) or null
+  const [previewMode, setPreviewMode] = useState(false); // flip the report to the clean read-only view to print
   const [busy, setBusy] = useState('');
   const [noteFor, setNoteFor] = useState(null);   // document id whose note is being edited
   const [noteText, setNoteText] = useState('');
@@ -95,7 +96,7 @@ function DoctorDashboard({ onLogout, preview = false }) {
   useEffect(() => {
     if (!caseUhid) { setHandover(null); return; }
     docApi(`/doctor/cases/${caseUhid}`)
-      .then((h) => { setHandover(h); setForm({ ...EMPTY_FORM, ...(h.reportForm || {}) }); setReport(h.reportData || null); })
+      .then((h) => { setHandover(h); setForm({ ...EMPTY_FORM, ...(h.reportForm || {}) }); setReport(h.reportData || null); setPreviewMode(false); })
       .catch((e) => { setMsg(e.message); setCase(null); });
   }, [caseUhid]);
 
@@ -213,7 +214,6 @@ function DoctorDashboard({ onLogout, preview = false }) {
               <span className="doc-case-actions">
                 {handover.status === 'Delivered' && <span className="adm-badge green">Sent to patient</span>}
                 {handover.status === 'Pending Approval' && <span className="adm-badge blue">Submitted — awaiting admin approval</span>}
-                <button type="button" className="icon-btn" onClick={() => window.print()}>Print</button>
                 <button type="button" className="icon-btn" onClick={() => { setCase(null); load(); }}>Close</button>
               </span>
             </div>
@@ -285,7 +285,7 @@ function DoctorDashboard({ onLogout, preview = false }) {
               <ReportForm form={form} onChange={setForm} onGenerate={generate} busy={busy === 'generate'} generated={!!report} disabled={preview} />
             </div>
 
-            {report && (
+            {report && !previewMode && (
               <>
                 <div className="doc-report-head no-print">
                   <h3 className="doc-case-h3">Generated report — review &amp; edit</h3>
@@ -297,6 +297,7 @@ function DoctorDashboard({ onLogout, preview = false }) {
                     caseId={caseUhid} doctor={name} date={new Date()} />
                 </div>
                 <div className="doc-actbar no-print">
+                  <button type="button" className="doc-btn doc-btn-ghost" onClick={() => setPreviewMode(true)}>Preview &amp; print</button>
                   <span className="spacer" />
                   <button type="button" className="doc-btn doc-btn-outline" disabled={preview || busy === 'save'} onClick={saveReport}>
                     {busy === 'save' ? 'Saving…' : 'Save draft'}
@@ -309,6 +310,26 @@ function DoctorDashboard({ onLogout, preview = false }) {
                   {handover.status === 'Pending Approval' && (
                     <p className="doc-actbar-note">Submitted for review — the admin team will send it to the patient.</p>
                   )}
+                </div>
+              </>
+            )}
+
+            {report && previewMode && (
+              <>
+                <div className="doc-preview-bar no-print">
+                  <div>
+                    <h3 className="doc-case-h3" style={{ margin: 0 }}>Report preview</h3>
+                    <span className="cns-muted">This is exactly how the report prints and how the patient will see it.</span>
+                  </div>
+                  <span className="doc-preview-actions">
+                    <button type="button" className="doc-btn doc-btn-outline" onClick={() => setPreviewMode(false)}>← Back to editing</button>
+                    <button type="button" className="doc-btn doc-btn-primary" onClick={() => window.print()}>Print / Save as PDF</button>
+                  </span>
+                </div>
+                <div className="doc-report-preview">
+                  <OpinionReport data={report}
+                    patient={{ name: handover.patient?.name, age: handover.patient?.age, gender: handover.patient?.gender }}
+                    caseId={caseUhid} doctor={name} date={new Date()} />
                 </div>
               </>
             )}

@@ -41,11 +41,16 @@ const I = {
 const fmtDate = (iso) => (iso ? new Date(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }) : new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }));
 const hasText = (v) => typeof v === 'string' && v.trim().length > 0;
 
+// Whether the browser sizes a textarea to its content natively (Chrome/Edge). When it does we let
+// CSS `field-sizing: content` do the growing and never touch the height in JS — a stray inline
+// height would fight the native sizing and bring the scrollbar back.
+const NATIVE_SIZING = typeof CSS !== 'undefined' && CSS.supports && CSS.supports('field-sizing', 'content');
+
 // A textarea that grows with its content, so a long field never hides text behind a scrollbar.
 // Top-level (stable type) so it keeps focus while the parent report re-renders on each edit.
 function Grow({ value, onChange, placeholder, rows = 2 }) {
   const ref = useRef(null);
-  const size = () => { const el = ref.current; if (!el) return; el.style.height = 'auto'; el.style.height = `${Math.max(34, el.scrollHeight)}px`; };
+  const size = () => { if (NATIVE_SIZING) return; const el = ref.current; if (!el) return; el.style.height = 'auto'; el.style.height = `${Math.max(34, el.scrollHeight)}px`; };
   useEffect(size, [value]);
   return <textarea ref={ref} className="orp-edit" rows={rows} value={value || ''} placeholder={placeholder}
     onChange={(e) => { onChange(e.target.value); size(); }} />;
