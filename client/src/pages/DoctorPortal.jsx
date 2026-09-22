@@ -115,14 +115,6 @@ function DoctorDashboard({ onLogout, preview = false }) {
   const flash = (m) => { setMsg(m); setTimeout(() => setMsg(''), 4000); };
   const reopen = () => docApi(`/doctor/cases/${caseUhid}`).then((h) => { setHandover(h); setOpinion(h.doctorOpinion || ''); });
 
-  // Explicitly a draft, not the opinion: it lands in the editor for the doctor to rewrite.
-  const draftWithAI = () => {
-    setBusy('draft');
-    docApi(`/doctor/cases/${caseUhid}/draft`, { method: 'POST' })
-      .then((r) => { setOpinion(r.draft); flash('Draft ready — review and edit it before sending.'); })
-      .catch((e) => flash(e.message))
-      .finally(() => setBusy(''));
-  };
   // The counsellor may already have read this; a specialist re-reading it themselves, or
   // reading one that arrived after triage, should not have to go back and ask.
   const analyseDoc = (docId) => {
@@ -263,17 +255,14 @@ function DoctorDashboard({ onLogout, preview = false }) {
 
             <h3 className="doc-case-h3">My second opinion</h3>
             <p className="cns-muted no-print">
-              This is what the patient receives. An AI draft is a starting point built from the handover and the
-              document readings — check every line against the reports before you send it.
+              This is what the patient receives. Write it from the handover and the reports, and check every line
+              before you send it.
               {handover.patientQuestions && ' The patient asked questions, above: answer each of them in your opinion.'}
             </p>
             <textarea ref={opinionRef} className="cns-report cns-report-auto no-print" rows={5} value={opinion} readOnly={preview} onChange={(e) => { setOpinion(e.target.value); autosizeOpinion(); }}
               placeholder="Your opinion for this patient…" />
             <pre className="cns-ai print-only">{opinion}</pre>
             <div className="doc-actbar no-print">
-              <button type="button" className="doc-btn doc-btn-ghost" disabled={preview || busy === 'draft' || !handover.ai} onClick={draftWithAI}>
-                {busy === 'draft' ? 'Drafting…' : 'Draft with AI'}
-              </button>
               <span className="spacer" />
               <button type="button" className="doc-btn doc-btn-outline" disabled={preview || busy === 'save'} onClick={saveOpinion}>
                 {busy === 'save' ? 'Saving…' : 'Save draft'}
@@ -281,11 +270,8 @@ function DoctorDashboard({ onLogout, preview = false }) {
               <button type="button" className="doc-btn doc-btn-primary" disabled={preview || busy === 'send' || !handover.doctorOpinion} onClick={deliver}>
                 {busy === 'send' ? 'Sending…' : handover.status === 'Delivered' ? 'Re-send to patient' : 'Send to patient'}
               </button>
-              {(!handover.ai || !handover.doctorOpinion) && (
-                <p className="doc-actbar-note">
-                  {[!handover.doctorOpinion && 'Save your opinion before it can be sent.',
-                    !handover.ai && 'AI drafting is switched off on this server.'].filter(Boolean).join(' ')}
-                </p>
+              {!handover.doctorOpinion && (
+                <p className="doc-actbar-note">Save your opinion before it can be sent.</p>
               )}
             </div>
 
