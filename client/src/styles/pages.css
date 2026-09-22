@@ -191,6 +191,9 @@ table.admin-table{width:100%;border-collapse:collapse;min-width:720px}
 .icon-btn.danger:hover{border-color:#e2574c;color:#c0392b;background:#fdecea}
 .icon-btn.ok{border-color:#bfe6cf;color:#0f9d6b;background:#eafaf1}
 .icon-btn.ok:hover{border-color:#0f9d6b;color:#0b7d55;background:#dff5e9}
+/* "Review report" on a submitted (Pending Approval) row — solid so the action to take stands out */
+.icon-btn.review{border-color:var(--teal);background:var(--teal);color:#fff}
+.icon-btn.review:hover{border-color:var(--teal-dark);background:var(--teal-dark);color:#fff}
 
 .admin-empty{padding:2.5rem;text-align:center;color:var(--muted)}
 .admin-msg{margin:0 0 1rem;padding:.7rem .9rem;border-radius:10px;font-size:.88rem;font-weight:600;display:none}

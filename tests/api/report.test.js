@@ -115,6 +115,9 @@
   // --- submit to admin (the plain-text flattening set by the save satisfies the submit gate) ---
   const submitted = await call('POST', `/doctor/cases/${uhid}/submit`, dTok);
   check('the doctor submits for review', submitted.body.case.status, 'Pending Approval');
+  check('  the submission is dated for the approval queue', !!submitted.body.case.submittedDate, true);
+  // The admin approval queue counts it as awaiting approval.
+  check('  it shows in the admin approval queue', (await call('GET', '/notifications', adminTok)).body.queues.opinions >= 1, true);
   check('patient still sees nothing', (await call('GET', '/portal/opinions', pTok)).body.length, 0);
   const caseId = submitted.body.case.id;
 

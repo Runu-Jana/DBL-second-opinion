@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api, rupees } from '../api.js';
 import { Select, DateField, RefreshButton } from './AdminFields.jsx';
+import ProfileModal from './ProfileModal.jsx';
 
 const withCurrent = (opts, current) => (current && !opts.some((o) => o.value === current) ? [{ value: current, label: current }, ...opts] : opts);
 
@@ -65,11 +66,20 @@ function CrudModal({ cfg, item, patients, staff, onClose, onSaved, on401 }) {
   );
 }
 
-const cellValue = (col, row) => {
+const cellValue = (col, row, openProfile) => {
   if (col.render) return col.render(row);
   const v = row[col.key];
   if (col.money) return v ? rupees(v) : '—';
   if (col.badge) return <span className={'adm-badge ' + (col.badge[v] || 'blue')}>{v}</span>;
+  // A patient-name cell that opens the full profile (where a submitted report is reviewed & sent).
+  if (col.profile && openProfile) {
+    return (
+      <span className="t-name">
+        <button type="button" className="link-name" onClick={() => openProfile(row)}>{v || '—'}</button>
+        {row[col.sub] ? <span className="t-sub"> · {row[col.sub]}</span> : ''}
+      </span>
+    );
+  }
   if (col.sub) return <span className="t-name">{v || '—'}{row[col.sub] ? <span className="t-sub"> · {row[col.sub]}</span> : ''}</span>;
   return v || v === 0 ? v : '—';
 };
@@ -81,7 +91,16 @@ export default function AdminCrud({ cfg, flash, on401 }) {
   const [q, setQ] = useState('');
   const [status, setStatus] = useState('');
   const [modal, setModal] = useState(undefined);
+  const [profileId, setProfileId] = useState(null);  // patient id whose profile (report review) is open
   const [loading, setLoading] = useState(true);
+
+  // Resolve a request row to its patient record so the profile can open. Matches on UHID first,
+  // then on name — a walk-in request with no linked patient simply won't open a profile.
+  const openProfile = cfg.openProfile ? (row) => {
+    const p = patients.find((x) => (row.patientUhid && x.uhid === row.patientUhid) || x.name === row.patientName);
+    if (p) setProfileId(p.id);
+    else flash('No patient profile is linked to this request yet.', 'err');
+  } : null;
 
   const load = () => {
     const params = new URLSearchParams();
@@ -145,8 +164,12 @@ export default function AdminCrud({ cfg, flash, on401 }) {
               {!loading && list.length === 0 && <tr><td colSpan={cfg.columns.length + 1} className="admin-empty">No records found.</td></tr>}
               {!loading && list.map((row) => (
                 <tr key={row.id}>
-                  {cfg.columns.map((c) => <td key={c.key} className={c.sub ? '' : (c.className || '')}>{cellValue(c, row)}</td>)}
-                  <td><div className="row-actions"><button className="icon-btn" onClick={() => setModal(row)}>Edit</button><button className="icon-btn danger" onClick={() => del(row)}>Delete</button></div></td>
+                  {cfg.columns.map((c) => <td key={c.key} className={c.sub ? '' : (c.className || '')}>{cellValue(c, row, openProfile)}</td>)}
+                  <td><div className="row-actions">
+                    {openProfile && <button type="button" className={'icon-btn' + (row.status === 'Pending Approval' ? ' review' : '')} onClick={() => openProfile(row)}>{row.status === 'Pending Approval' ? 'Review report' : 'View report'}</button>}
+                    <button className="icon-btn" onClick={() => setModal(row)}>Edit</button>
+                    <button className="icon-btn danger" onClick={() => del(row)}>Delete</button>
+                  </div></td>
                 </tr>
               ))}
             </tbody>
@@ -155,6 +178,9 @@ export default function AdminCrud({ cfg, flash, on401 }) {
       </section>
 
       {modal !== undefined && <CrudModal cfg={cfg} item={modal} patients={patients} staff={staff} on401={on401} onClose={() => setModal(undefined)} onSaved={(m) => { setModal(undefined); flash(m); load(); }} />}
+      {/* Reviewing a submitted report happens in the patient profile; refresh the list on close so a
+          just-sent report shows its new status. */}
+      {profileId !== null && <ProfileModal kind="patient" id={profileId} on401={on401} onClose={() => { setProfileId(null); load(); }} />}
     </div>
   );
 }

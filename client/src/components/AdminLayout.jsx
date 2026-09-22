@@ -47,7 +47,7 @@ const BrandMark = () => (
 
 /* nav sections in display order — matches the admin reference */
 // Nav key -> the queue count that belongs on it (see /api/notifications).
-const NAV_QUEUE = { consultations: 'consultations', applications: 'applications', reports: 'reports' };
+const NAV_QUEUE = { consultations: 'consultations', applications: 'applications', reports: 'reports', 'second-opinion': 'opinions' };
 
 export const ADMIN_NAV = [
   { key: 'dashboard', label: 'Dashboard', icon: AI.dashboard },

@@ -318,7 +318,11 @@ router.post('/cases/:uhid/submit', requireDoctor, async (req, res) => {
     }
     const updated = await prisma.secondOpinion.update({
       where: { id: kase.id },
-      data: { status: 'Pending Approval', summary: kase.doctorOpinion.slice(0, 500) },
+      data: {
+        status: 'Pending Approval',
+        summary: kase.doctorOpinion.slice(0, 500),
+        submittedDate: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+      },
     });
     logActivity(req, { kind: 'activity', actor: req.doctor.name,
       action: `Second opinion submitted for review — ${kase.patientName}`, target: kase.patientUhid, category: 'Report' });

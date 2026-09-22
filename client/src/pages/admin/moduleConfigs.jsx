@@ -6,7 +6,7 @@ const countBy = (l, pred) => l.filter(pred).length;
 const T = {
   report: { 'Pending Review': 'amber', Reviewed: 'green', Uploaded: 'blue', Archived: 'gray' },
   plan: { Active: 'blue', Completed: 'green', 'On Hold': 'amber', Cancelled: 'rose' },
-  opinion: { 'Awaiting Review': 'amber', 'Under Review': 'blue', 'Opinion Ready': 'teal', Delivered: 'green' },
+  opinion: { 'Awaiting Review': 'amber', 'Under Review': 'blue', 'Pending Approval': 'rose', 'Opinion Ready': 'teal', Delivered: 'green' },
   priority: { Normal: 'gray', High: 'amber', Urgent: 'rose' },
   medication: { 'In Stock': 'green', 'Low Stock': 'amber', 'Out of Stock': 'rose' },
   invoice: { Paid: 'green', Pending: 'amber', Overdue: 'rose', Refunded: 'gray' },
@@ -19,7 +19,7 @@ const REPORT_STATUSES = ['Pending Review', 'Reviewed', 'Uploaded', 'Archived'];
 const REPORT_TYPES = ['CT Scan', 'PET CT', 'Histopathology', 'Blood Report', 'MRI', 'X-Ray', 'Ultrasound', 'Treatment Summary'];
 const PLAN_STATUSES = ['Active', 'Completed', 'On Hold', 'Cancelled'];
 const MODALITIES = ['Chemotherapy', 'Radiotherapy', 'Immunotherapy', 'Targeted', 'Surgery'];
-const OPINION_STATUSES = ['Awaiting Review', 'Under Review', 'Opinion Ready', 'Delivered'];
+const OPINION_STATUSES = ['Awaiting Review', 'Under Review', 'Pending Approval', 'Opinion Ready', 'Delivered'];
 const PRIORITIES = ['Normal', 'High', 'Urgent'];
 const MED_STATUSES = ['In Stock', 'Low Stock', 'Out of Stock'];
 const MED_CATEGORIES = ['Chemotherapy', 'Supportive', 'Analgesic', 'Antiemetic', 'Antibiotic', 'Other'];
@@ -69,8 +69,9 @@ const MODULE_CONFIGS = {
   'second-opinion': {
     title: 'Review & Second Opinion', subtitle: 'Second-opinion request queue', noun: 'Request', endpoint: '/second-opinions',
     addLabel: 'New Request', searchPlaceholder: 'Search patient, expert or cancer type…', statuses: OPINION_STATUSES, pickers: ['patients', 'staff'],
+    openProfile: true, // clicking a patient opens their profile, where a submitted report is reviewed and sent
     columns: [
-      { key: 'patientName', label: 'Patient', sub: 'patientUhid' },
+      { key: 'patientName', label: 'Patient', sub: 'patientUhid', profile: true },
       { key: 'cancerType', label: 'Cancer Type' }, { key: 'expert', label: 'Assigned Expert' },
       { key: 'priority', label: 'Priority', badge: T.priority },
       { key: 'submittedDate', label: 'Submitted' },
@@ -88,10 +89,10 @@ const MODULE_CONFIGS = {
     ],
     defaults: { priority: 'Normal', status: 'Awaiting Review' },
     stats: (l) => [
-      { label: 'Awaiting review', value: countBy(l, (x) => x.status === 'Awaiting Review'), tone: 'amber' },
+      { label: 'Awaiting your approval', value: countBy(l, (x) => x.status === 'Pending Approval'), tone: 'rose' },
       { label: 'Under review', value: countBy(l, (x) => x.status === 'Under Review'), tone: 'blue' },
+      { label: 'Awaiting review', value: countBy(l, (x) => x.status === 'Awaiting Review'), tone: 'amber' },
       { label: 'Delivered', value: countBy(l, (x) => x.status === 'Delivered'), tone: 'green' },
-      { label: 'Urgent', value: countBy(l, (x) => x.priority === 'Urgent'), tone: 'rose' },
     ],
   },
 
