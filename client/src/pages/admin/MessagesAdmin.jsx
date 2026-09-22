@@ -25,13 +25,21 @@ export default function MessagesAdmin({ flash, on401 }) {
   };
   useEffect(() => { loadConvos(); const id = setInterval(loadConvos, 20000); return () => clearInterval(id); }, []); // eslint-disable-line
 
-  const openThread = (c) => {
-    setSel(c);
+  const fetchThread = (c, silent) => {
+    if (!c) return;
     const q = new URLSearchParams();
     if (c.patientUhid) q.set('uhid', c.patientUhid);
     if (c.patientName) q.set('name', c.patientName);
-    api('/messages/thread?' + q.toString(), { on401 }).then((d) => setThread(Array.isArray(d) ? d : [])).catch((e) => flash(e.message, 'err'));
+    api('/messages/thread?' + q.toString(), { on401 }).then((d) => setThread(Array.isArray(d) ? d : [])).catch((e) => { if (!silent) flash(e.message, 'err'); });
   };
+  const openThread = (c) => { setSel(c); fetchThread(c, false); };
+  // Keep the open conversation live, like the patient's own Messages page, so a new incoming
+  // message shows without reselecting the conversation.
+  useEffect(() => {
+    if (!sel) return undefined;
+    const id = setInterval(() => fetchThread(sel, true), 20000);
+    return () => clearInterval(id);
+  }, [sel]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (bodyRef.current) bodyRef.current.scrollTop = bodyRef.current.scrollHeight; }, [thread]);
 
   const reply = async (e) => {

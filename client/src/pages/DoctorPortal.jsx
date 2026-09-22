@@ -108,8 +108,15 @@ function DoctorDashboard({ onLogout, preview = false }) {
   }, [caseUhid]);
 
   useEffect(() => {
-    if (!caseUhid) { setThread(null); return; }
-    docApi(`/doctor/messages/${caseUhid}`).then((d) => setThread(d.messages || [])).catch(() => setThread([]));
+    if (!caseUhid) { setThread(null); return undefined; }
+    // Keep the conversation live while the case is open, so a patient's message appears without
+    // reopening the case. The patient's own Messages page already polls the same way.
+    const loadThread = () => docApi(`/doctor/messages/${caseUhid}`)
+      .then((d) => setThread(d.messages || []))
+      .catch(() => setThread((t) => (t === null ? [] : t)));
+    loadThread();
+    const id = setInterval(loadThread, 20000);
+    return () => clearInterval(id);
   }, [caseUhid]);
 
   const flash = (m) => { setMsg(m); setTimeout(() => setMsg(''), 4000); };
