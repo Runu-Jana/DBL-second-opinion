@@ -6,6 +6,8 @@ const { crudRouter, str, int, inSet } = require('./_crud');
 const { CATEGORIES, splitCategories } = require('../lib/categories');
 const { logActivity } = require('../lib/audit');
 const reportAI = require('../lib/reportAI');
+const { sendOpinionReady } = require('../lib/email');
+const { notifyPatient, notifyDoctor, notifyCounsellor } = require('../lib/notify');
 
 const need = (v) => (v && String(v).trim() ? String(v).trim() : '');
 
@@ -13,7 +15,7 @@ const need = (v) => (v && String(v).trim() ? String(v).trim() : '');
 const S = {
   report: ['Pending Review', 'Reviewed', 'Uploaded', 'Archived'],
   plan: ['Active', 'Completed', 'On Hold', 'Cancelled'],
-  opinion: ['Awaiting Review', 'Under Review', 'Opinion Ready', 'Delivered'],
+  opinion: ['Awaiting Review', 'Under Review', 'Opinion Ready', 'Pending Approval', 'Delivered'],
   medication: ['In Stock', 'Low Stock', 'Out of Stock'],
   invoice: ['Paid', 'Pending', 'Overdue', 'Refunded'],
   lab: ['Ordered', 'Sample Collected', 'In Progress', 'Completed'],
@@ -151,6 +153,57 @@ const secondOpinions = crudRouter({
     const patientName = need(b.patientName); if (!patientName) return { error: 'Patient is required.' };
     return { data: { patientName, patientUhid: str(b.patientUhid), expert: str(b.expert), cancerType: str(b.cancerType), priority: inSet(b.priority, ['Normal', 'High', 'Urgent'], 'Normal'), submittedDate: str(b.submittedDate), status: inSet(b.status, S.opinion, 'Awaiting Review'), summary: str(b.summary) } };
   },
+});
+
+// The doctor submits a finished opinion; it does NOT go to the patient. An admin reviews it here,
+// edits it if needed, and only then sends it. These two routes are that admin stage.
+
+// PUT /api/second-opinions/:id/opinion — admin edits the opinion text before sending.
+secondOpinions.put('/:id/opinion', requireAdmin, async (req, res) => {
+  try {
+    const opinion = req.body.opinion == null ? '' : String(req.body.opinion).trim();
+    const updated = await prisma.secondOpinion.update({ where: { id: +req.params.id }, data: { doctorOpinion: opinion } });
+    logActivity(req, { kind: 'audit', action: `Edited the second opinion for ${updated.patientName}`, target: updated.patientUhid, category: 'Report' });
+    res.json(updated);
+  } catch (e) {
+    if (e.code === 'P2025') return res.status(404).json({ error: 'Not found.' });
+    console.error(e); res.status(500).json({ error: 'Could not save the opinion.' });
+  }
+});
+
+// POST /api/second-opinions/:id/deliver — admin approves and sends the opinion to the patient.
+// This is the only path that reaches the patient; the doctor's own submit never does.
+secondOpinions.post('/:id/deliver', requireAdmin, async (req, res) => {
+  try {
+    const kase = await prisma.secondOpinion.findUnique({ where: { id: +req.params.id } });
+    if (!kase) return res.status(404).json({ error: 'Not found.' });
+    if (!kase.doctorOpinion || !kase.doctorOpinion.trim()) {
+      return res.status(400).json({ error: 'There is no opinion to send yet.' });
+    }
+    const updated = await prisma.secondOpinion.update({
+      where: { id: kase.id },
+      data: { status: 'Delivered', deliveredAt: new Date(), summary: kase.doctorOpinion.slice(0, 500) },
+    });
+    if (kase.patientUhid && kase.expert) {
+      await prisma.report.updateMany({ where: { patientUhid: kase.patientUhid, doctor: kase.expert }, data: { status: 'Reviewed' } }).catch(() => {});
+    }
+    const patient = kase.patientUhid ? await prisma.patient.findFirst({ where: { uhid: kase.patientUhid } }) : null;
+    const origin = req.headers.origin || process.env.PUBLIC_URL || '';
+    let emailed = false;
+    if (patient && patient.email) {
+      const r = await sendOpinionReady({ to: patient.email, name: patient.name, doctor: kase.expert || 'our specialist', url: `${origin}/dashboard/opinion` })
+        .catch((e) => { console.error('opinion email failed:', e.message); return { skipped: true }; });
+      emailed = !!(r && r.ok);
+    }
+    await notifyPatient(kase.patientUhid, { kind: 'report', title: 'Your second opinion is ready',
+      body: 'Your reviewed second opinion is ready. Tap to read it.', link: '/dashboard/opinion' });
+    if (kase.expert) await notifyDoctor(kase.expert, { kind: 'case', title: 'Your opinion was sent to the patient',
+      body: `The admin team reviewed and sent your opinion for ${kase.patientName}.`, link: null });
+    if (kase.counsellor) await notifyCounsellor(kase.counsellor, { kind: 'case', title: 'Opinion delivered',
+      body: `The opinion for ${kase.patientName} was sent to the patient.`, link: null });
+    logActivity(req, { kind: 'audit', action: `Second opinion approved and sent to ${kase.patientName}`, target: kase.patientUhid, category: 'Report' });
+    res.json({ ok: true, case: updated, emailed });
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not send the opinion.' }); }
 });
 
 const medications = crudRouter({

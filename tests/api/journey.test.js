@@ -118,7 +118,10 @@
     (await call('GET', '/notifications/mine', pTok)).body.items.some((n) => /opinion is ready/.test(n.title)), false);
   check('patient cannot read an undelivered opinion', (await call('GET', '/portal/opinions', pTok)).body.length, 0);
 
-  const delivered = await call('POST', `/doctor/cases/${uhid}/deliver`, dTok);
+  const kase = await prisma.secondOpinion.findFirst({ where: { patientUhid: uhid } });
+  const adminTok = jwt.sign({ id: 1, email: 'a@b.com', name: 'Admin', role: 'admin' }, S, { expiresIn: '1d' });
+  await call('POST', `/doctor/cases/${uhid}/submit`, dTok);                                  // doctor submits for review
+  const delivered = await call('POST', `/second-opinions/${kase.id}/deliver`, adminTok);     // admin approves and sends
   check('opinion delivered', delivered.status, 200);
 
   // ---------- 7. the patient receives it ----------

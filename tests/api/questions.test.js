@@ -89,8 +89,9 @@
   const pTok = jwt.sign({ id: patient.id, uhid, name: patient.name, email, role: 'patient' }, S, { expiresIn: '1d' });
   const cases = await call('GET', '/portal/cases', pTok);
   check('the patient sees their questions on the case', (cases.body[0]?.patientQuestions || '').includes(Q1), true);
-  await call('PUT', `/doctor/cases/${uhid}/opinion`, dTok, { opinion: 'ANSWERS TO YOUR QUESTIONS\nSurgery: not on this evidence.' });
-  const sent = await call('POST', `/doctor/cases/${uhid}/deliver`, dTok);
+  const savedOp = await call('PUT', `/doctor/cases/${uhid}/opinion`, dTok, { opinion: 'ANSWERS TO YOUR QUESTIONS\nSurgery: not on this evidence.' });
+  await call('POST', `/doctor/cases/${uhid}/submit`, dTok);            // doctor submits for review
+  const sent = await call('POST', `/second-opinions/${savedOp.body.case.id}/deliver`, adminTok);   // admin delivers
   check('the opinion is delivered', sent.status, 200);
   const ops = await call('GET', '/portal/opinions', pTok);
   check('  and the questions sit beside it', (ops.body[0]?.patientQuestions || '').includes(Q1), true);

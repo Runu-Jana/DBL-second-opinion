@@ -158,11 +158,13 @@ function DoctorDashboard({ onLogout, preview = false }) {
       .catch((e) => flash(e.message))
       .finally(() => setBusy(''));
   };
-  const deliver = () => {
-    if (!window.confirm('Send this opinion to the patient? They will be emailed and will be able to read it in their portal.')) return;
+  // The doctor no longer sends to the patient directly — this submits the opinion to the admin
+  // team, who review it and send it on.
+  const submit = () => {
+    if (!window.confirm('Submit this opinion to the admin team for review? They will check it and send it to the patient.')) return;
     setBusy('send');
-    docApi(`/doctor/cases/${caseUhid}/deliver`, { method: 'POST' })
-      .then((r) => { flash(r.emailed ? 'Sent — the patient has been emailed.' : 'Sent. No email address on file, so nothing was emailed.'); load(); return reopen(); })
+    docApi(`/doctor/cases/${caseUhid}/submit`, { method: 'POST' })
+      .then(() => { flash('Submitted for admin review. The admin team will send it to the patient.'); load(); return reopen(); })
       .catch((e) => flash(e.message))
       .finally(() => setBusy(''));
   };
@@ -206,6 +208,7 @@ function DoctorDashboard({ onLogout, preview = false }) {
               <h2>Case — {handover.patient?.name || caseUhid}</h2>
               <span className="doc-case-actions">
                 {handover.status === 'Delivered' && <span className="adm-badge green">Sent to patient</span>}
+                {handover.status === 'Pending Approval' && <span className="adm-badge blue">Submitted — awaiting admin approval</span>}
                 <button type="button" className="icon-btn" onClick={() => window.print()}>Print</button>
                 <button type="button" className="icon-btn" onClick={() => { setCase(null); load(); }}>Close</button>
               </span>
@@ -281,11 +284,16 @@ function DoctorDashboard({ onLogout, preview = false }) {
               <button type="button" className="doc-btn doc-btn-outline" disabled={preview || busy === 'save'} onClick={saveOpinion}>
                 {busy === 'save' ? 'Saving…' : 'Save draft'}
               </button>
-              <button type="button" className="doc-btn doc-btn-primary" disabled={preview || busy === 'send' || !handover.doctorOpinion} onClick={deliver}>
-                {busy === 'send' ? 'Sending…' : handover.status === 'Delivered' ? 'Re-send to patient' : 'Send to patient'}
+              <button type="button" className="doc-btn doc-btn-primary" disabled={preview || busy === 'send' || !handover.doctorOpinion || handover.status === 'Delivered'} onClick={submit}>
+                {busy === 'send' ? 'Submitting…'
+                  : handover.status === 'Delivered' ? 'Sent to patient'
+                    : handover.status === 'Pending Approval' ? 'Re-submit report' : 'Submit report'}
               </button>
               {!handover.doctorOpinion && (
-                <p className="doc-actbar-note">Save your opinion before it can be sent.</p>
+                <p className="doc-actbar-note">Save your opinion before it can be submitted.</p>
+              )}
+              {handover.doctorOpinion && handover.status === 'Pending Approval' && (
+                <p className="doc-actbar-note">Submitted for review — the admin team will send it to the patient.</p>
               )}
             </div>
 

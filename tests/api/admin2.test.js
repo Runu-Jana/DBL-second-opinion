@@ -40,8 +40,9 @@
   await call('POST', `/counsellor/folders/${patient.id}/assign`, cTok, { doctor: docName, category: 'Lung Cancer' });
   await call('POST', `/doctor/messages/${uhid}`, dTok, { body: 'Doctor to patient message.' });
   await call('POST', '/portal/messages', pTok, { body: 'Patient reply.' });
-  await call('PUT', `/doctor/cases/${uhid}/opinion`, dTok, { opinion: 'The doctor opinion text.' });
-  await call('POST', `/doctor/cases/${uhid}/deliver`, dTok);
+  const savedOp = await call('PUT', `/doctor/cases/${uhid}/opinion`, dTok, { opinion: 'The doctor opinion text.' });
+  await call('POST', `/doctor/cases/${uhid}/submit`, dTok);                                  // doctor submits
+  await call('POST', `/second-opinions/${savedOp.body.case.id}/deliver`, adminTok);           // admin delivers
 
   // ---- access ----
   console.log('\n--- who may read a profile ---');

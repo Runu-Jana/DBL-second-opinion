@@ -66,8 +66,14 @@
   pf = await feed(pTok);
   check('an unsent draft tells the patient nothing', titles(pf).includes('Your second opinion is ready'), false);
 
-  // --- doctor delivers ---
-  await call('POST', `/doctor/cases/${uhid}/deliver`, dTok);
+  // --- doctor submits for review: the patient still hears nothing ---
+  await call('POST', `/doctor/cases/${uhid}/submit`, dTok);
+  check('submitting for review tells the patient nothing', titles(await feed(pTok)).includes('Your second opinion is ready'), false);
+
+  // --- admin approves and delivers: only now is the patient (and counsellor) told ---
+  const kase = await prisma.secondOpinion.findFirst({ where: { patientUhid: uhid } });
+  const adminTok = jwt.sign({ id: 1, email: 'a@b.com', name: 'Admin', role: 'admin' }, S, { expiresIn: '1d' });
+  await call('POST', `/second-opinions/${kase.id}/deliver`, adminTok);
   pf = await feed(pTok);
   check('patient told the opinion is ready', titles(pf).includes('Your second opinion is ready'), true);
   check('counsellor told it was delivered', titles(await feed(cTok)).includes('Opinion delivered'), true);

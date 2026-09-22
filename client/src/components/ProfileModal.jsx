@@ -19,12 +19,13 @@ export default function ProfileModal({ kind, id, onClose, on401 }) {
   const [data, setData] = useState(null);
   const [err, setErr] = useState('');
 
-  useEffect(() => {
-    setData(null); setErr('');
+  const load = (quiet) => {
+    if (!quiet) { setData(null); setErr(''); }
     api(`/profiles/${kind}/${id}`, { on401 })
       .then(setData)
       .catch((e) => setErr(e.message));
-  }, [kind, id]); // eslint-disable-line react-hooks/exhaustive-deps
+  };
+  useEffect(() => { load(); }, [kind, id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const esc = (e) => { if (e.key === 'Escape') onClose(); };
@@ -57,7 +58,7 @@ export default function ProfileModal({ kind, id, onClose, on401 }) {
             </header>
 
             {kind === 'patient' ? (
-              <PatientBody d={data} />
+              <PatientBody d={data} api={api} on401={on401} reload={() => load(true)} />
             ) : (
               <StaffBody d={data} />
             )}
@@ -68,9 +69,33 @@ export default function ProfileModal({ kind, id, onClose, on401 }) {
   );
 }
 
-function PatientBody({ d }) {
+function PatientBody({ d, api, on401, reload }) {
   const p = d.patient;
   const k = d.case;
+  // The doctor submits an opinion for review; the admin edits it here and sends it to the patient.
+  const pending = k && k.status === 'Pending Approval';
+  const [opinion, setOpinion] = useState(k ? (k.doctorOpinion || '') : '');
+  const [busy, setBusy] = useState('');
+  const [note, setNote] = useState('');
+  useEffect(() => { setOpinion(k ? (k.doctorOpinion || '') : ''); }, [k && k.id, k && k.doctorOpinion]); // eslint-disable-line
+
+  const saveEdits = () => {
+    setBusy('save'); setNote('');
+    api(`/second-opinions/${k.id}/opinion`, { method: 'PUT', on401, body: JSON.stringify({ opinion }) })
+      .then(() => { setNote('Changes saved.'); reload(); })
+      .catch((e) => setNote(e.message))
+      .finally(() => setBusy(''));
+  };
+  const sendToPatient = () => {
+    if (!window.confirm('Send this opinion to the patient now? They will be emailed and can read it in their portal.')) return;
+    setBusy('send'); setNote('');
+    // Save any pending edits first, then deliver, so the patient gets exactly what is on screen.
+    api(`/second-opinions/${k.id}/opinion`, { method: 'PUT', on401, body: JSON.stringify({ opinion }) })
+      .then(() => api(`/second-opinions/${k.id}/deliver`, { method: 'POST', on401 }))
+      .then((r) => { setNote(r.emailed ? 'Sent — the patient has been emailed.' : 'Sent to the patient.'); reload(); })
+      .catch((e) => setNote(e.message))
+      .finally(() => setBusy(''));
+  };
   return (
     <div className="prof-body">
       <section>
@@ -121,12 +146,23 @@ function PatientBody({ d }) {
                 <pre className="cns-ai">{k.counsellorReport}</pre>
               </>
             )}
-            {k.doctorOpinion && (
+            {pending ? (
               <>
-                <h5>Doctor&rsquo;s opinion{k.deliveredAt ? '' : ' (draft — not sent)'}</h5>
+                <h5>Doctor&rsquo;s opinion <em>— awaiting your approval</em></h5>
+                <p className="cns-muted">{k.expert || 'The specialist'} submitted this. Review it, edit if needed, then send it to the patient.</p>
+                <textarea className="cns-report" rows={12} value={opinion} onChange={(e) => setOpinion(e.target.value)} placeholder="The opinion the patient will receive…" />
+                <div className="cns-row" style={{ marginTop: '.6rem' }}>
+                  <button type="button" className="doc-btn doc-btn-outline" disabled={busy === 'save' || busy === 'send'} onClick={saveEdits}>{busy === 'save' ? 'Saving…' : 'Save edits'}</button>
+                  <button type="button" className="doc-btn doc-btn-primary" disabled={busy === 'send' || !opinion.trim()} onClick={sendToPatient}>{busy === 'send' ? 'Sending…' : 'Send to patient'}</button>
+                </div>
+                {note && <p className="cns-muted" style={{ marginTop: '.4rem' }}>{note}</p>}
+              </>
+            ) : k.doctorOpinion ? (
+              <>
+                <h5>Doctor&rsquo;s opinion{k.deliveredAt ? ` (sent ${fmtWhen(k.deliveredAt)})` : ' (draft — not submitted)'}</h5>
                 <pre className="cns-ai">{k.doctorOpinion}</pre>
               </>
-            )}
+            ) : null}
           </>
         )}
       </section>

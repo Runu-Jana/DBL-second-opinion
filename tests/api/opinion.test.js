@@ -34,6 +34,7 @@
   const patient = await prisma.patient.create({ data: { name: `Opinion Probe ${stamp}`, uhid, email, status: 'New Patient', password: 'x' } });
   await prisma.report.create({ data: { patientName: patient.name, patientUhid: uhid, type: 'CT Scan', status: 'Pending Review', fileUrl: '/uploads/x.pdf', aiSummary: 'Left upper lobe mass 3.1 cm.' } });
   const pTok = jwt.sign({ id: patient.id, uhid, name: patient.name, email, role: 'patient' }, S, { expiresIn: '1d' });
+  const adminTok = jwt.sign({ id: 1, email: 'a@b.com', name: 'Admin', role: 'admin' }, S, { expiresIn: '1d' });
 
   // Counsellor routes the case so the doctor owns it.
   await call('PUT', `/counsellor/folders/${patient.id}/report`, cTok, { report: 'Suspected lung primary.', cancerType: 'Lung Cancer' });
@@ -43,9 +44,9 @@
   check('another doctor cannot save an opinion', (await call('PUT', `/doctor/cases/${uhid}/opinion`, otherDoc, { opinion: 'x' })).status, 404);
   check('a counsellor cannot use the doctor route', (await call('PUT', `/doctor/cases/${uhid}/opinion`, cTok, { opinion: 'x' })).status, 403);
 
-  // --- cannot send before writing ---
-  const early = await call('POST', `/doctor/cases/${uhid}/deliver`, dTok);
-  check('sending before writing is refused', early.status, 400);
+  // --- cannot submit before writing ---
+  const early = await call('POST', `/doctor/cases/${uhid}/submit`, dTok);
+  check('submitting before writing is refused', early.status, 400);
   check('  and says why', /save your opinion/i.test(early.body.error || ''), true);
 
   // --- patient sees nothing yet ---
@@ -57,10 +58,17 @@
   check('  stored', /Left upper lobe mass/.test(saved.body.case.doctorOpinion || ''), true);
   check('  not yet delivered', saved.body.case.status, 'Under Review');
   check('patient still sees nothing', (await call('GET', '/portal/opinions', pTok)).body.length, 0);
+  const caseId = saved.body.case.id;
 
-  // --- deliver ---
-  const sent = await call('POST', `/doctor/cases/${uhid}/deliver`, dTok);
-  check('delivered', sent.status, 200);
+  // --- doctor submits for admin review; this must NOT reach the patient ---
+  const submitted = await call('POST', `/doctor/cases/${uhid}/submit`, dTok);
+  check('submitted for review', submitted.status, 200);
+  check('  case marked Pending Approval', submitted.body.case.status, 'Pending Approval');
+  check('patient still sees nothing after submission', (await call('GET', '/portal/opinions', pTok)).body.length, 0);
+
+  // --- admin reviews and delivers; only now does the patient get it ---
+  const sent = await call('POST', `/second-opinions/${caseId}/deliver`, adminTok);
+  check('admin delivers', sent.status, 200);
   check('  case marked Delivered', sent.body.case.status, 'Delivered');
   check('  timestamped', !!sent.body.case.deliveredAt, true);
 

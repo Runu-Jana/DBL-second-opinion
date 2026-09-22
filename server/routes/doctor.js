@@ -215,40 +215,25 @@ router.put('/cases/:uhid/opinion', requireDoctor, async (req, res) => {
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not save your opinion.' }); }
 });
 
-// POST /api/doctor/cases/:uhid/deliver -> release it to the patient and tell them it is ready
-router.post('/cases/:uhid/deliver', requireDoctor, async (req, res) => {
+// POST /api/doctor/cases/:uhid/submit -> hand the finished opinion to the admin team for review.
+// The doctor no longer reaches the patient directly: an admin checks the opinion, edits it if
+// needed, and only then sends it. So this marks the case awaiting approval and notifies the admin
+// team through the activity feed — it does not email or notify the patient.
+router.post('/cases/:uhid/submit', requireDoctor, async (req, res) => {
   try {
     const kase = await ownCase(req);
     if (!kase) return res.status(404).json({ error: 'Case not found.' });
     if (!kase.doctorOpinion) {
-      return res.status(400).json({ error: 'Write and save your opinion before sending it to the patient.' });
+      return res.status(400).json({ error: 'Write and save your opinion before submitting it.' });
     }
     const updated = await prisma.secondOpinion.update({
       where: { id: kase.id },
-      data: { status: 'Delivered', deliveredAt: new Date(), summary: kase.doctorOpinion.slice(0, 500) },
+      data: { status: 'Pending Approval', summary: kase.doctorOpinion.slice(0, 500) },
     });
-    // The reports this opinion came from are done with review.
-    await prisma.report.updateMany({ where: { patientUhid: kase.patientUhid, doctor: req.doctor.name }, data: { status: 'Reviewed' } });
-
-    const patient = await prisma.patient.findFirst({ where: { uhid: kase.patientUhid } });
-    const origin = req.headers.origin || process.env.PUBLIC_URL || '';
-    let emailed = false;
-    if (patient && patient.email) {
-      const r = await sendOpinionReady({
-        to: patient.email, name: patient.name, doctor: req.doctor.name,
-        url: `${origin}/dashboard/opinion`,
-      }).catch((e) => { console.error('opinion email failed:', e.message); return { skipped: true }; });
-      emailed = !!(r && r.ok);
-    }
-    await notifyPatient(kase.patientUhid, { kind: 'report', title: 'Your second opinion is ready',
-      body: `${req.doctor.name} has completed your review. Tap to read it.`, link: '/dashboard/opinion' });
-    if (kase.counsellor) {
-      await notifyCounsellor(kase.counsellor, { kind: 'case', title: 'Opinion delivered',
-        body: `${req.doctor.name} sent the opinion for ${kase.patientName}.`, link: null });
-    }
-    logActivity(req, { kind: 'audit', actor: req.doctor.name, action: `Second opinion delivered to ${kase.patientName}`, target: kase.patientUhid, category: 'Report' });
-    res.json({ ok: true, case: updated, emailed });
-  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not send the opinion.' }); }
+    logActivity(req, { kind: 'activity', actor: req.doctor.name,
+      action: `Second opinion submitted for review — ${kase.patientName}`, target: kase.patientUhid, category: 'Report' });
+    res.json({ ok: true, case: updated });
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not submit the opinion.' }); }
 });
 
 // POST /api/doctor/documents/:id/analyse -> AI reading of one document on their own case.

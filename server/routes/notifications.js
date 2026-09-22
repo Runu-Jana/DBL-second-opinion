@@ -73,7 +73,7 @@ router.get('/', requireAdmin, async (req, res) => {
     const mSince = since(req.query.messagesSince);
 
     const [activity, contact, patientMsgs, contactUnread, msgUnread,
-      consultations, applications, untriaged] = await Promise.all([
+      consultations, applications, untriaged, opinionsPending] = await Promise.all([
       prisma.activityLog.count({ where: { kind: 'activity', createdAt: { gt: aSince } } }),
       prisma.contactMessage.count({ where: { createdAt: { gt: mSince } } }),
       prisma.message.count({ where: { sender: 'patient', createdAt: { gt: mSince } } }),
@@ -85,13 +85,15 @@ router.get('/', requireAdmin, async (req, res) => {
       prisma.consultation.count({ where: { status: { in: ['Pending', 'In Review'] } } }),
       prisma.doctorApplication.count({ where: { status: 'Pending' } }),
       prisma.report.count({ where: { category: null } }),
+      // Opinions a doctor has submitted and that are waiting for an admin to review and send.
+      prisma.secondOpinion.count({ where: { status: 'Pending Approval' } }),
     ]);
 
     res.json({
       activity,
       messages: contact + patientMsgs,
       outstanding: { contact: contactUnread, messages: msgUnread },
-      queues: { consultations, applications, reports: untriaged },
+      queues: { consultations, applications, reports: untriaged, opinions: opinionsPending },
     });
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not load notification counts.' }); }
 });
