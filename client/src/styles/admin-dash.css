@@ -137,6 +137,18 @@
 .adm-unassigned{color:#b45309;font-size:.8rem;font-weight:600;font-style:italic}
 
 /* Reports grouped into per-patient folders: a folder row that expands to its files as sub-rows. */
+.adm-folder-head{display:inline-flex;align-items:center;gap:.55rem;background:none;border:0;cursor:pointer;
+  font:inherit;text-align:left;padding:.1rem .35rem .1rem .1rem;margin:-.1rem;border-radius:9px;
+  transition:background .14s ease}
+.adm-folder-head:hover{background:var(--teal-soft,#e9f7f5)}
+.adm-folder-head:hover .adm-folder-name{color:var(--teal-dark)}
+.adm-folder-avatar{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
+  background:linear-gradient(135deg,var(--teal),var(--teal-dark));color:#fff;font-size:.72rem;font-weight:800;letter-spacing:.02em}
+.adm-folder-ico{flex:none;display:inline-flex;color:var(--teal-dark)}
+.adm-folder-id{display:flex;flex-direction:column;line-height:1.2}
+.adm-folder-name{font-weight:700;font-size:.92rem;color:var(--ink);transition:color .14s ease}
+.adm-folder-row.is-open{background:var(--teal-soft,#eef8f6)}
+.adm-folder-row.is-open .adm-folder-ico{color:var(--teal)}
 .adm-folder-toggle{display:inline-flex;align-items:center;gap:.45rem;background:none;border:0;cursor:pointer;
   font:inherit;font-size:.85rem;font-weight:700;color:var(--ink)}
 .adm-folder-toggle:hover{color:var(--teal-dark)}
@@ -144,7 +156,7 @@
 .adm-chev.open{transform:rotate(90deg)}
 .admin-table tr.adm-subrow{background:#f7fafb}
 .admin-table tr.adm-subrow td{border-top:0;padding-top:.55rem;padding-bottom:.55rem}
-.adm-subcell{color:var(--ink-soft);font-weight:600}
+.adm-subcell{color:var(--ink-soft);font-weight:600;padding-left:2.7rem !important}
 .triage-files{display:flex;flex-direction:column;gap:.4rem;align-items:flex-start}
 
 /* category cell: "Set category" button (untriaged) + badge+Change (triaged) — no inline dropdown */

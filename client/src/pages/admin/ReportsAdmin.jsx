@@ -13,6 +13,17 @@ const TagIcon = (
   </svg>
 );
 
+// Folder glyph for the patient row — flap lifts when the folder is open, so the row reads as a folder.
+const FolderIcon = ({ open }) => (
+  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M3 8a2 2 0 0 1 2-2h3.6a2 2 0 0 1 1.4.6L11.4 8H19a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
+    {open && <path d="M3 10h18" opacity=".55" />}
+  </svg>
+);
+
+// Initials from the patient's name, for the folder avatar (e.g. "Asha Rao" → "AR").
+const initials = (name) => String(name || '?').trim().split(/\s+/).slice(0, 2).map((w) => w[0] || '').join('').toUpperCase() || '?';
+
 // The filename the patient uploaded, pulled from the notes ("… · filename.pdf"), else the type.
 const fileLabel = (r) => {
   const tail = String(r.notes || '').split('·').pop().trim();
@@ -257,15 +268,24 @@ export default function ReportsAdmin({ flash, on401 }) {
 function FolderRows({ f, isOpen, toggle, onFileTriage, onDelete, CatCell }) {
   return (
     <>
-      <tr className={'adm-folder-row' + (f.untriaged ? ' row-untriaged' : '')}>
-        <td className="t-name">{f.patientName}{f.patientUhid ? <span className="t-sub"> · {f.patientUhid}</span> : ''}</td>
+      <tr className={'adm-folder-row' + (f.untriaged ? ' row-untriaged' : '') + (isOpen ? ' is-open' : '')}>
+        <td className="t-name">
+          <button type="button" className="adm-folder-head" onClick={toggle} aria-expanded={isOpen} title={isOpen ? 'Collapse folder' : 'Open folder'}>
+            <span className={'adm-chev' + (isOpen ? ' open' : '')} aria-hidden="true">▸</span>
+            <span className="adm-folder-avatar" aria-hidden="true">{initials(f.patientName)}</span>
+            <span className="adm-folder-ico"><FolderIcon open={isOpen} /></span>
+            <span className="adm-folder-id">
+              <span className="adm-folder-name">{f.patientName || 'Unknown patient'}</span>
+              {f.patientUhid && <span className="t-sub">{f.patientUhid}</span>}
+            </span>
+          </button>
+        </td>
         <td>{f.type}</td>
         <td><CatCell f={f} /></td>
         <td>{f.category && f.category !== 'Mixed' ? (f.doctor || <span className="adm-unassigned">No specialist tagged</span>) : (f.doctor || '—')}</td>
         <td>{f.date || '—'}</td>
         <td>
           <button type="button" className="adm-folder-toggle" onClick={toggle} aria-expanded={isOpen}>
-            <span className={'adm-chev' + (isOpen ? ' open' : '')} aria-hidden="true">▸</span>
             {f.count} file{f.count > 1 ? 's' : ''}
             {f.untriaged > 0 && <span className="adm-badge amber" style={{ marginLeft: '.4rem' }}>{f.untriaged} new</span>}
           </button>
