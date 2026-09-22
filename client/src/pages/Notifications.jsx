@@ -6,6 +6,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 import { patientApi } from '../api.js';
 
 const s = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.7, strokeLinecap: 'round', strokeLinejoin: 'round' };
@@ -33,6 +34,7 @@ export default function Notifications() {
   const [items, setItems] = useState(null);   // null = loading
   const [err, setErr] = useState('');
   const navigate = useNavigate();
+  const { refreshUnread } = useAuth();
 
   const load = () => patientApi('/notifications/mine')
     .then((d) => setItems(d.items || []))
@@ -41,14 +43,16 @@ export default function Notifications() {
 
   const unread = (items || []).filter((n) => !n.readAt).length;
 
+  // After marking read, refresh the shared count so the bell and the sidebar badge clear too —
+  // not just this page.
   const markAll = () => patientApi('/notifications/mine/read', { method: 'POST', body: JSON.stringify({}) })
-    .then(load).catch((e) => setErr(e.message));
+    .then(() => { load(); refreshUnread(); }).catch((e) => setErr(e.message));
 
   // Reading one is what opening it means; follow its link afterwards if it has one.
   const open = (n) => {
     if (!n.readAt) {
       patientApi('/notifications/mine/read', { method: 'POST', body: JSON.stringify({ id: n.id }) })
-        .then(load).catch(() => {});
+        .then(() => { load(); refreshUnread(); }).catch(() => {});
     }
     if (n.link) navigate(n.link);
   };

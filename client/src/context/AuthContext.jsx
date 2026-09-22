@@ -14,6 +14,7 @@ export function AuthProvider({ children }) {
   const [justSignedUp, setJustSignedUp] = useState(false); // true right after a new account is created
   const [authOpen, setAuthOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [unread, setUnread] = useState(0);   // unread notifications — drives the bell + sidebar badge
 
   // Restore the session from the stored token on load.
   useEffect(() => {
@@ -79,10 +80,27 @@ export function AuthProvider({ children }) {
     catch { return null; }
   }, []);
 
+  // The unread notification count behind the bell and the sidebar badge. Kept here so the header,
+  // the sidebar and the notifications page all read one number and all update together — the page
+  // calls this after marking read, so the badge clears instead of lingering.
+  const refreshUnread = useCallback(async () => {
+    if (!getPatientToken()) { setUnread(0); return; }
+    try { const r = await patientApi('/notifications/mine'); setUnread(Number(r.unread) || 0); }
+    catch { /* leave the last known count rather than flashing to zero on a blip */ }
+  }, []);
+
+  // Load it whenever a session appears, and keep it fresh while they are signed in.
+  useEffect(() => {
+    if (!session) { setUnread(0); return undefined; }
+    refreshUnread();
+    const t = setInterval(refreshUnread, 60000);
+    return () => clearInterval(t);
+  }, [session, refreshUnread]);
+
   const value = {
     session, loading, authOpen, setAuthOpen, uploadOpen, setUploadOpen,
     requestUpload, finishLogin, login, signup, logout, refreshSession, setSession,
-    forgotPassword, resetPassword, justSignedUp,
+    forgotPassword, resetPassword, justSignedUp, unread, refreshUnread,
   };
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
 }

@@ -24,7 +24,8 @@ const NAV = [
   { key: 'cases', label: 'My Cases', icon: I.cases, to: '/dashboard/cases' },
   { key: 'upload', label: 'Upload Reports', icon: I.upload, to: '/dashboard/upload' },
   { key: 'appointments', label: 'My Appointments', icon: I.appointments, to: '/dashboard/appointments' },
-  { key: 'notifications', label: 'Notifications', icon: I.notifications, badge: 3, to: '/dashboard/notifications' },
+  // Notifications live in the header bell, not here — keeping them out of the sidebar avoids a
+  // second place showing the same unread count.
   { key: 'documents', label: 'My Documents', icon: I.documents, to: '/dashboard/documents' },
   { key: 'messages', label: 'Messages', icon: I.messages, to: '/dashboard/messages' },
   { key: 'payments', label: 'Payments', icon: I.payments, to: '/dashboard/payments' },
@@ -55,7 +56,6 @@ export default function DashboardLayout({ active = 'dashboard', children }) {
               <Link key={it.key} to={it.to} className={'dash-nav-item' + (it.key === active ? ' active' : '')}>
                 <span className="dash-nav-ico">{it.icon}</span>
                 <span className="dash-nav-label">{it.label}</span>
-                {it.badge ? <span className="dash-nav-badge">{it.badge}</span> : null}
               </Link>
             ))}
           </nav>

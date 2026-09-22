@@ -18,7 +18,7 @@ const BrandMark = () => (
 const initials = (name = '') =>
   name.trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase() || 'U';
 
-function UserMenu({ session, logout }) {
+function UserMenu({ session, logout, unread = 0 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const navigate = useNavigate();
@@ -31,9 +31,9 @@ function UserMenu({ session, logout }) {
 
   return (
     <div className="header-user">
-      <button type="button" className="header-bell" aria-label="Notifications" title="Notifications">
+      <button type="button" className="header-bell" aria-label={`Notifications${unread ? `, ${unread} unread` : ''}`} title="Notifications" onClick={() => navigate('/dashboard/notifications')}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 8-3 8h18s-3-1-3-8M13.7 21a2 2 0 0 1-3.4 0" /></svg>
-        <span className="dot">3</span>
+        {unread > 0 && <span className="dot">{unread > 9 ? '9+' : unread}</span>}
       </button>
       <div className="user-menu" ref={ref}>
         <button type="button" className="user-chip" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
@@ -80,7 +80,7 @@ function NavDropdown({ label, active, items }) {
 }
 
 export default function Header({ active }) {
-  const { requestUpload, session, logout, setAuthOpen } = useAuth();
+  const { requestUpload, session, logout, setAuthOpen, unread } = useAuth();
   const { t } = useLang();
   const [open, setOpen] = useState(false);
   const navRef = useRef(null);
@@ -127,7 +127,7 @@ export default function Header({ active }) {
         <div className="header-actions">
           <LanguageSwitcher />
           {session
-            ? <UserMenu session={session} logout={logout} />
+            ? <UserMenu session={session} logout={logout} unread={unread} />
             : <>
                 <button type="button" className="header-login" onClick={() => setAuthOpen(true)}>{t('nav.login')}</button>
                 <button type="button" className="btn btn-primary header-cta" onClick={requestUpload}>{t('nav.cta')}</button>

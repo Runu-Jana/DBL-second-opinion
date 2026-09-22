@@ -184,7 +184,8 @@
   .dash-stats{grid-template-columns:1fr}
   .dash-duo{grid-template-columns:1fr}
   .user-name{display:none}
-  .header-bell{display:none}   /* free space so the logged-in header fits a phone (notifications live in the dashboard) */
+  /* The bell is the only way to notifications now (they are no longer in the sidebar), so it stays
+     on a phone; hiding the name above frees the room for it. */
 }
 
 /* ============================================================
