@@ -113,9 +113,14 @@
   await call('PUT', `/doctor/cases/${uhid}/report`, dTok, { reportData: sample, form });
 
   // --- submit to admin (the plain-text flattening set by the save satisfies the submit gate) ---
-  const submitted = await call('POST', `/doctor/cases/${uhid}/submit`, dTok);
+  // Submitting sends whatever is on the doctor's screen, so an inline edit made without pressing
+  // "Save draft" still reaches the admin — the admin reviews exactly what the doctor saw.
+  const editedAtSubmit = JSON.parse(JSON.stringify(sample));
+  editedAtSubmit.secondOpinion.overallOpinion = 'Edited on screen just before submitting.';
+  const submitted = await call('POST', `/doctor/cases/${uhid}/submit`, dTok, { reportData: editedAtSubmit, form });
   check('the doctor submits for review', submitted.body.case.status, 'Pending Approval');
   check('  the submission is dated for the approval queue', !!submitted.body.case.submittedDate, true);
+  check('  submitting persists the on-screen report for the admin', JSON.parse(submitted.body.case.reportData).secondOpinion.overallOpinion, 'Edited on screen just before submitting.');
   // The admin approval queue counts it as awaiting approval.
   check('  it shows in the admin approval queue', (await call('GET', '/notifications', adminTok)).body.queues.opinions >= 1, true);
   check('patient still sees nothing', (await call('GET', '/portal/opinions', pTok)).body.length, 0);

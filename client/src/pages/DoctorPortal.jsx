@@ -179,7 +179,9 @@ function DoctorDashboard({ onLogout, preview = false }) {
   const submit = () => {
     if (!window.confirm('Submit this opinion to the admin team for review? They will check it and send it to the patient.')) return;
     setBusy('send');
-    docApi(`/doctor/cases/${caseUhid}/submit`, { method: 'POST' })
+    // Send exactly what is on screen, so the admin reviews the report the doctor sees — inline edits
+    // are persisted as part of submitting, whether or not "Save draft" was pressed first.
+    docApi(`/doctor/cases/${caseUhid}/submit`, { method: 'POST', body: JSON.stringify({ reportData: report, form }) })
       .then(() => { flash('Submitted for admin review. The admin team will send it to the patient.'); load(); return reopen(); })
       .catch((e) => flash(e.message))
       .finally(() => setBusy(''));

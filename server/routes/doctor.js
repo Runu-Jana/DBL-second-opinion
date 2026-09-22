@@ -313,14 +313,29 @@ router.post('/cases/:uhid/submit', requireDoctor, async (req, res) => {
   try {
     const kase = await ownCase(req);
     if (!kase) return res.status(404).json({ error: 'Case not found.' });
-    if (!kase.doctorOpinion) {
-      return res.status(400).json({ error: 'Write and save your opinion before submitting it.' });
+    if (req.doctor.imp) return res.status(403).json({ error: 'Preview is read-only.' });
+    // The doctor sends the report that is on their screen with the submission, so the admin reviews
+    // exactly that — not an earlier saved draft. If it is present we persist it here, atomically
+    // with flipping the status, which also means inline edits can never be lost by forgetting to
+    // "Save draft" first.
+    const persist = {};
+    let opinionText = kase.doctorOpinion;
+    if (req.body && req.body.reportData && typeof req.body.reportData === 'object') {
+      const reportData = normaliseReport(req.body.reportData);
+      opinionText = toPlainText(reportData, kase.patientName) || null;
+      persist.reportData = JSON.stringify(reportData);
+      persist.doctorOpinion = opinionText;
+      if (req.body.form && typeof req.body.form === 'object') persist.reportForm = JSON.stringify(req.body.form);
+    }
+    if (!opinionText) {
+      return res.status(400).json({ error: 'Build the report before submitting it.' });
     }
     const updated = await prisma.secondOpinion.update({
       where: { id: kase.id },
       data: {
+        ...persist,
         status: 'Pending Approval',
-        summary: kase.doctorOpinion.slice(0, 500),
+        summary: opinionText.slice(0, 500),
         submittedDate: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
       },
     });

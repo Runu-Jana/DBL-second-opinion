@@ -47,7 +47,7 @@
   // --- cannot submit before writing ---
   const early = await call('POST', `/doctor/cases/${uhid}/submit`, dTok);
   check('submitting before writing is refused', early.status, 400);
-  check('  and says why', /save your opinion/i.test(early.body.error || ''), true);
+  check('  and says why', /before submitting/i.test(early.body.error || ''), true);
 
   // --- patient sees nothing yet ---
   check('patient sees no opinion before it is sent', (await call('GET', '/portal/opinions', pTok)).body.length, 0);
