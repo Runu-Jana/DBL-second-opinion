@@ -54,12 +54,12 @@
   // --- doctor opens the case: review begins ---
   await call('GET', `/doctor/cases/${uhid}`, dTok);
   pf = await feed(pTok);
-  check('patient told review has started', titles(pf).includes('Your reports are being reviewed'), true);
+  check('patient told their reports were reviewed', titles(pf).includes('Your reports have been reviewed'), true);
 
-  // Opening it again must not tell them twice.
+  // Opening it again must not tell them twice — the reports are already reviewed, so nothing moves.
   await call('GET', `/doctor/cases/${uhid}`, dTok);
   pf = await feed(pTok);
-  check('  and only once, however often the doctor revisits', titles(pf).filter((t) => t === 'Your reports are being reviewed').length, 1);
+  check('  and only once, however often the doctor revisits', titles(pf).filter((t) => t === 'Your reports have been reviewed').length, 1);
 
   // --- doctor saves a draft: the patient must NOT hear about it ---
   await call('PUT', `/doctor/cases/${uhid}/opinion`, dTok, { opinion: 'Draft, not sent.' });

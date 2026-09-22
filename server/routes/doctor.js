@@ -132,10 +132,24 @@ router.get('/cases/:uhid', requireDoctor, async (req, res) => {
     // Opening the case is the moment review actually starts. Stamped once, so the patient is
     // told when it begins rather than every time the specialist revisits the page. An admin
     // preview must not trigger it — the patient should not hear "review started" from a look.
-    if (!kase.reviewStartedAt && !req.doctor.imp) {
-      await prisma.secondOpinion.update({ where: { id: kase.id }, data: { reviewStartedAt: new Date() } }).catch(() => {});
-      await notifyPatient(kase.patientUhid, { kind: 'case', title: 'Your reports are being reviewed',
-        body: `${req.doctor.name} has started reviewing your case.`, link: '/dashboard/cases' });
+    if (!req.doctor.imp) {
+      // First open stamps when review began (kept for the record).
+      if (!kase.reviewStartedAt) {
+        await prisma.secondOpinion.update({ where: { id: kase.id }, data: { reviewStartedAt: new Date() } }).catch(() => {});
+      }
+      // Reviewing a case is seeing its documents. Mark this doctor's still-pending reports reviewed
+      // — that clears them from "reports pending review" and from the case's "new" badge — and tell
+      // the patient once, when reports actually move from pending to reviewed. The opinion is a
+      // separate step: the case stays in the review queue until the opinion is sent.
+      const marked = await prisma.report.updateMany({
+        where: { patientUhid: uhid, doctor: req.doctor.name, status: 'Pending Review' },
+        data: { status: 'Reviewed' },
+      }).catch(() => ({ count: 0 }));
+      if (marked.count > 0) {
+        documents.forEach((d) => { if (d.status === 'Pending Review') d.status = 'Reviewed'; });
+        await notifyPatient(uhid, { kind: 'case', title: 'Your reports have been reviewed',
+          body: `${req.doctor.name} has reviewed your ${marked.count === 1 ? 'report' : 'reports'} and is preparing your second opinion.`, link: '/dashboard/cases' });
+      }
     }
     res.json({
       patient,

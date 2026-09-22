@@ -171,6 +171,13 @@ function DoctorDashboard({ onLogout, preview = false }) {
   const name = me?.doctor?.name || 'Doctor';
   const stats = me?.stats || { patients: 0, pendingReports: 0, totalReports: 0 };
 
+  // Cases to Review is the actual to-do: cases still awaiting the opinion. My Patients is the rest
+  // of the roster. Splitting them this way means a patient shows in one place, not both — a case
+  // moves from the review queue to the patient list once its opinion is sent.
+  const reviewCases = cases.filter((c) => !c.delivered);
+  const queueUhids = new Set(reviewCases.map((c) => c.uhid).filter(Boolean));
+  const rosterPatients = patients.filter((p) => !queueUhids.has(p.uhid));
+
   return (
     <div className="doc-shell">
       <header className="doc-topbar">
@@ -200,7 +207,7 @@ function DoctorDashboard({ onLogout, preview = false }) {
               <span className="doc-case-actions">
                 {handover.status === 'Delivered' && <span className="adm-badge green">Sent to patient</span>}
                 <button type="button" className="icon-btn" onClick={() => window.print()}>Print</button>
-                <button type="button" className="icon-btn" onClick={() => setCase(null)}>Close</button>
+                <button type="button" className="icon-btn" onClick={() => { setCase(null); load(); }}>Close</button>
               </span>
             </div>
 
@@ -317,8 +324,8 @@ function DoctorDashboard({ onLogout, preview = false }) {
             <table className="admin-table">
               <thead><tr><th>Patient</th><th>Category</th><th>Documents</th><th>Priority</th><th>Status</th><th></th></tr></thead>
               <tbody>
-                {cases.length === 0 && <tr><td colSpan="6" className="admin-empty">No cases assigned to you yet.</td></tr>}
-                {cases.map((c) => (
+                {reviewCases.length === 0 && <tr><td colSpan="6" className="admin-empty">No cases waiting on your opinion.</td></tr>}
+                {reviewCases.map((c) => (
                   <tr key={c.key}>
                     <td className="t-name">{c.patientName}{c.uhid ? <span className="t-sub"> · {c.uhid}</span> : ''}</td>
                     <td>{c.category ? <span className={'adm-badge ' + (CATEGORY_TONE[c.category] || 'gray')}>{c.category}</span> : '—'}</td>
@@ -349,8 +356,8 @@ function DoctorDashboard({ onLogout, preview = false }) {
             <table className="admin-table">
               <thead><tr><th>Patient</th><th>UHID</th><th>Cancer Type</th><th>Stage</th><th>Status</th><th>Last Visit</th><th></th></tr></thead>
               <tbody>
-                {patients.length === 0 && <tr><td colSpan="7" className="admin-empty">No patients assigned to you yet.</td></tr>}
-                {patients.map((p) => (
+                {rosterPatients.length === 0 && <tr><td colSpan="7" className="admin-empty">Everyone assigned to you is in the review queue above.</td></tr>}
+                {rosterPatients.map((p) => (
                   <tr key={p.id}>
                     <td className="t-name">{p.name}</td>
                     <td className="mono">{p.uhid}</td>

@@ -111,7 +111,7 @@
   check('  and all three documents', handover.body.documents.length, 3);
 
   feed = await call('GET', '/notifications/mine', pTok);
-  check('patient told review has started', feed.body.items.some((n) => /being reviewed/.test(n.title)), true);
+  check('patient told their reports were reviewed', feed.body.items.some((n) => /have been reviewed/.test(n.title)), true);
 
   await call('PUT', `/doctor/cases/${uhid}/opinion`, dTok, { opinion: 'MY ASSESSMENT\nI agree a biopsy is the right next step.' });
   check('patient NOT told about the unsent draft',
