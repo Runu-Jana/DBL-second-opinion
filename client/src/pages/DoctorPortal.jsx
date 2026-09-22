@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { CATEGORY_TONE } from '../lib/categories.js';
 import CounsellorPortal from './CounsellorPortal.jsx';
 import StaffBell from '../components/StaffBell.jsx';
@@ -80,6 +80,17 @@ function DoctorDashboard({ onLogout, preview = false }) {
   const [noteText, setNoteText] = useState('');
   const [thread, setThread] = useState(null);
   const [draft, setDraft] = useState('');
+
+  // The opinion editor starts a few rows tall and grows with what the specialist writes, up to a
+  // cap, then scrolls — like the counsellor's report box, not a fixed wall of empty space.
+  const opinionRef = useRef(null);
+  const autosizeOpinion = () => {
+    const el = opinionRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.max(120, Math.min(el.scrollHeight, 640))}px`;
+  };
+  useEffect(autosizeOpinion, [opinion]);
 
   const load = () => {
     docApi('/doctor/me').then(setMe).catch(() => onLogout());
@@ -256,7 +267,7 @@ function DoctorDashboard({ onLogout, preview = false }) {
               document readings — check every line against the reports before you send it.
               {handover.patientQuestions && ' The patient asked questions, above: answer each of them in your opinion.'}
             </p>
-            <textarea className="cns-report no-print" rows={16} value={opinion} readOnly={preview} onChange={(e) => setOpinion(e.target.value)}
+            <textarea ref={opinionRef} className="cns-report cns-report-auto no-print" rows={5} value={opinion} readOnly={preview} onChange={(e) => { setOpinion(e.target.value); autosizeOpinion(); }}
               placeholder="Your opinion for this patient…" />
             <pre className="cns-ai print-only">{opinion}</pre>
             <div className="doc-actbar no-print">
