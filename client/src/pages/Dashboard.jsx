@@ -143,7 +143,7 @@ export default function Dashboard() {
             <div className="msg">
               <span className="msg-ico">{Ico.coord}</span>
               <div className="msg-body">
-                <div className="msg-top"><strong>Care Coordinator</strong><span>{latest?.date || ''}</span></div>
+                <div className="msg-top"><strong>Care Coordinator</strong>{latest?.date ? <span>{latest.date}</span> : null}</div>
                 <p>{latest
                   ? (latest.status === 'Reviewed' || latest.status === 'Archived'
                     ? `Your report has been reviewed${latest.doctor ? ` by ${latest.doctor}` : ''}. Your expert opinion is ready.`

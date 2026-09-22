@@ -91,9 +91,12 @@
   background:#fff;color:var(--teal-dark)}
 .msg-ico svg{width:20px;height:20px}
 .msg-body{min-width:0}
-.msg-top{display:flex;align-items:center;justify-content:space-between;gap:.6rem}
+/* Heading then date, sitting together at the start — the date used to be pushed across the row
+   by space-between and floated adrift when the body did not fill the card. */
+.msg-top{display:flex;align-items:baseline;flex-wrap:wrap;gap:.2rem .5rem}
 .msg-top strong{font-size:.86rem;color:var(--ink)}
 .msg-top span{font-size:.72rem;color:var(--muted);white-space:nowrap}
+.msg-top span::before{content:"·";margin-right:.5rem;color:var(--muted)}
 .msg-body p{margin:.2rem 0 0;font-size:.82rem;color:var(--ink-soft);line-height:1.45}
 
 /* ---------- case progress stepper ---------- */
