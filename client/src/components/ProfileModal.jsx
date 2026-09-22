@@ -80,7 +80,10 @@ function PatientBody({ d, api, on401, reload }) {
   const [report, setReport] = useState(parseReport(k && k.reportData));
   const [busy, setBusy] = useState('');
   const [note, setNote] = useState('');
+  const [fullscreen, setFullscreen] = useState(false);   // open the report in a full-viewport view
   useEffect(() => { setReport(parseReport(k && k.reportData)); }, [k && k.id, k && k.reportData]); // eslint-disable-line
+  // Leaving the modal always leaves full screen too.
+  useEffect(() => () => setFullscreen(false), []);
 
   const saveEdits = () => {
     if (!report) return;
@@ -99,10 +102,18 @@ function PatientBody({ d, api, on401, reload }) {
       : Promise.resolve();
     saveFirst
       .then(() => api(`/second-opinions/${k.id}/deliver`, { method: 'POST', on401 }))
-      .then((r) => { setNote(r.emailed ? 'Sent — the patient has been emailed.' : 'Sent to the patient.'); reload(); })
+      .then((r) => { setNote(r.emailed ? 'Sent — the patient has been emailed.' : 'Sent to the patient.'); setFullscreen(false); reload(); })
       .catch((e) => setNote(e.message))
       .finally(() => setBusy(''));
   };
+
+  // The report shown large, over the whole viewport — editable while it awaits approval, read-only
+  // once delivered. The same `report` state backs it, so edits here and in the modal stay in step.
+  const fullView = (icon) => report && (
+    <button type="button" className="icon-btn prof-fs-btn" onClick={() => setFullscreen(true)} title="Open full screen">{icon} Full screen</button>
+  );
+  const expandIcon = <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3" /></svg>;
+
   return (
     <div className="prof-body">
       <section>
@@ -155,7 +166,10 @@ function PatientBody({ d, api, on401, reload }) {
             )}
             {pending ? (
               <>
-                <h5>Doctor&rsquo;s report <em>— awaiting your approval</em></h5>
+                <div className="prof-report-head">
+                  <h5>Doctor&rsquo;s report <em>— awaiting your approval</em></h5>
+                  {fullView(expandIcon)}
+                </div>
                 <p className="cns-muted">{k.expert || 'The specialist'} submitted this. Review it, edit any section if needed, then send it to the patient.</p>
                 {report ? (
                   <div className="prof-report-frame">
@@ -173,12 +187,39 @@ function PatientBody({ d, api, on401, reload }) {
               </>
             ) : (report || k.doctorOpinion) ? (
               <>
-                <h5>Doctor&rsquo;s report{k.deliveredAt ? ` (sent ${fmtWhen(k.deliveredAt)})` : ' (draft — not submitted)'}</h5>
+                <div className="prof-report-head">
+                  <h5>Doctor&rsquo;s report{k.deliveredAt ? ` (sent ${fmtWhen(k.deliveredAt)})` : ' (draft — not submitted)'}</h5>
+                  {fullView(expandIcon)}
+                </div>
                 {report
                   ? <div className="prof-report-frame"><OpinionReport data={report} patient={{ name: p.name, age: p.age, gender: p.gender }} caseId={p.uhid} doctor={k.expert} date={k.deliveredAt} /></div>
                   : <pre className="cns-ai">{k.doctorOpinion}</pre>}
               </>
             ) : null}
+
+            {fullscreen && report && (
+              <div className="orp-fs" role="dialog" aria-label="Report full screen">
+                <div className="orp-fs-bar">
+                  <strong>Second-opinion report — {p.name}</strong>
+                  <span className="orp-fs-actions">
+                    {pending ? (
+                      <>
+                        <button type="button" className="doc-btn doc-btn-outline" disabled={busy === 'save' || busy === 'send'} onClick={saveEdits}>{busy === 'save' ? 'Saving…' : 'Save edits'}</button>
+                        <button type="button" className="doc-btn doc-btn-primary" disabled={busy === 'send'} onClick={sendToPatient}>{busy === 'send' ? 'Sending…' : 'Send to patient'}</button>
+                      </>
+                    ) : (
+                      <button type="button" className="doc-btn doc-btn-outline" onClick={() => window.print()}>Print / Save as PDF</button>
+                    )}
+                    <button type="button" className="doc-btn doc-btn-ghost" onClick={() => setFullscreen(false)}>Exit full screen</button>
+                  </span>
+                </div>
+                <div className="orp-fs-body">
+                  <OpinionReport data={report} editable={pending} onChange={setReport}
+                    patient={{ name: p.name, age: p.age, gender: p.gender }} caseId={p.uhid} doctor={k.expert} date={pending ? new Date() : k.deliveredAt} />
+                </div>
+                {note && <p className="orp-fs-note">{note}</p>}
+              </div>
+            )}
           </>
         )}
       </section>
