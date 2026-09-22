@@ -114,6 +114,42 @@ reports.post('/:id/categorise', requireAdmin, async (req, res) => {
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not categorise the report.' }); }
 });
 
+// Picks the least-loaded active specialist tagged for a category (or null if none tagged).
+async function leastLoadedFor(category) {
+  const docs = await prisma.staff.findMany({ where: { status: 'Active', password: { not: null } } });
+  const eligible = docs.filter((d) => splitCategories(d.specialties).includes(category));
+  if (!eligible.length) return { assigned: null, eligibleCount: 0 };
+  const counts = await Promise.all(eligible.map((d) => prisma.report.count({ where: { doctor: d.name, status: { not: 'Archived' } } })));
+  let best = 0;
+  for (let i = 1; i < eligible.length; i++) if (counts[i] < counts[best]) best = i;
+  return { assigned: eligible[best].name, eligibleCount: eligible.length };
+}
+
+// POST /api/reports/categorise-folder — triage a whole patient folder at once: every one of that
+// patient's reports gets the same category and the SAME specialist, so an upload of several files
+// is never split across two doctors (which per-report routing could otherwise do).
+reports.post('/categorise-folder', requireAdmin, async (req, res) => {
+  try {
+    const category = inSet(str(req.body.category), CATEGORIES, null);
+    if (!category) return res.status(400).json({ error: 'A valid category is required.' });
+    const uhid = str(req.body.patientUhid);
+    const name = str(req.body.patientName);
+    const where = uhid ? { patientUhid: uhid } : (name ? { patientName: { equals: name, mode: 'insensitive' } } : null);
+    if (!where) return res.status(400).json({ error: 'A patient is required.' });
+    const folder = await prisma.report.findMany({ where });
+    if (!folder.length) return res.status(404).json({ error: 'No reports found for this patient.' });
+
+    const { assigned, eligibleCount } = await leastLoadedFor(category);
+    await prisma.report.updateMany({ where, data: { category, doctor: assigned } });
+    // Sync the patient record + case once, from any of the folder's reports.
+    await syncTriageToPatient(folder[0], category, assigned);
+
+    logActivity(req, { kind: 'audit', action: `Triaged ${folder.length} report(s) as ${category}${assigned ? ` → ${assigned}` : ''}`, target: `Report · ${folder[0].patientName}`, category: 'Report' });
+    logActivity(req, { kind: 'activity', action: `${folder[0].patientName}'s reports categorised as ${category}${assigned ? ` and routed to ${assigned}` : ''}`, category: 'Report' });
+    res.json({ assignedTo: assigned, eligibleCount, count: folder.length, category });
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not categorise the folder.' }); }
+});
+
 // POST /api/reports/:id/analyze — Claude reads the uploaded file and returns a structured summary
 // + a suggested category (decision-support). The summary is saved on the report for the doctor.
 reports.post('/:id/analyze', requireAdmin, async (req, res) => {

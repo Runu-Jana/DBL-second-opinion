@@ -136,6 +136,17 @@
 .admin-table tr.row-untriaged{background:#fffdf7}
 .adm-unassigned{color:#b45309;font-size:.8rem;font-weight:600;font-style:italic}
 
+/* Reports grouped into per-patient folders: a folder row that expands to its files as sub-rows. */
+.adm-folder-toggle{display:inline-flex;align-items:center;gap:.45rem;background:none;border:0;cursor:pointer;
+  font:inherit;font-size:.85rem;font-weight:700;color:var(--ink)}
+.adm-folder-toggle:hover{color:var(--teal-dark)}
+.adm-chev{display:inline-block;transition:transform .15s ease;color:var(--muted)}
+.adm-chev.open{transform:rotate(90deg)}
+.admin-table tr.adm-subrow{background:#f7fafb}
+.admin-table tr.adm-subrow td{border-top:0;padding-top:.55rem;padding-bottom:.55rem}
+.adm-subcell{color:var(--ink-soft);font-weight:600}
+.triage-files{display:flex;flex-direction:column;gap:.4rem;align-items:flex-start}
+
 /* category cell: "Set category" button (untriaged) + badge+Change (triaged) — no inline dropdown */
 .adm-cat-set{display:inline-flex;align-items:center;gap:.4rem;font:inherit;font-size:.82rem;font-weight:700;
   color:#c2410c;background:#fff7ed;border:1px dashed #fb923c;border-radius:8px;padding:.42rem .7rem;cursor:pointer;
