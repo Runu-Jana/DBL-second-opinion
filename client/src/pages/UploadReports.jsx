@@ -33,9 +33,10 @@ export default function UploadReports() {
               <rect x="6" y="30" width="52" height="60" rx="6" fill="#d0efec" stroke="#0e9f8e" strokeWidth="2" />
               <path d="M18 46h28M18 56h28M18 66h20" stroke="#0e9f8e" strokeWidth="2" strokeLinecap="round" />
               <circle cx="82" cy="52" r="30" fill="#0e9f8e" />
-              <path d="M82 64V42m0 0-8 8m8-8 8 8" stroke="#fff" strokeWidth="3.2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-              <circle cx="104" cy="74" r="14" fill="#0b7d70" />
-              <path d="m98 74 4 4 8-8" stroke="#fff" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M82 63V43m0 0-7.5 7.5M82 43l7.5 7.5" stroke="#fff" strokeWidth="3.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+              {/* success badge — a white ring separates it from the circle so it reads as a badge on top */}
+              <circle cx="103" cy="75" r="13" fill="#0b7d70" stroke="#fff" strokeWidth="3.5" />
+              <path d="m97.5 75 3.5 3.5 6.5-6.5" stroke="#fff" strokeWidth="2.6" fill="none" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </span>
         </div>
