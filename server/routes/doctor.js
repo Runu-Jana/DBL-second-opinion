@@ -4,12 +4,17 @@ const prisma = require('../db');
 const { requireDoctor } = require('./auth');
 const { logActivity } = require('../lib/audit');
 const { draftOpinion, configured: aiConfigured } = require('../lib/opinionAI');
+const { composeReport, toPlainText, normalise: normaliseReport } = require('../lib/reportComposer');
 const { analyzeReport } = require('../lib/reportAI');
 const { sendOpinionReady } = require('../lib/email');
 const { notifyPatient, notifyCounsellor } = require('../lib/notify');
 
 const router = express.Router();
 const REPORT_STATUSES = ['Pending Review', 'Reviewed', 'Uploaded', 'Archived'];
+
+// JSON columns (reportForm / reportData) are stored as text; a bad or empty value must never
+// crash the handover, so a parse failure just reads as "nothing there yet".
+const safeParse = (s) => { try { return s ? JSON.parse(s) : null; } catch { return null; } };
 
 // Every case route below goes through this. A specialist may only touch a case they were
 // actually assigned — the id in the URL is never trusted on its own.
@@ -162,6 +167,8 @@ router.get('/cases/:uhid', requireDoctor, async (req, res) => {
       assignedAt: kase.assignedAt,
       doctorOpinion: kase.doctorOpinion,
       doctorAiDraft: kase.doctorAiDraft,
+      reportForm: safeParse(kase.reportForm),
+      reportData: safeParse(kase.reportData),
       status: kase.status,
       deliveredAt: kase.deliveredAt,
       ai: aiConfigured(),
@@ -199,6 +206,72 @@ router.post('/cases/:uhid/draft', requireDoctor, async (req, res) => {
     console.error(e);
     res.status(502).json({ error: 'The AI could not draft this right now.' });
   }
+});
+
+// POST /api/doctor/cases/:uhid/generate-report -> the heart of the new flow. Takes the doctor's
+// short tick-box intake and composes the FULL structured report from it plus the counsellor's
+// assessment, the AI readings of the documents and the patient's questions. Saved as a draft
+// (reportForm + reportData + a plain-text flattening in doctorOpinion) — not sent to anyone.
+router.post('/cases/:uhid/generate-report', requireDoctor, async (req, res) => {
+  try {
+    const kase = await ownCase(req);
+    if (!kase) return res.status(404).json({ error: 'Case not found.' });
+    if (req.doctor.imp) return res.status(403).json({ error: 'Preview is read-only.' });
+    if (!aiConfigured()) return res.status(503).json({ error: 'AI report generation is not configured on this server.' });
+    const form = (req.body && req.body.form && typeof req.body.form === 'object') ? req.body.form : {};
+    const documents = await prisma.report.findMany({ where: { patientUhid: kase.patientUhid } });
+    const readings = documents.filter((d) => d.aiSummary);
+    const reportData = await composeReport({
+      patientName: kase.patientName,
+      cancerType: kase.cancerType,
+      counsellorReport: kase.counsellorReport,
+      patientQuestions: kase.patientQuestions,
+      readings,
+      form,
+    });
+    const plain = toPlainText(reportData, kase.patientName);
+    const saved = await prisma.secondOpinion.update({
+      where: { id: kase.id },
+      data: {
+        reportForm: JSON.stringify(form),
+        reportData: JSON.stringify(reportData),
+        doctorOpinion: plain || null,
+        status: kase.status === 'Delivered' ? 'Delivered' : 'Under Review',
+      },
+    });
+    res.json({ ok: true, reportData, reportForm: form, status: saved.status });
+  } catch (e) {
+    if (e.code === 'NO_AI') return res.status(503).json({ error: e.message });
+    if (e.code === 'BAD_JSON') return res.status(502).json({ error: e.message });
+    console.error(e);
+    res.status(502).json({ error: 'The AI could not build this report right now. Please try again.' });
+  }
+});
+
+// PUT /api/doctor/cases/:uhid/report -> save the doctor's edits to the generated report (and the
+// intake behind it). Kept in draft state; submitting it for review is a separate step.
+router.put('/cases/:uhid/report', requireDoctor, async (req, res) => {
+  try {
+    const kase = await ownCase(req);
+    if (!kase) return res.status(404).json({ error: 'Case not found.' });
+    if (req.doctor.imp) return res.status(403).json({ error: 'Preview is read-only.' });
+    if (!req.body || typeof req.body.reportData !== 'object' || !req.body.reportData) {
+      return res.status(400).json({ error: 'No report to save.' });
+    }
+    const reportData = normaliseReport(req.body.reportData);
+    const form = (req.body.form && typeof req.body.form === 'object') ? req.body.form : safeParse(kase.reportForm);
+    const plain = toPlainText(reportData, kase.patientName);
+    const updated = await prisma.secondOpinion.update({
+      where: { id: kase.id },
+      data: {
+        reportData: JSON.stringify(reportData),
+        ...(form ? { reportForm: JSON.stringify(form) } : {}),
+        doctorOpinion: plain || null,
+        status: kase.status === 'Delivered' ? 'Delivered' : 'Under Review',
+      },
+    });
+    res.json({ ok: true, reportData, status: updated.status });
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not save the report.' }); }
 });
 
 // PUT /api/doctor/cases/:uhid/opinion -> save the doctor's own text (draft state, not sent yet)

@@ -268,8 +268,10 @@ model SecondOpinion {
   aiDraft       String?                          // AI first draft, kept so the human edit can be compared
   assignedAt    DateTime?                        // when a doctor was put on the case
   assignmentHistory String?                      // JSON log of every assignment/reassignment: who, when, stage, by whom
-  doctorOpinion String?                          // the specialist's second opinion — what the patient receives
+  doctorOpinion String?                          // the specialist's second opinion — what the patient receives (plain-text flattening for email/summary/back-compat)
   doctorAiDraft String?                          // AI first draft of that opinion, kept beside the final text
+  reportForm    String?                          // JSON of the doctor's tick-box intake (the clinical decisions they made)
+  reportData    String?                          // JSON of the generated structured report (Report.jsx-shaped) — what the styled document renders from
   reviewStartedAt DateTime?                      // first time the specialist opened the case
   deliveredAt   DateTime?                        // when the opinion was released to the patient
   createdAt     DateTime @default(now())

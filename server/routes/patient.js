@@ -206,9 +206,13 @@ router.get('/opinions', requirePatient, async (req, res) => {
     });
     res.json(list.map((o) => ({
       id: o.id,
+      patientName: o.patientName,
+      uhid: o.patientUhid,
       cancerType: o.cancerType,
       doctor: o.expert,
       opinion: o.doctorOpinion,
+      // The structured report drives the styled document; the plain text above is the fallback.
+      reportData: (() => { try { return o.reportData ? JSON.parse(o.reportData) : null; } catch { return null; } })(),
       // Shown back beside the answer, so they can check each one was addressed.
       patientQuestions: o.patientQuestions,
       deliveredAt: o.deliveredAt,

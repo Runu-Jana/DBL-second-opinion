@@ -787,3 +787,33 @@
 .prof-stats span{font-size:.75rem;color:var(--muted)}
 
 .prof-thread{display:flex;flex-direction:column;gap:.5rem;max-height:320px;overflow-y:auto;padding-right:.2rem}
+
+/* ---- Doctor's tick-box report intake (ReportForm) ---- */
+.rf{margin:.4rem 0 1rem}
+.rf-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.rf-sec{background:#f7fafb;border:1px solid var(--line,#e3e9ee);border-radius:12px;padding:14px 16px}
+.rf-sec-wide{grid-column:1 / -1}
+.rf-sec h4{margin:0 0 10px;font-size:.85rem;font-weight:800;color:var(--teal-dark,#0b7d70);text-transform:uppercase;letter-spacing:.3px}
+.rf-sec h4 em{font-style:normal;font-weight:600;color:var(--muted);text-transform:none;letter-spacing:0}
+.rf-check{display:flex;align-items:center;gap:9px;padding:6px 2px;cursor:pointer;font-size:.9rem;color:var(--ink,#25324a)}
+.rf-check input{position:absolute;opacity:0;width:0;height:0}
+.rf-box{flex:0 0 auto;width:18px;height:18px;border:2px solid #c6d2da;border-radius:5px;position:relative;transition:.14s}
+.rf-check.on .rf-box{background:var(--teal,#0e9f8e);border-color:var(--teal,#0e9f8e)}
+.rf-check.on .rf-box::after{content:"";position:absolute;left:5px;top:1px;width:5px;height:10px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.rf-inline{display:flex;align-items:center;gap:8px;font-size:.9rem;color:var(--ink,#25324a);margin:6px 0}
+.rf-inline select{font:inherit;padding:4px 8px;border:1px solid var(--line,#dbe3e8);border-radius:7px;background:#fff}
+.rf-chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px}
+.rf-chip{font:inherit;font-size:.82rem;font-weight:600;color:var(--ink-soft,#42566b);background:#fff;border:1px solid #d7dfe6;border-radius:20px;padding:5px 12px;cursor:pointer;transition:.14s}
+.rf-chip:hover{border-color:var(--teal,#0e9f8e)}
+.rf-chip.on{background:var(--teal,#0e9f8e);border-color:var(--teal,#0e9f8e);color:#fff}
+.rf-divider{height:1px;background:var(--line,#e3e9ee);margin:10px 0}
+.rf-radios{display:flex;flex-direction:column;gap:6px}
+.rf-radio{display:flex;align-items:center;gap:8px;font-size:.88rem;color:var(--ink,#25324a);cursor:pointer}
+.rf-radio.on{font-weight:700;color:var(--teal-dark,#0b7d70)}
+.rf-note{width:100%;box-sizing:border-box;font:inherit;font-size:.9rem;border:1px solid var(--line,#dbe3e8);border-radius:8px;padding:8px 10px;resize:vertical}
+.rf-actions{display:flex;align-items:center;justify-content:flex-end;gap:14px;flex-wrap:wrap;margin-top:14px}
+.rf-hint{margin:0;font-size:.82rem;color:var(--muted);flex:1;min-width:220px}
+.rf-generate{font-size:.95rem}
+.doc-report-head{margin-top:18px}
+.doc-report-head .cns-muted{display:block;margin-top:2px}
+@media (max-width:720px){.rf-grid{grid-template-columns:1fr}}

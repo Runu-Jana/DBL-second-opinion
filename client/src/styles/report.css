@@ -95,10 +95,50 @@
 /* screen scaling on small viewports */
 @media (max-width:900px){.rp-page{width:100%;min-height:auto;padding:22px 18px 60px}.rp-page::after{font-size:44pt}.rp-cover-inner{height:auto;padding:28px 22px}.rp-cover-title h1{font-size:26pt}}
 
+/* ------------------------------------------------------------------ *
+ *  OpinionReport: the same .rp-* document, reused as an inline editor
+ *  (doctor building / admin approving) and as the patient's read view.
+ * ------------------------------------------------------------------ */
+.orp-report{min-height:0}
+
+/* Embedded editor frames: the A4 page fills the panel and reads as an editable card, not a
+   fixed sheet that overflows a modal. The patient's own view keeps the true A4 document. */
+.doc-report-frame,.prof-report-frame{background:#eef2f5;border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:10px}
+.prof-report-frame{max-height:68vh;overflow:auto}
+.doc-report-frame .report,.prof-report-frame .report,.opinion-report-wrap .report{background:transparent;min-height:0;padding:0}
+.doc-report-frame .rp-page,.prof-report-frame .rp-page{width:100%;min-height:auto;margin:0 auto 16px;padding:22px 24px 46px;box-shadow:0 1px 3px rgba(16,42,58,.08)}
+.doc-report-frame .rp-page::after,.prof-report-frame .rp-page::after{display:none}
+
+/* Editable narrative field / table cell */
+.orp-edit{width:100%;box-sizing:border-box;font:inherit;font-size:10pt;color:#25324a;border:1px solid var(--line);border-radius:7px;padding:6px 8px;background:#fff;resize:none;line-height:1.5}
+.orp-edit:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-050)}
+.orp-q{font-weight:700;margin-bottom:4px}
+.orp-cell{width:100%;box-sizing:border-box;font:inherit;font-size:9.5pt;border:1px solid var(--line);border-radius:6px;padding:4px 6px;background:#fff}
+.orp-cell:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 2px var(--teal-050)}
+.orp-inline{display:flex;gap:8px;align-items:center}
+.orp-inline .orp-cell{flex:1}
+.orp-add{margin-top:8px;font:inherit;font-size:9pt;font-weight:700;color:var(--teal-dark);background:var(--teal-050);border:1px dashed var(--teal);border-radius:8px;padding:5px 12px;cursor:pointer}
+.orp-add:hover{background:#d5f2ee}
+.orp-del{flex:0 0 auto;width:24px;height:24px;border-radius:6px;border:1px solid var(--line);background:#fff;color:#b42318;font-size:15px;line-height:1;cursor:pointer;margin-left:6px}
+.orp-del:hover{background:#fef2f2;border-color:#f3b0a8}
+.orp-check{display:inline-flex;align-items:center;gap:8px;font-size:9pt;font-weight:600;color:var(--teal-dark);margin-bottom:8px;cursor:pointer}
+.rp-list li .orp-edit{flex:1}
+
+/* Answers to the patient's questions */
+.rp-qa{display:flex;flex-direction:column;gap:14px}
+.rp-qa-item{border-left:3px solid var(--teal);padding-left:12px}
+.rp-qa-q{margin:0 0 4px;font-size:10pt;font-weight:800;color:var(--teal-dark);display:flex;align-items:center;gap:6px}
+.rp-qa-q svg{width:15px;height:15px;flex:0 0 auto}
+.rp-qa-a{margin:0;font-size:10pt;color:#33425e}
+.rp-qa-item .orp-edit{margin-bottom:4px}
+
 @media print{
   .report{background:#fff;padding:0}
   .rp-toolbar{display:none}
   .rp-page{box-shadow:none;margin:0 auto;page-break-after:always;width:210mm;min-height:297mm}
   .rp-page:last-child{page-break-after:auto}
+  /* Embedded frames print as a clean document too */
+  .doc-report-frame,.prof-report-frame{background:#fff;border:0;padding:0;max-height:none;overflow:visible}
+  .doc-report-frame .rp-page,.prof-report-frame .rp-page{width:210mm;min-height:297mm;box-shadow:none;padding:18mm 15mm}
   @page{size:A4;margin:0}
 }

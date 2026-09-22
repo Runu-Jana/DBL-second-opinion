@@ -6,10 +6,12 @@ const { crudRouter, str, int, inSet } = require('./_crud');
 const { CATEGORIES, splitCategories } = require('../lib/categories');
 const { logActivity } = require('../lib/audit');
 const reportAI = require('../lib/reportAI');
+const { normalise: normaliseReport, toPlainText: reportToPlainText } = require('../lib/reportComposer');
 const { sendOpinionReady } = require('../lib/email');
 const { notifyPatient, notifyDoctor, notifyCounsellor } = require('../lib/notify');
 
 const need = (v) => (v && String(v).trim() ? String(v).trim() : '');
+const safeParse = (s) => { try { return s ? JSON.parse(s) : null; } catch { return null; } };
 
 /* ---------- status vocabularies ---------- */
 const S = {
@@ -204,6 +206,29 @@ secondOpinions.put('/:id/opinion', requireAdmin, async (req, res) => {
   } catch (e) {
     if (e.code === 'P2025') return res.status(404).json({ error: 'Not found.' });
     console.error(e); res.status(500).json({ error: 'Could not save the opinion.' });
+  }
+});
+
+// PUT /api/second-opinions/:id/report — admin edits the STRUCTURED report before sending. Keeps
+// the plain-text flattening in doctorOpinion in step, so the delivered summary and email match.
+secondOpinions.put('/:id/report', requireAdmin, async (req, res) => {
+  try {
+    if (!req.body || typeof req.body.reportData !== 'object' || !req.body.reportData) {
+      return res.status(400).json({ error: 'No report to save.' });
+    }
+    const kase = await prisma.secondOpinion.findUnique({ where: { id: +req.params.id } });
+    if (!kase) return res.status(404).json({ error: 'Not found.' });
+    const reportData = normaliseReport(req.body.reportData);
+    const plain = reportToPlainText(reportData, kase.patientName);
+    const updated = await prisma.secondOpinion.update({
+      where: { id: kase.id },
+      data: { reportData: JSON.stringify(reportData), doctorOpinion: plain || null },
+    });
+    logActivity(req, { kind: 'audit', action: `Edited the second-opinion report for ${updated.patientName}`, target: updated.patientUhid, category: 'Report' });
+    res.json({ ok: true, reportData });
+  } catch (e) {
+    if (e.code === 'P2025') return res.status(404).json({ error: 'Not found.' });
+    console.error(e); res.status(500).json({ error: 'Could not save the report.' });
   }
 });
 

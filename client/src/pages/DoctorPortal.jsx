@@ -1,8 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { CATEGORY_TONE } from '../lib/categories.js';
 import CounsellorPortal from './CounsellorPortal.jsx';
 import StaffBell from '../components/StaffBell.jsx';
 import PasswordField from '../components/PasswordField.jsx';
+import ReportForm, { EMPTY_FORM } from '../components/ReportForm.jsx';
+import OpinionReport from '../components/OpinionReport.jsx';
 import { getDoctorToken, setDoctorToken, clearDoctorToken, endDoctorSession, SESSION_ENDED } from '../api.js';
 
 const RTONE = { 'Pending Review': 'amber', Reviewed: 'green', Uploaded: 'blue', Archived: 'gray' };
@@ -74,23 +76,13 @@ function DoctorDashboard({ onLogout, preview = false }) {
   const [msg, setMsg] = useState('');
   const [caseUhid, setCase] = useState(null);
   const [handover, setHandover] = useState(null);
-  const [opinion, setOpinion] = useState('');
+  const [form, setForm] = useState(EMPTY_FORM);   // the doctor's tick-box intake
+  const [report, setReport] = useState(null);     // the generated structured report (reportData) or null
   const [busy, setBusy] = useState('');
   const [noteFor, setNoteFor] = useState(null);   // document id whose note is being edited
   const [noteText, setNoteText] = useState('');
   const [thread, setThread] = useState(null);
   const [draft, setDraft] = useState('');
-
-  // The opinion editor starts a few rows tall and grows with what the specialist writes, up to a
-  // cap, then scrolls — like the counsellor's report box, not a fixed wall of empty space.
-  const opinionRef = useRef(null);
-  const autosizeOpinion = () => {
-    const el = opinionRef.current;
-    if (!el) return;
-    el.style.height = 'auto';
-    el.style.height = `${Math.max(120, Math.min(el.scrollHeight, 640))}px`;
-  };
-  useEffect(autosizeOpinion, [opinion]);
 
   const load = () => {
     docApi('/doctor/me').then(setMe).catch(() => onLogout());
@@ -103,7 +95,7 @@ function DoctorDashboard({ onLogout, preview = false }) {
   useEffect(() => {
     if (!caseUhid) { setHandover(null); return; }
     docApi(`/doctor/cases/${caseUhid}`)
-      .then((h) => { setHandover(h); setOpinion(h.doctorOpinion || ''); })
+      .then((h) => { setHandover(h); setForm({ ...EMPTY_FORM, ...(h.reportForm || {}) }); setReport(h.reportData || null); })
       .catch((e) => { setMsg(e.message); setCase(null); });
   }, [caseUhid]);
 
@@ -120,7 +112,9 @@ function DoctorDashboard({ onLogout, preview = false }) {
   }, [caseUhid]);
 
   const flash = (m) => { setMsg(m); setTimeout(() => setMsg(''), 4000); };
-  const reopen = () => docApi(`/doctor/cases/${caseUhid}`).then((h) => { setHandover(h); setOpinion(h.doctorOpinion || ''); });
+  // Refresh the handover after a write, but keep whatever the doctor is editing on screen — the
+  // report state is the live draft, so don't clobber it with the just-saved server copy.
+  const reopen = () => docApi(`/doctor/cases/${caseUhid}`).then(setHandover);
 
   // The counsellor may already have read this; a specialist re-reading it themselves, or
   // reading one that arrived after triage, should not have to go back and ask.
@@ -151,9 +145,19 @@ function DoctorDashboard({ onLogout, preview = false }) {
       .finally(() => setBusy(''));
   };
 
-  const saveOpinion = () => {
+  // The doctor ticks the intake, then the AI builds the whole report from it plus the handover and
+  // the document readings. The result lands editable below — it is a draft, not sent to anyone.
+  const generate = () => {
+    setBusy('generate');
+    docApi(`/doctor/cases/${caseUhid}/generate-report`, { method: 'POST', body: JSON.stringify({ form }) })
+      .then((r) => { setReport(r.reportData); flash('Report built. Review and correct every section, then submit.'); return reopen(); })
+      .catch((e) => flash(e.message))
+      .finally(() => setBusy(''));
+  };
+  const saveReport = () => {
+    if (!report) return;
     setBusy('save');
-    docApi(`/doctor/cases/${caseUhid}/opinion`, { method: 'PUT', body: JSON.stringify({ opinion }) })
+    docApi(`/doctor/cases/${caseUhid}/report`, { method: 'PUT', body: JSON.stringify({ reportData: report, form }) })
       .then(() => { flash('Saved. Not sent to the patient yet.'); return reopen(); })
       .catch((e) => flash(e.message))
       .finally(() => setBusy(''));
@@ -270,32 +274,44 @@ function DoctorDashboard({ onLogout, preview = false }) {
               ))}
             </ul>
 
-            <h3 className="doc-case-h3">My second opinion</h3>
+            <h3 className="doc-case-h3">Build the second opinion</h3>
             <p className="cns-muted no-print">
-              This is what the patient receives. Write it from the handover and the reports, and check every line
-              before you send it.
-              {handover.patientQuestions && ' The patient asked questions, above: answer each of them in your opinion.'}
+              Tick your clinical decisions below, then generate. The AI writes the full report from your ticks,
+              the counsellor&rsquo;s handover and the reports — you review and correct every line before it goes to
+              the admin team for approval.
+              {handover.patientQuestions && ' The patient&rsquo;s questions are answered automatically.'}
             </p>
-            <textarea ref={opinionRef} className="cns-report cns-report-auto no-print" rows={5} value={opinion} readOnly={preview} onChange={(e) => { setOpinion(e.target.value); autosizeOpinion(); }}
-              placeholder="Your opinion for this patient…" />
-            <pre className="cns-ai print-only">{opinion}</pre>
-            <div className="doc-actbar no-print">
-              <span className="spacer" />
-              <button type="button" className="doc-btn doc-btn-outline" disabled={preview || busy === 'save'} onClick={saveOpinion}>
-                {busy === 'save' ? 'Saving…' : 'Save draft'}
-              </button>
-              <button type="button" className="doc-btn doc-btn-primary" disabled={preview || busy === 'send' || !handover.doctorOpinion || handover.status === 'Delivered'} onClick={submit}>
-                {busy === 'send' ? 'Submitting…'
-                  : handover.status === 'Delivered' ? 'Sent to patient'
-                    : handover.status === 'Pending Approval' ? 'Re-submit report' : 'Submit report'}
-              </button>
-              {!handover.doctorOpinion && (
-                <p className="doc-actbar-note">Save your opinion before it can be submitted.</p>
-              )}
-              {handover.doctorOpinion && handover.status === 'Pending Approval' && (
-                <p className="doc-actbar-note">Submitted for review — the admin team will send it to the patient.</p>
-              )}
+            <div className="no-print">
+              <ReportForm form={form} onChange={setForm} onGenerate={generate} busy={busy === 'generate'} generated={!!report} disabled={preview} />
             </div>
+
+            {report && (
+              <>
+                <div className="doc-report-head no-print">
+                  <h3 className="doc-case-h3">Generated report — review &amp; edit</h3>
+                  <span className="cns-muted">Everything below is editable. Correct anything the AI got wrong; a <b>[CONFIRM]</b> tag marks something to check.</span>
+                </div>
+                <div className="doc-report-frame">
+                  <OpinionReport data={report} editable={!preview} onChange={setReport}
+                    patient={{ name: handover.patient?.name, age: handover.patient?.age, gender: handover.patient?.gender }}
+                    caseId={caseUhid} doctor={name} date={new Date()} />
+                </div>
+                <div className="doc-actbar no-print">
+                  <span className="spacer" />
+                  <button type="button" className="doc-btn doc-btn-outline" disabled={preview || busy === 'save'} onClick={saveReport}>
+                    {busy === 'save' ? 'Saving…' : 'Save draft'}
+                  </button>
+                  <button type="button" className="doc-btn doc-btn-primary" disabled={preview || busy === 'send' || !handover.doctorOpinion || handover.status === 'Delivered'} onClick={submit}>
+                    {busy === 'send' ? 'Submitting…'
+                      : handover.status === 'Delivered' ? 'Sent to patient'
+                        : handover.status === 'Pending Approval' ? 'Re-submit report' : 'Submit report'}
+                  </button>
+                  {handover.status === 'Pending Approval' && (
+                    <p className="doc-actbar-note">Submitted for review — the admin team will send it to the patient.</p>
+                  )}
+                </div>
+              </>
+            )}
 
             <h3 className="doc-case-h3 no-print">Messages with {handover.patient?.name || 'the patient'}</h3>
             <div className="doc-chat no-print">

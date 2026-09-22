@@ -6,6 +6,9 @@
 // doctor-patient conversation, which admin alone can see in full.
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
+import OpinionReport from './OpinionReport.jsx';
+
+const parseReport = (s) => { try { return s ? JSON.parse(s) : null; } catch { return null; } };
 
 const fmtDate = (iso) => (iso ? new Date(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—');
 const fmtWhen = (iso) => (iso ? new Date(iso).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '');
@@ -74,23 +77,27 @@ function PatientBody({ d, api, on401, reload }) {
   const k = d.case;
   // The doctor submits an opinion for review; the admin edits it here and sends it to the patient.
   const pending = k && k.status === 'Pending Approval';
-  const [opinion, setOpinion] = useState(k ? (k.doctorOpinion || '') : '');
+  const [report, setReport] = useState(parseReport(k && k.reportData));
   const [busy, setBusy] = useState('');
   const [note, setNote] = useState('');
-  useEffect(() => { setOpinion(k ? (k.doctorOpinion || '') : ''); }, [k && k.id, k && k.doctorOpinion]); // eslint-disable-line
+  useEffect(() => { setReport(parseReport(k && k.reportData)); }, [k && k.id, k && k.reportData]); // eslint-disable-line
 
   const saveEdits = () => {
+    if (!report) return;
     setBusy('save'); setNote('');
-    api(`/second-opinions/${k.id}/opinion`, { method: 'PUT', on401, body: JSON.stringify({ opinion }) })
+    api(`/second-opinions/${k.id}/report`, { method: 'PUT', on401, body: JSON.stringify({ reportData: report }) })
       .then(() => { setNote('Changes saved.'); reload(); })
       .catch((e) => setNote(e.message))
       .finally(() => setBusy(''));
   };
   const sendToPatient = () => {
-    if (!window.confirm('Send this opinion to the patient now? They will be emailed and can read it in their portal.')) return;
+    if (!window.confirm('Send this report to the patient now? They will be emailed and can read it in their portal.')) return;
     setBusy('send'); setNote('');
     // Save any pending edits first, then deliver, so the patient gets exactly what is on screen.
-    api(`/second-opinions/${k.id}/opinion`, { method: 'PUT', on401, body: JSON.stringify({ opinion }) })
+    const saveFirst = report
+      ? api(`/second-opinions/${k.id}/report`, { method: 'PUT', on401, body: JSON.stringify({ reportData: report }) })
+      : Promise.resolve();
+    saveFirst
       .then(() => api(`/second-opinions/${k.id}/deliver`, { method: 'POST', on401 }))
       .then((r) => { setNote(r.emailed ? 'Sent — the patient has been emailed.' : 'Sent to the patient.'); reload(); })
       .catch((e) => setNote(e.message))
@@ -148,19 +155,28 @@ function PatientBody({ d, api, on401, reload }) {
             )}
             {pending ? (
               <>
-                <h5>Doctor&rsquo;s opinion <em>— awaiting your approval</em></h5>
-                <p className="cns-muted">{k.expert || 'The specialist'} submitted this. Review it, edit if needed, then send it to the patient.</p>
-                <textarea className="cns-report" rows={12} value={opinion} onChange={(e) => setOpinion(e.target.value)} placeholder="The opinion the patient will receive…" />
+                <h5>Doctor&rsquo;s report <em>— awaiting your approval</em></h5>
+                <p className="cns-muted">{k.expert || 'The specialist'} submitted this. Review it, edit any section if needed, then send it to the patient.</p>
+                {report ? (
+                  <div className="prof-report-frame">
+                    <OpinionReport data={report} editable onChange={setReport}
+                      patient={{ name: p.name, age: p.age, gender: p.gender }} caseId={p.uhid} doctor={k.expert} date={new Date()} />
+                  </div>
+                ) : (
+                  <pre className="cns-ai">{k.doctorOpinion || 'No report content was submitted.'}</pre>
+                )}
                 <div className="cns-row" style={{ marginTop: '.6rem' }}>
-                  <button type="button" className="doc-btn doc-btn-outline" disabled={busy === 'save' || busy === 'send'} onClick={saveEdits}>{busy === 'save' ? 'Saving…' : 'Save edits'}</button>
-                  <button type="button" className="doc-btn doc-btn-primary" disabled={busy === 'send' || !opinion.trim()} onClick={sendToPatient}>{busy === 'send' ? 'Sending…' : 'Send to patient'}</button>
+                  <button type="button" className="doc-btn doc-btn-outline" disabled={busy === 'save' || busy === 'send' || !report} onClick={saveEdits}>{busy === 'save' ? 'Saving…' : 'Save edits'}</button>
+                  <button type="button" className="doc-btn doc-btn-primary" disabled={busy === 'send'} onClick={sendToPatient}>{busy === 'send' ? 'Sending…' : 'Send to patient'}</button>
                 </div>
                 {note && <p className="cns-muted" style={{ marginTop: '.4rem' }}>{note}</p>}
               </>
-            ) : k.doctorOpinion ? (
+            ) : (report || k.doctorOpinion) ? (
               <>
-                <h5>Doctor&rsquo;s opinion{k.deliveredAt ? ` (sent ${fmtWhen(k.deliveredAt)})` : ' (draft — not submitted)'}</h5>
-                <pre className="cns-ai">{k.doctorOpinion}</pre>
+                <h5>Doctor&rsquo;s report{k.deliveredAt ? ` (sent ${fmtWhen(k.deliveredAt)})` : ' (draft — not submitted)'}</h5>
+                {report
+                  ? <div className="prof-report-frame"><OpinionReport data={report} patient={{ name: p.name, age: p.age, gender: p.gender }} caseId={p.uhid} doctor={k.expert} date={k.deliveredAt} /></div>
+                  : <pre className="cns-ai">{k.doctorOpinion}</pre>}
               </>
             ) : null}
           </>
