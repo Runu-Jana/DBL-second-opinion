@@ -15,6 +15,8 @@ const Ico = {
 };
 
 const STONE = { 'Pending Review': 'amber', Reviewed: 'green', Uploaded: 'blue', Archived: 'gray' };
+// Case-level statuses (the grouped /portal/cases), not the per-file report statuses.
+const CASE_STONE = { 'Awaiting Review': 'amber', 'Under Review': 'blue', 'Pending Approval': 'blue', 'Opinion Ready': 'green', Delivered: 'green' };
 const pad = (n) => String(n).padStart(2, '0');
 
 // Overall journey progress, derived from the patient's most recent report.
@@ -36,15 +38,19 @@ export default function Dashboard() {
   const name = session?.name || 'there';
   const [stats, setStats] = useState(null);
   const [reports, setReports] = useState(null);
+  const [cases, setCases] = useState(null);
   const [opinions, setOpinions] = useState([]);
 
   useEffect(() => {
     patientApi('/portal/me').then((r) => setStats(r.stats)).catch(() => setStats({ reports: 0, pendingReports: 0, appointments: 0, cases: 0 }));
     patientApi('/portal/reports').then(setReports).catch(() => setReports([]));
+    patientApi('/portal/cases').then((d) => setCases(Array.isArray(d) ? d : [])).catch(() => setCases([]));
     patientApi('/portal/opinions').then((d) => setOpinions(Array.isArray(d) ? d : [])).catch(() => {});
   }, []);
 
-  const recent = (reports || []).slice(0, 5);
+  // Recent Cases lists grouped cases — one row per case, with its documents inside — not one row
+  // per uploaded file.
+  const recent = (cases || []).slice(0, 5);
   const latest = (reports || [])[0];
   const progress = progressFor(latest);
 
@@ -109,29 +115,29 @@ export default function Dashboard() {
           <section className="dash-card">
             <div className="dash-card-head">
               <h2>Recent Cases</h2>
-              {(reports?.length || 0) > recent.length && <Link to="/dashboard/cases" className="dash-link">View All</Link>}
+              {(cases?.length || 0) > recent.length && <Link to="/dashboard/cases" className="dash-link">View All</Link>}
             </div>
             <div className="dash-table-wrap">
               {recent.length ? (
                 <table className="dash-table">
                   <thead>
-                    <tr><th>Case ID</th><th>Report Type</th><th>Date</th><th>Status</th><th>Action</th></tr>
+                    <tr><th>Case ID</th><th>Case</th><th>Date</th><th>Status</th><th>Action</th></tr>
                   </thead>
                   <tbody>
-                    {recent.map((r) => (
-                      <tr key={r.id}>
-                        <td className="mono">DBL-{String(r.id).padStart(4, '0')}</td>
-                        <td>{r.type}{r.category ? ` · ${r.category}` : ''}</td>
-                        <td>{r.date || '—'}</td>
-                        <td><span className={'pill pill-' + (STONE[r.status] || 'blue')}>{r.status}</span></td>
-                        <td><Link to={'/dashboard/cases/' + r.id} className="dash-link">View</Link></td>
+                    {recent.map((c) => (
+                      <tr key={c.id}>
+                        <td className="mono">{c.reference || `DBL-${String(c.id).padStart(4, '0')}`}</td>
+                        <td>{c.cancerType || 'Second opinion'} · {c.documents.length} report{c.documents.length === 1 ? '' : 's'}</td>
+                        <td>{c.submittedDate || '—'}</td>
+                        <td><span className={'pill pill-' + (CASE_STONE[c.status] || 'blue')}>{c.delivered ? 'Opinion ready' : c.status}</span></td>
+                        <td>{c.documents[0] && <Link to={'/dashboard/cases/' + c.documents[0].id} className="dash-link">View</Link>}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               ) : (
                 <div className="empty" style={{ padding: '2rem 1rem' }}>
-                  <p>{reports === null ? 'Loading…' : 'No reports yet.'} <Link to="/dashboard/upload" className="dash-link">Upload your first report →</Link></p>
+                  <p>{cases === null ? 'Loading…' : 'No cases yet.'} <Link to="/dashboard/upload" className="dash-link">Upload your first report →</Link></p>
                 </div>
               )}
             </div>

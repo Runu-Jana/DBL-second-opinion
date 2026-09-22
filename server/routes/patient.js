@@ -25,12 +25,16 @@ router.get('/me', requirePatient, async (req, res) => {
     const patient = await prisma.patient.findUnique({ where: { id: req.patient.id } });
     if (!patient) return res.status(404).json({ error: 'Account not found.' });
     const where = safeWhere(req);
-    const [reports, pending, appts, cases] = await Promise.all([
+    const [reports, pending, appts, opinions] = await Promise.all([
       prisma.report.count({ where }),
       prisma.report.count({ where: { AND: [where, { status: 'Pending Review' }] } }),
       prisma.appointment.count({ where }),
-      prisma.consultation.count({ where }),
+      prisma.secondOpinion.count({ where }),
     ]);
+    // A "case" is a second-opinion case, not a Consultation row (which the patient never has). Match
+    // the My Cases page: the opinion cases, or one grouped case when reports were uploaded before
+    // triage opened a case row.
+    const cases = opinions || (reports > 0 ? 1 : 0);
     res.json({ patient: publicPatient(patient), stats: { reports, pendingReports: pending, appointments: appts, cases } });
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not load your profile.' }); }
 });
