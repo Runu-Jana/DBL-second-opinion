@@ -113,7 +113,9 @@ export default function Header({ active }) {
         </Link>
 
         <nav ref={navRef} className={'main-nav' + (open ? ' open' : '')} aria-label="Primary" onClick={() => setOpen(false)}>
-          <Link to="/" className={is('home')}>{t('nav.home')}</Link>
+          {/* For a signed-in patient, "/" redirects to their dashboard, so a separate "Home" link
+              would just duplicate "Dashboard". Show it only to signed-out visitors. */}
+          {!session && <Link to="/" className={is('home')}>{t('nav.home')}</Link>}
           <Link to="/oncologists" className={is('oncologists')}>{t('nav.oncologists')}</Link>
           <Link to="/services" className={is('services')}>{t('nav.services')}</Link>
           <NavDropdown label={t('nav.patients')} active={active === 'patients' || active === 'how'}
