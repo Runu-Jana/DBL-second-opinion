@@ -274,6 +274,7 @@ model SecondOpinion {
   reportData    String?                          // JSON of the generated structured report (Report.jsx-shaped) — what the styled document renders from
   reviewStartedAt DateTime?                      // first time the specialist opened the case
   deliveredAt   DateTime?                        // when the opinion was released to the patient
+  openedByPatientAt DateTime?                    // when the patient first opened the delivered opinion (clears the dashboard banner)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

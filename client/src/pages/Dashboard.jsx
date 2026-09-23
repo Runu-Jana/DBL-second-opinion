@@ -61,9 +61,10 @@ export default function Dashboard() {
         <p>{justSignedUp ? 'Your account is ready — upload your first report to begin your second-opinion journey.' : "Here's an overview of your health journey."}</p>
       </div>
 
-      {/* A delivered opinion is the whole reason this patient is here. It belongs at the top of
-          the page they land on, not behind a bell icon. */}
-      {opinions.length > 0 && (
+      {/* A newly delivered opinion is the whole reason this patient is here, so it belongs at the
+          top of the page they land on. Once they have opened and read it, the banner has done its
+          job and drops away — the opinion stays available under My Cases. */}
+      {opinions.some((o) => !o.read) && (
         <Link to="/dashboard/opinion" className="opinion-ready">
           <span className="opinion-ready-ico" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -73,7 +74,7 @@ export default function Dashboard() {
           <span className="opinion-ready-text">
             <strong>Your second opinion is ready</strong>
             <span>
-              {opinions[0].doctor ? `${opinions[0].doctor} has completed your review.` : 'Your specialist has completed your review.'}
+              {(() => { const o = opinions.find((x) => !x.read); return o && o.doctor ? `${o.doctor} has completed your review.` : 'Your specialist has completed your review.'; })()}
               {' Tap to read it.'}
             </span>
           </span>

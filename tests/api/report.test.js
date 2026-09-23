@@ -147,6 +147,11 @@
   check('  the doctor is named', mine.body[0].doctor, docName);
   check("  the counsellor's internal note is NOT exposed", JSON.stringify(mine.body).includes('Suspected lung primary'), false);
 
+  // The dashboard banner: unread at first, cleared once the patient opens their opinion page.
+  check('the opinion starts unread', mine.body[0].read, false);
+  check('marking it read succeeds', (await call('POST', '/portal/opinions/read', pTok)).status, 200);
+  check('  the opinion is now read (banner clears)', (await call('GET', '/portal/opinions', pTok)).body[0].read, true);
+
   await prisma.notification.deleteMany({ where: { recipient: { in: [uhid, docName] } } }).catch(() => {});
   await prisma.report.deleteMany({ where: { patientUhid: uhid } });
   await prisma.secondOpinion.deleteMany({ where: { patientUhid: uhid } });

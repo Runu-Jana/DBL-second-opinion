@@ -18,7 +18,11 @@ export default function MyOpinion() {
 
   useEffect(() => {
     patientApi('/portal/opinions')
-      .then((d) => setItems(Array.isArray(d) ? d : []))
+      .then((d) => {
+        setItems(Array.isArray(d) ? d : []);
+        // Opening this page is reading the opinion — mark it read so the dashboard banner clears.
+        if (Array.isArray(d) && d.some((o) => !o.read)) patientApi('/portal/opinions/read', { method: 'POST' }).catch(() => {});
+      })
       .catch((e) => { setErr(e.message); setItems([]); });
   }, []);
 

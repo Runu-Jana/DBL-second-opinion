@@ -217,8 +217,23 @@ router.get('/opinions', requirePatient, async (req, res) => {
       patientQuestions: o.patientQuestions,
       deliveredAt: o.deliveredAt,
       submittedDate: o.submittedDate,
+      // Whether this patient has already opened it — the dashboard banner only nags about unread ones.
+      read: !!o.openedByPatientAt,
     })));
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not load your opinions.' }); }
+});
+
+// POST /api/portal/opinions/read — the patient opened their opinion page, so mark their delivered
+// opinions as read. This clears the "your second opinion is ready" banner on the dashboard. Reading
+// the list (GET above) deliberately does NOT mark it, since the dashboard fetches it too.
+router.post('/opinions/read', requirePatient, async (req, res) => {
+  try {
+    await prisma.secondOpinion.updateMany({
+      where: { AND: [safeWhere(req), { status: 'Delivered' }, { openedByPatientAt: null }] },
+      data: { openedByPatientAt: new Date() },
+    });
+    res.json({ ok: true });
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not update your opinions.' }); }
 });
 
 // GET /api/portal/invoices — the patient's bills
