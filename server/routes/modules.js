@@ -241,9 +241,12 @@ secondOpinions.post('/:id/deliver', requireAdmin, async (req, res) => {
     if (!kase.doctorOpinion || !kase.doctorOpinion.trim()) {
       return res.status(400).json({ error: 'There is no opinion to send yet.' });
     }
+    // A case that was already delivered is a REVISED send — clear the patient's "read" mark so the
+    // dashboard banner and notification fire again for the updated report.
+    const isRevision = !!kase.deliveredAt;
     const updated = await prisma.secondOpinion.update({
       where: { id: kase.id },
-      data: { status: 'Delivered', deliveredAt: new Date(), summary: kase.doctorOpinion.slice(0, 500) },
+      data: { status: 'Delivered', deliveredAt: new Date(), summary: kase.doctorOpinion.slice(0, 500), openedByPatientAt: null },
     });
     if (kase.patientUhid && kase.expert) {
       await prisma.report.updateMany({ where: { patientUhid: kase.patientUhid, doctor: kase.expert }, data: { status: 'Reviewed' } }).catch(() => {});
@@ -252,12 +255,13 @@ secondOpinions.post('/:id/deliver', requireAdmin, async (req, res) => {
     const origin = req.headers.origin || process.env.PUBLIC_URL || '';
     let emailed = false;
     if (patient && patient.email) {
-      const r = await sendOpinionReady({ to: patient.email, name: patient.name, doctor: kase.expert || 'our specialist', url: `${origin}/dashboard/opinion` })
+      const r = await sendOpinionReady({ to: patient.email, name: patient.name, doctor: kase.expert || 'our specialist', url: `${origin}/dashboard/opinion`, revised: isRevision })
         .catch((e) => { console.error('opinion email failed:', e.message); return { skipped: true }; });
       emailed = !!(r && r.ok);
     }
-    await notifyPatient(kase.patientUhid, { kind: 'report', title: 'Your second opinion is ready',
-      body: 'Your reviewed second opinion is ready. Tap to read it.', link: '/dashboard/opinion' });
+    await notifyPatient(kase.patientUhid, isRevision
+      ? { kind: 'report', title: 'Your second opinion has been updated', body: 'Your specialist has sent a revised second opinion. Tap to read it.', link: '/dashboard/opinion' }
+      : { kind: 'report', title: 'Your second opinion is ready', body: 'Your reviewed second opinion is ready. Tap to read it.', link: '/dashboard/opinion' });
     if (kase.expert) await notifyDoctor(kase.expert, { kind: 'case', title: 'Your opinion was sent to the patient',
       body: `The admin team reviewed and sent your opinion for ${kase.patientName}.`, link: null });
     if (kase.counsellor) await notifyCounsellor(kase.counsellor, { kind: 'case', title: 'Opinion delivered',

@@ -118,14 +118,18 @@ async function sendOtpEmail({ to, name, code }) {
 // Tell the patient their second opinion is ready. The opinion itself is not put in the email —
 // it is medical information about them, and email is not a place to leave it lying around; they
 // sign in to read and download it.
-async function sendOpinionReady({ to, name, doctor, url }) {
+async function sendOpinionReady({ to, name, doctor, url, revised = false }) {
   if (!emailConfigured()) return { skipped: true };
   if (!looksEmail(to)) return { skipped: true, reason: 'no email on record' };
   const from = process.env.CONTACT_FROM || 'DBL International <onboarding@resend.dev>';
+  const heading = revised ? 'Your second opinion has been updated' : 'Your second opinion is ready';
+  const lead = revised
+    ? `${esc(doctor) || 'Our specialist'} has sent a revised version of your second opinion.`
+    : `${esc(doctor) || 'our specialist'} has completed the review of the reports you sent us.`;
   const html = `
     <div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;color:#0f1b2d">
-      <h2 style="color:#0b5952;margin:0 0 14px">Your second opinion is ready</h2>
-      <p>Hi ${esc(name) || 'there'}, ${esc(doctor) || 'our specialist'} has completed the review of the reports you sent us.</p>
+      <h2 style="color:#0b5952;margin:0 0 14px">${heading}</h2>
+      <p>Hi ${esc(name) || 'there'}, ${lead}</p>
       <p style="margin:18px 0"><a href="${esc(url)}" style="background:#0b7d70;color:#fff;text-decoration:none;padding:11px 20px;border-radius:8px;font-weight:700;display:inline-block">Read your opinion</a></p>
       <p style="color:#42506a;font-size:13px">Sign in to read it in full, download it, or print a copy. We have not put the details in this email — it is your medical information, and your account is the safer place for it.</p>
       <p style="color:#94a3b8;font-size:12px;margin-top:18px">If you have questions, reply to this email and our care team will help.</p>
@@ -133,7 +137,7 @@ async function sendOpinionReady({ to, name, doctor, url }) {
   const resp = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from, to, subject: 'Your second opinion is ready — DBL International', html }),
+    body: JSON.stringify({ from, to, subject: `${heading} — DBL International`, html }),
   });
   if (!resp.ok) { const body = await resp.text().catch(() => ''); throw new Error(`Resend ${resp.status}: ${body.slice(0, 300)}`); }
   return { ok: true };

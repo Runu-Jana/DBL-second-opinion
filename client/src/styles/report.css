@@ -120,6 +120,7 @@
 .prof-report-head{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin:.6rem 0 .1rem}
 .prof-report-head h5{margin:0}
 .prof-fs-btn{display:inline-flex;align-items:center;gap:.35rem;flex:0 0 auto;white-space:nowrap}
+.prof-report-head-actions{display:flex;align-items:center;gap:.5rem;flex:0 0 auto;flex-wrap:wrap;justify-content:flex-end}
 .orp-fs{position:fixed;inset:0;z-index:3000;background:#e9eef2;display:flex;flex-direction:column}
 .orp-fs-bar{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;
   padding:.7rem 1.1rem;background:#fff;border-bottom:1px solid var(--line)}

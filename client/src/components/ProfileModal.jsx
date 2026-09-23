@@ -77,11 +77,14 @@ function PatientBody({ d, api, on401, reload }) {
   const k = d.case;
   // The doctor submits an opinion for review; the admin edits it here and sends it to the patient.
   const pending = k && k.status === 'Pending Approval';
+  const delivered = k && k.status === 'Delivered';
   const [report, setReport] = useState(parseReport(k && k.reportData));
   const [busy, setBusy] = useState('');
   const [note, setNote] = useState('');
   const [fullscreen, setFullscreen] = useState(false);   // open the report in a full-viewport view
-  useEffect(() => { setReport(parseReport(k && k.reportData)); }, [k && k.id, k && k.reportData]); // eslint-disable-line
+  const [revising, setRevising] = useState(false);       // admin re-editing an already-delivered opinion
+  const editing = pending || revising;                   // report is editable + sendable in these states
+  useEffect(() => { setReport(parseReport(k && k.reportData)); setRevising(false); }, [k && k.id, k && k.reportData]); // eslint-disable-line
   // Leaving the modal always leaves full screen too.
   useEffect(() => () => setFullscreen(false), []);
 
@@ -94,15 +97,19 @@ function PatientBody({ d, api, on401, reload }) {
       .finally(() => setBusy(''));
   };
   const sendToPatient = () => {
-    if (!window.confirm('Send this report to the patient now? They will be emailed and can read it in their portal.')) return;
+    const isRevision = delivered;
+    const ask = isRevision
+      ? 'Send this revised opinion to the patient? They will be notified again that an updated opinion is ready.'
+      : 'Send this report to the patient now? They will be emailed and can read it in their portal.';
+    if (!window.confirm(ask)) return;
     setBusy('send'); setNote('');
-    // Save any pending edits first, then deliver, so the patient gets exactly what is on screen.
+    // Save whatever is on screen first, then deliver, so the patient gets exactly what is shown.
     const saveFirst = report
       ? api(`/second-opinions/${k.id}/report`, { method: 'PUT', on401, body: JSON.stringify({ reportData: report }) })
       : Promise.resolve();
     saveFirst
       .then(() => api(`/second-opinions/${k.id}/deliver`, { method: 'POST', on401 }))
-      .then((r) => { setNote(r.emailed ? 'Sent — the patient has been emailed.' : 'Sent to the patient.'); setFullscreen(false); reload(); })
+      .then((r) => { setNote((isRevision ? 'Revised opinion sent.' : 'Sent to the patient.') + (r.emailed ? ' The patient has been emailed.' : '')); setRevising(false); setFullscreen(false); reload(); })
       .catch((e) => setNote(e.message))
       .finally(() => setBusy(''));
   };
@@ -189,11 +196,22 @@ function PatientBody({ d, api, on401, reload }) {
               <>
                 <div className="prof-report-head">
                   <h5>Doctor&rsquo;s report{k.deliveredAt ? ` (sent ${fmtWhen(k.deliveredAt)})` : ' (draft — not submitted)'}</h5>
-                  {fullView(expandIcon)}
+                  <span className="prof-report-head-actions">
+                    {delivered && report && !revising && <button type="button" className="doc-btn doc-btn-outline" onClick={() => setRevising(true)}>Revise &amp; re-send</button>}
+                    {fullView(expandIcon)}
+                  </span>
                 </div>
+                {revising && <p className="cns-muted">Edit any section, then send the revised opinion. The patient is notified again and their &ldquo;read&rdquo; mark is cleared.</p>}
                 {report
-                  ? <div className="prof-report-frame"><OpinionReport data={report} patient={{ name: p.name, age: p.age, gender: p.gender }} caseId={p.uhid} doctor={k.expert} date={k.deliveredAt} /></div>
+                  ? <div className="prof-report-frame"><OpinionReport data={report} editable={revising} onChange={setReport} patient={{ name: p.name, age: p.age, gender: p.gender }} caseId={p.uhid} doctor={k.expert} date={k.deliveredAt} /></div>
                   : <pre className="cns-ai">{k.doctorOpinion}</pre>}
+                {revising && (
+                  <div className="cns-row" style={{ marginTop: '.6rem' }}>
+                    <button type="button" className="doc-btn doc-btn-ghost" onClick={() => { setRevising(false); setReport(parseReport(k.reportData)); setNote(''); }}>Cancel</button>
+                    <button type="button" className="doc-btn doc-btn-primary" disabled={busy === 'send'} onClick={sendToPatient}>{busy === 'send' ? 'Sending…' : 'Send revised opinion'}</button>
+                  </div>
+                )}
+                {note && <p className="cns-muted" style={{ marginTop: '.4rem' }}>{note}</p>}
               </>
             ) : null}
 
@@ -202,10 +220,10 @@ function PatientBody({ d, api, on401, reload }) {
                 <div className="orp-fs-bar">
                   <strong>Second-opinion report — {p.name}</strong>
                   <span className="orp-fs-actions">
-                    {pending ? (
+                    {editing ? (
                       <>
-                        <button type="button" className="doc-btn doc-btn-outline" disabled={busy === 'save' || busy === 'send'} onClick={saveEdits}>{busy === 'save' ? 'Saving…' : 'Save edits'}</button>
-                        <button type="button" className="doc-btn doc-btn-primary" disabled={busy === 'send'} onClick={sendToPatient}>{busy === 'send' ? 'Sending…' : 'Send to patient'}</button>
+                        {pending && <button type="button" className="doc-btn doc-btn-outline" disabled={busy === 'save' || busy === 'send'} onClick={saveEdits}>{busy === 'save' ? 'Saving…' : 'Save edits'}</button>}
+                        <button type="button" className="doc-btn doc-btn-primary" disabled={busy === 'send'} onClick={sendToPatient}>{busy === 'send' ? 'Sending…' : (revising ? 'Send revised opinion' : 'Send to patient')}</button>
                       </>
                     ) : (
                       <button type="button" className="doc-btn doc-btn-outline" onClick={() => window.print()}>Print / Save as PDF</button>
@@ -214,8 +232,8 @@ function PatientBody({ d, api, on401, reload }) {
                   </span>
                 </div>
                 <div className="orp-fs-body">
-                  <OpinionReport data={report} editable={pending} onChange={setReport}
-                    patient={{ name: p.name, age: p.age, gender: p.gender }} caseId={p.uhid} doctor={k.expert} date={pending ? new Date() : k.deliveredAt} />
+                  <OpinionReport data={report} editable={editing} onChange={setReport}
+                    patient={{ name: p.name, age: p.age, gender: p.gender }} caseId={p.uhid} doctor={k.expert} date={editing ? new Date() : k.deliveredAt} />
                 </div>
                 {note && <p className="orp-fs-note">{note}</p>}
               </div>

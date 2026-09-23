@@ -152,6 +152,15 @@
   check('marking it read succeeds', (await call('POST', '/portal/opinions/read', pTok)).status, 200);
   check('  the opinion is now read (banner clears)', (await call('GET', '/portal/opinions', pTok)).body[0].read, true);
 
+  // A revised opinion re-sent by the admin clears the read mark, so the banner returns.
+  const revised = JSON.parse(JSON.stringify(edited));
+  revised.secondOpinion.overallOpinion = 'Revised again after the patient had read it.';
+  await call('PUT', `/second-opinions/${caseId}/report`, adminTok, { reportData: revised });
+  check('re-delivering a revised opinion succeeds', (await call('POST', `/second-opinions/${caseId}/deliver`, adminTok)).status, 200);
+  const afterRevise = await call('GET', '/portal/opinions', pTok);
+  check('  the revised opinion is unread again (banner returns)', afterRevise.body[0].read, false);
+  check('  and carries the revision', afterRevise.body[0].reportData.secondOpinion.overallOpinion, 'Revised again after the patient had read it.');
+
   await prisma.notification.deleteMany({ where: { recipient: { in: [uhid, docName] } } }).catch(() => {});
   await prisma.report.deleteMany({ where: { patientUhid: uhid } });
   await prisma.secondOpinion.deleteMany({ where: { patientUhid: uhid } });
