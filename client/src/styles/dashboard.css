@@ -177,7 +177,7 @@
      tab's white background then shows as a giant misaligned card). */
   .dash-side{position:static;height:auto;flex-direction:row;align-items:center;overflow-x:auto;overflow-y:hidden;top:0;padding:.5rem .55rem;gap:.3rem}
   .dash-nav{flex-direction:row;flex:none;gap:.3rem;align-items:center}
-  .dash-nav-item{flex-direction:column;justify-content:center;gap:.3rem;padding:.55rem .7rem;font-size:.7rem;white-space:nowrap;min-width:76px;min-height:52px;text-align:center;border-radius:12px}
+  .dash-nav-item{flex-direction:column;justify-content:center;gap:.3rem;padding:.55rem 1.05rem;font-size:.7rem;white-space:nowrap;min-width:76px;min-height:52px;text-align:center;border-radius:12px}
   /* The active tab is a flush, centred white pill the same height as the others, with even
      teal space around it. No shadow — a horizontal scroll strip clips vertical overflow, so a
      drop-shadow would be cut off and look like the tab is misaligned/popping out of the bar. */
