@@ -247,7 +247,7 @@ export default function OpinionReport({ data, patient = {}, caseId, doctor, date
                   <td><input className="orp-cell" value={m.status || ''} onChange={(e) => setRow('medications', i, { status: e.target.value })} /></td>
                   <td className="no-print">{delBtn(() => delRow('medications', i))}</td>
                 </> : <>
-                  <td><b>{m.name}</b></td><td>{m.dose}</td><td>{m.purpose}</td><td><span className="rp-ok">{m.status || 'Appropriate'}</span></td>
+                  <td data-label="Medication"><b>{m.name}</b></td><td data-label="Dose & Frequency">{m.dose}</td><td data-label="Purpose">{m.purpose}</td><td data-label="Status"><span className="rp-ok">{m.status || 'Appropriate'}</span></td>
                 </>}
               </tr>
             ))}
@@ -275,7 +275,7 @@ export default function OpinionReport({ data, patient = {}, caseId, doctor, date
                     <td><input className="orp-cell" value={m.recommendation || ''} onChange={(e) => setRow2('interactions', 'minor', i, { recommendation: e.target.value })} /></td>
                     <td className="no-print">{delBtn(() => delRow2('interactions', 'minor', i))}</td>
                   </> : <>
-                    <td>{m.combo}</td><td>{m.risk}</td><td>{m.recommendation}</td>
+                    <td data-label="Drug Combination">{m.combo}</td><td data-label="Risk">{m.risk}</td><td data-label="Recommendation">{m.recommendation}</td>
                   </>}
                 </tr>
               ))}
@@ -303,7 +303,7 @@ export default function OpinionReport({ data, patient = {}, caseId, doctor, date
                   <td><input className="orp-cell" value={r.interpretation || ''} onChange={(e) => setRow('investigations', i, { interpretation: e.target.value })} /></td>
                   <td className="no-print">{delBtn(() => delRow('investigations', i))}</td>
                 </> : <>
-                  <td><b>{r.name}</b></td><td>{r.date}</td><td>{r.findings}</td><td>{r.interpretation}</td>
+                  <td data-label="Investigation"><b>{r.name}</b></td><td data-label="Date">{r.date}</td><td data-label="Findings">{r.findings}</td><td data-label="Interpretation">{r.interpretation}</td>
                 </>}
               </tr>
             ))}
@@ -325,7 +325,7 @@ export default function OpinionReport({ data, patient = {}, caseId, doctor, date
                   <td><input className="orp-cell" value={r.management || ''} onChange={(e) => setRow('sideEffects', i, { management: e.target.value })} /></td>
                   <td className="no-print">{delBtn(() => delRow('sideEffects', i))}</td>
                 </> : <>
-                  <td><b>{r.effect}</b></td><td>{r.monitoring}</td><td>{r.management}</td>
+                  <td data-label="Potential Side Effect"><b>{r.effect}</b></td><td data-label="Monitoring">{r.monitoring}</td><td data-label="Management">{r.management}</td>
                 </>}
               </tr>
             ))}
@@ -397,7 +397,7 @@ export default function OpinionReport({ data, patient = {}, caseId, doctor, date
                   <td><input className="orp-cell" value={c.range || ''} onChange={(e) => setRow('costs', i, { range: e.target.value })} /></td>
                   <td className="no-print">{delBtn(() => delRow('costs', i))}</td>
                 </> : <>
-                  <td>{c.description}</td><td>₹ {c.range}</td>
+                  <td data-label="Description">{c.description}</td><td data-label="Estimated Cost (INR)">₹ {c.range}</td>
                 </>}
               </tr>
             ))}

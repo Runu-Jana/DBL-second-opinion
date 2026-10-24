@@ -95,6 +95,43 @@
 /* screen scaling on small viewports */
 @media (max-width:900px){.rp-page{width:100%;min-height:auto;padding:22px 18px 60px}.rp-page::after{font-size:44pt}.rp-cover-inner{height:auto;padding:28px 22px}.rp-cover-title h1{font-size:26pt}}
 
+/* The patient view (.opinion-report-wrap) keeps full-height A4 pages with an absolutely-pinned
+   footer. On any small screen the pages shrink to their content, so that footer would land on
+   top of the last rows — let it flow after the content instead. `screen` keeps print on A4. */
+@media screen and (max-width:900px){
+  .opinion-report-wrap .rp-foot{position:static;left:auto;right:auto;bottom:auto;margin-top:16px}
+}
+
+/* ---- Phone layout: make the on-screen report read cleanly on a narrow screen. Scoped to
+   max-width (not `screen`-only) but 600px never matches the 210mm print page, so the PDF keeps
+   its true A4 design. ---- */
+@media (max-width:600px){
+  .rp-page{padding:20px 15px 40px}
+  .rp-title{padding:8px 11px;gap:8px}
+  .rp-title h2{font-size:11pt;letter-spacing:.3px}
+  .rp-title .n{width:22px;height:22px;font-size:9pt}
+  /* Two-column field grids and the cover info grid stack to one column. */
+  .rp-two,.rp-cols3{grid-template-columns:1fr}
+  .rp-cover-inner{padding:26px 20px}
+  .rp-cover-shield{display:none}   /* decorative watermark shield overlaps the title on a phone */
+  .rp-cover-title{margin-top:8px}
+  .rp-cover-title h1{font-size:23pt}
+  .rp-cover-info{grid-template-columns:1fr;gap:11px;padding:15px 16px}
+  .rp-sub{margin:14px 0 9px}
+  /* Data tables become stacked, labelled cards: the column headers are hidden and each cell
+     shows its header as a small label above the value (via the data-label attribute). */
+  .opinion-report-wrap .rp-table{display:block;font-size:10pt}
+  .opinion-report-wrap .rp-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  .opinion-report-wrap .rp-table tbody{display:block}
+  .opinion-report-wrap .rp-table tr{display:block;border:1px solid var(--teal-100);border-radius:9px;padding:10px 12px;margin-bottom:11px;background:#fff}
+  .opinion-report-wrap .rp-table tbody tr:nth-child(even){background:#f5faf9}
+  .opinion-report-wrap .rp-table td{display:block;border:0;border-bottom:1px dashed var(--line);padding:7px 0;text-align:left}
+  .opinion-report-wrap .rp-table tr td:first-child{padding-top:0}
+  .opinion-report-wrap .rp-table tr td:last-child{border-bottom:0;padding-bottom:0}
+  .opinion-report-wrap .rp-table td::before{content:attr(data-label);display:block;font-weight:800;color:var(--teal-dark);font-size:8pt;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+  .opinion-report-wrap .rp-table td:not([data-label])::before,.opinion-report-wrap .rp-table td[data-label='']::before{display:none}
+}
+
 /* ------------------------------------------------------------------ *
  *  OpinionReport: the same .rp-* document, reused as an inline editor
  *  (doctor building / admin approving) and as the patient's read view.
