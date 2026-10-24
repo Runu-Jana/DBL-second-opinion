@@ -119,17 +119,20 @@
   .rp-cover-info{grid-template-columns:1fr;gap:11px;padding:15px 16px}
   .rp-sub{margin:14px 0 9px}
   /* Data tables become stacked, labelled cards: the column headers are hidden and each cell
-     shows its header as a small label above the value (via the data-label attribute). */
-  .opinion-report-wrap .rp-table{display:block;font-size:10pt}
-  .opinion-report-wrap .rp-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-  .opinion-report-wrap .rp-table tbody{display:block}
-  .opinion-report-wrap .rp-table tr{display:block;border:1px solid var(--teal-100);border-radius:9px;padding:10px 12px;margin-bottom:11px;background:#fff}
-  .opinion-report-wrap .rp-table tbody tr:nth-child(even){background:#f5faf9}
-  .opinion-report-wrap .rp-table td{display:block;border:0;border-bottom:1px dashed var(--line);padding:7px 0;text-align:left}
-  .opinion-report-wrap .rp-table tr td:first-child{padding-top:0}
-  .opinion-report-wrap .rp-table tr td:last-child{border-bottom:0;padding-bottom:0}
-  .opinion-report-wrap .rp-table td::before{content:attr(data-label);display:block;font-weight:800;color:var(--teal-dark);font-size:8pt;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
-  .opinion-report-wrap .rp-table td:not([data-label])::before,.opinion-report-wrap .rp-table td[data-label='']::before{display:none}
+     shows its header as a small label above the value (via the data-label attribute). Applied to
+     every read-only view of the report — the patient's page AND the doctor's "what the patient
+     receives" preview and the admin full-screen review — so all three match on a phone. The
+     editable frames (doctor building / admin approving) keep the real table. */
+  :is(.opinion-report-wrap,.doc-report-preview,.orp-fs-body) .rp-table{display:block;font-size:10pt}
+  :is(.opinion-report-wrap,.doc-report-preview,.orp-fs-body) .rp-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  :is(.opinion-report-wrap,.doc-report-preview,.orp-fs-body) .rp-table tbody{display:block}
+  :is(.opinion-report-wrap,.doc-report-preview,.orp-fs-body) .rp-table tr{display:block;border:1px solid var(--teal-100);border-radius:9px;padding:10px 12px;margin-bottom:11px;background:#fff}
+  :is(.opinion-report-wrap,.doc-report-preview,.orp-fs-body) .rp-table tbody tr:nth-child(even){background:#f5faf9}
+  :is(.opinion-report-wrap,.doc-report-preview,.orp-fs-body) .rp-table td{display:block;border:0;border-bottom:1px dashed var(--line);padding:7px 0;text-align:left}
+  :is(.opinion-report-wrap,.doc-report-preview,.orp-fs-body) .rp-table tr td:first-child{padding-top:0}
+  :is(.opinion-report-wrap,.doc-report-preview,.orp-fs-body) .rp-table tr td:last-child{border-bottom:0;padding-bottom:0}
+  :is(.opinion-report-wrap,.doc-report-preview,.orp-fs-body) .rp-table td::before{content:attr(data-label);display:block;font-weight:800;color:var(--teal-dark);font-size:8pt;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+  :is(.opinion-report-wrap,.doc-report-preview,.orp-fs-body) .rp-table td:not([data-label])::before,:is(.opinion-report-wrap,.doc-report-preview,.orp-fs-body) .rp-table td[data-label='']::before{display:none}
 }
 
 /* ------------------------------------------------------------------ *

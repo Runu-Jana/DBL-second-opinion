@@ -727,6 +727,8 @@
 .doc-chat-send textarea{flex:1;padding:.6rem .75rem;border:1.5px solid var(--line);border-radius:10px;
   font:inherit;font-size:.87rem;line-height:1.5;resize:vertical}
 .doc-chat-send textarea:focus{outline:none;border-color:var(--teal)}
+/* 16px on phones stops iOS Safari auto-zooming the page when the doctor taps to reply. */
+@media (max-width:768px){.doc-chat-send textarea{font-size:16px}}
 
 /* ---------- staff notification bell (components/StaffBell.jsx) ---------- */
 .staff-bell{position:relative;display:inline-flex}
