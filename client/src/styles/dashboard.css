@@ -175,12 +175,14 @@
   /* auto row keeps the nav a compact horizontal bar; without it the grid stretches the
      sidebar to fill the viewport height, blowing every tab up to full height (the active
      tab's white background then shows as a giant misaligned card). */
-  .dash-side{position:static;height:auto;flex-direction:row;align-items:center;overflow-x:auto;overflow-y:hidden;top:0;padding:.5rem .55rem;gap:.3rem}
+  .dash-side{position:static;height:auto;flex-direction:row;align-items:center;overflow-x:auto;overflow-y:hidden;top:0;padding:.45rem .5rem;gap:.3rem}
   .dash-nav{flex-direction:row;flex:none;gap:.3rem;align-items:center}
-  .dash-nav-item{flex-direction:column;justify-content:center;gap:.3rem;padding:.55rem 1.05rem;font-size:.7rem;white-space:nowrap;min-width:76px;min-height:52px;text-align:center;border-radius:12px}
-  /* The active tab is a flush, centred white pill the same height as the others, with even
-     teal space around it. No shadow — a horizontal scroll strip clips vertical overflow, so a
-     drop-shadow would be cut off and look like the tab is misaligned/popping out of the bar. */
+  /* Mobile tabs are text-only pills — the icons are hidden so each tab is a single short row
+     instead of a tall icon-over-label block, which keeps the strip compact. */
+  .dash-nav-ico{display:none}
+  .dash-nav-item{flex-direction:row;justify-content:center;gap:0;padding:.5rem 1.35rem;font-size:.72rem;white-space:nowrap;min-height:0;text-align:center;border-radius:999px}
+  /* The active tab is a flush, centred white pill. No shadow — a horizontal scroll strip clips
+     vertical overflow, so a drop-shadow would be cut off and look like the tab is misaligned. */
   .dash-nav-item.active{box-shadow:none}
   .dash-nav-label{flex:none}
   .dash-nav-badge{position:absolute;margin:0;top:6px;right:10px}
