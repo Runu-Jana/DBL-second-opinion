@@ -327,7 +327,11 @@
 .chat-head-av{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;margin-right:.55rem;vertical-align:middle;color:#fff;font-weight:800;font-size:.6rem;background:linear-gradient(135deg,var(--teal),var(--teal-dark))}
 .chat-empty{margin:auto;text-align:center;color:var(--muted);font-size:.86rem;max-width:34ch;line-height:1.5}
 .chat-err{margin:0;padding:.5rem .85rem;color:#c0392b;font-size:.8rem;font-weight:600}
-@media (max-width:620px){.chat-single{height:auto;min-height:62vh}}
+/* Keep the chat a bounded height on phones so the message list scrolls INSIDE the card (and
+   auto-scrolls to the newest message) with the composer pinned at the bottom — otherwise the
+   card grows with the thread and a long conversation opens on the oldest message with the
+   composer pushed far off-screen. */
+@media (max-width:620px){.chat-single{height:min(72vh,620px);min-height:0}}
 
 /* FAQ accordion */
 .faq-item{border:1px solid var(--line);border-radius:12px;margin-bottom:.7rem;overflow:hidden;background:#fff}
