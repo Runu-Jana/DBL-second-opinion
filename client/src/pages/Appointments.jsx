@@ -36,22 +36,24 @@ function dayMon(date) {
 function ApptCard({ a, past }) {
   const { d, mon } = dayMon(a.date);
   return (
-    <article className="dash-card" style={{ display: 'flex', gap: '1.1rem', alignItems: 'center' }}>
-      <div className="appt-date" style={{ minWidth: 74 }}>
+    <article className="dash-card appt-card">
+      <div className="appt-date">
         <strong>{d}</strong>
         <span>{mon}</span>
       </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <h3 style={{ margin: '0 0 .15rem', fontSize: '1rem', fontWeight: 800 }}>{a.doctor || 'To be assigned'}</h3>
-        <p style={{ margin: 0, fontSize: '.82rem', color: 'var(--muted)' }}>{a.type}</p>
-        <div style={{ display: 'flex', gap: '1rem', marginTop: '.45rem', flexWrap: 'wrap', fontSize: '.8rem', color: 'var(--teal-dark)', fontWeight: 600 }}>
-          {a.time && <span style={{ display: 'inline-flex', gap: '.35rem', alignItems: 'center' }}>{Ico.clock} {a.time}</span>}
-          <span style={{ display: 'inline-flex', gap: '.35rem', alignItems: 'center' }}>{Ico.video} {a.mode}</span>
+      <div className="appt-body">
+        <div className="appt-top">
+          <h3>{a.doctor || 'To be assigned'}</h3>
+          {past
+            ? <span className={'pill pill-' + (a.status === 'Cancelled' ? 'gray' : 'done')}>{a.status}</span>
+            : <span className="pill pill-blue">{a.status}</span>}
+        </div>
+        <p className="appt-type">{a.type}</p>
+        <div className="appt-meta">
+          {a.time && <span>{Ico.clock} {a.time}</span>}
+          <span>{Ico.video} {a.mode}</span>
         </div>
       </div>
-      {past
-        ? <span className={'pill pill-' + (a.status === 'Cancelled' ? 'gray' : 'done')}>{a.status}</span>
-        : <span className="pill pill-blue">{a.status}</span>}
     </article>
   );
 }

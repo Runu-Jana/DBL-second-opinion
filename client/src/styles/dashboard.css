@@ -71,6 +71,8 @@
 .pill-pending{background:#eef1f6;color:#5a6a86}
 .pill-paid{background:#e6f7ec;color:#1a8f4c}
 .pill-due{background:#fff3e0;color:#b26a00}
+.pill-blue{background:#e7f0ff;color:#1d4ed8}      /* upcoming / scheduled appointment status */
+.pill-gray{background:#eef1f6;color:#5a6a86}      /* cancelled appointment status */
 
 /* ---------- appointment + messages ---------- */
 .dash-duo{display:grid;grid-template-columns:1fr 1fr;gap:1.3rem}
@@ -79,6 +81,16 @@
   min-width:84px;padding:.7rem;border-radius:14px;background:linear-gradient(160deg,var(--teal-dark),var(--teal-deep));color:#fff}
 .appt-date strong{font-size:1.9rem;font-weight:800;line-height:1}
 .appt-date span{font-size:.72rem;opacity:.9;margin-top:.25rem}
+/* Appointment card: date box | body (title + status pill on one row, then type + time/mode).
+   The pill sits beside the title so it never floats mid-card or gets clipped on a phone. */
+.appt-card{display:flex;gap:1.1rem;align-items:flex-start}
+.appt-body{flex:1;min-width:0}
+.appt-top{display:flex;align-items:flex-start;justify-content:space-between;gap:.7rem}
+.appt-top h3{margin:0;font-size:1rem;font-weight:800;min-width:0}
+.appt-top .pill{flex:0 0 auto}
+.appt-type{margin:.15rem 0 0;font-size:.82rem;color:var(--muted)}
+.appt-meta{display:flex;gap:1rem;margin-top:.45rem;flex-wrap:wrap;font-size:.8rem;color:var(--teal-dark);font-weight:600}
+.appt-meta span{display:inline-flex;gap:.35rem;align-items:center}
 .appt-info{display:flex;flex-direction:column;min-width:0}
 .appt-info h3{margin:0 0 .15rem;font-size:.98rem;font-weight:800;color:var(--ink)}
 .appt-info p{margin:0;font-size:.8rem;color:var(--muted)}
@@ -281,6 +293,9 @@
 /* profile form */
 .pf-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
 @media (max-width:620px){.pf-grid{grid-template-columns:1fr}}
+/* 16px on phones so iOS doesn't zoom when a field is tapped (the global rule already covers
+   text inputs; these two selectors out-specify it, so repeat it for them). */
+@media (max-width:768px){.pf-field textarea,.pf-field select{font-size:16px}}
 .pf-field{display:flex;flex-direction:column;gap:.35rem}
 .pf-field span{font-size:.76rem;font-weight:700;color:var(--ink-soft)}
 .pf-field .pf-req{color:#e11d48;font-style:normal;margin-left:1px}
