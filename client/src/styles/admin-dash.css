@@ -637,6 +637,9 @@
 /* Auto-growing variant: height is driven by JS, so drop manual resize and hide the overflow
    until it reaches the cap, where overflow-y takes over and it scrolls. */
 .cns-report-auto{resize:none;overflow-y:auto}
+/* 16px on phones stops iOS Safari auto-zooming when the counsellor writes the case note or
+   searches, same as the doctor chat textarea. */
+@media (max-width:768px){.cns-report,.cns-search{font-size:16px}}
 .cns-row{display:flex;flex-wrap:wrap;align-items:flex-end;gap:.8rem;margin-top:.8rem}
 .cns-row label{display:flex;flex-direction:column;gap:.25rem;font-size:.8rem;font-weight:600;color:var(--ink-soft);min-width:200px}
 
