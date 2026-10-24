@@ -146,6 +146,26 @@
 /* font-size can't shrink the tagline below the browser's minimum, so scale the whole logo
    down (transform isn't clamped) until it clears the 250px sidebar. */
 .site-header:has(+ .dash-body) .brand{gap:.45rem;transform:scale(.78);transform-origin:left center}
+/* On mobile the sidebar becomes a horizontal bar, so the desktop 250px-sidebar shrink no longer
+   applies. transform:scale() above keeps the brand's ORIGINAL (unscaled) layout width, which on
+   narrow phones reserves phantom space and pushes the header actions + hamburger past the right
+   edge (the hamburger was overflowing the section on ~360–390px Samsung screens). Drop the
+   transform and size the brand for real so the row fits and the hamburger keeps its edge margin. */
+@media (max-width:820px){
+  .site-header:has(+ .dash-body) .brand{transform:none;gap:.4rem}
+  .site-header:has(+ .dash-body) .brand-mark svg{width:36px;height:44px}
+  .site-header:has(+ .dash-body) .brand-name{font-size:1.02rem}
+  .site-header:has(+ .dash-body) .brand-sub{font-size:.54rem;letter-spacing:.8px}
+  .site-header:has(+ .dash-body) .brand-tag{font-size:.4rem}
+}
+/* Smallest phones (~360px Samsung): drop the two-line tagline and tighten the action cluster so
+   the full row still clears the right edge. 375px+ (iPhones) keep the tagline. */
+@media (max-width:374px){
+  .site-header:has(+ .dash-body) .brand-tag{display:none}
+  .site-header:has(+ .dash-body) .brand-mark svg{width:32px;height:40px}
+  .site-header:has(+ .dash-body) .header-actions{gap:.28rem}
+  .site-header:has(+ .dash-body) .lang-btn{padding-left:.3rem;padding-right:.3rem}
+}
 .user-menu{position:relative}
 .user-chip{display:flex;align-items:center;gap:.5rem;border:1.5px solid var(--line);background:#fff;border-radius:999px;
   padding:.28rem .7rem .28rem .28rem;cursor:pointer;font:inherit;transition:border-color .15s ease,box-shadow .15s ease}
